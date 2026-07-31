@@ -1,0 +1,29 @@
+# Modpack jars used only as local reference/dev dependencies (182 MB)
+other_mods_in_modpack/
+
+# Gradle
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+
+# NeoForge / ModDevGradle generated
+run/
+runs/
+repo/
+.neoforge/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
