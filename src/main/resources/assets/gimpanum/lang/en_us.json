@@ -1,4 +1,30 @@
 {
     "itemGroup.gimpanum.main": "Gimpanum",
-    "block.gimpanum.probe": "Sublevel Probe"
+
+    "block.gimpanum.core": "Core",
+    "block.gimpanum.probe": "Sublevel Probe",
+    "item.gimpanum.seal": "Seal",
+
+    "item.gimpanum.seal.bound": "Bound players:",
+    "item.gimpanum.seal.empty": "Not bound to anyone",
+
+    "gimpanum.core.header": "=== Core configuration ===",
+    "gimpanum.core.players": "Bound players:",
+    "gimpanum.core.no_players": "No players bound",
+    "gimpanum.core.commands": "Commands on destruction:",
+    "gimpanum.core.no_commands": "No commands set",
+    "gimpanum.core.explosion": "Explosion: power %s, fire %s",
+    "gimpanum.core.on_sublevel": "On a physical contraption: %s",
+
+    "gimpanum.command.not_a_core": "There is no Core at that position",
+    "gimpanum.command.no_such_index": "No command with that number",
+    "gimpanum.command.player_added": "Bound player %s",
+    "gimpanum.command.player_removed": "Unbound player %s",
+    "gimpanum.command.player_already_bound": "Player %s is already bound",
+    "gimpanum.command.player_not_bound": "Player %s is not bound",
+    "gimpanum.command.players_cleared": "Unbound %s player(s)",
+    "gimpanum.command.command_added": "Command added: %s",
+    "gimpanum.command.command_removed": "Command removed: %s",
+    "gimpanum.command.commands_cleared": "Removed %s command(s)",
+    "gimpanum.command.explosion_set": "Explosion: power %s, fire %s"
 }
