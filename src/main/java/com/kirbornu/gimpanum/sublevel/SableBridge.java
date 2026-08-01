@@ -45,24 +45,17 @@ final class SableBridge {
         Pose3dc pose = subLevel.logicalPose();
         Vec3 rawCenter = Vec3.atCenterOf(pos);
 
-        // Основной кандидат: координаты делянки трактуются как локальное
-        // пространство позы напрямую.
+        // Координаты делянки — и есть локальное пространство позы: rotationPoint
+        // задан в них же. Проверено на живом сервере, см. SubLevelInfo.
         Vec3 worldCenter = pose.transformPosition(rawCenter);
-
-        // Запасной кандидат — на случай, если Sable считает локальными
-        // координаты, отсчитанные от центра делянки. Какой из двух верен,
-        // показывает зонд: правильный совпадёт с тем, что видит игрок.
-        Vec3 plotCenter = Vec3.atCenterOf(plot.getCenterBlock());
-        Vec3 plotRelativeCandidate = pose.transformPosition(rawCenter.subtract(plotCenter));
 
         return Optional.of(new SubLevelInfo(
                 subLevel.getUniqueId(),
-                subLevel.getName(),
+                Optional.ofNullable(subLevel.getName()),
                 plot.plotPos,
                 pos,
                 rawCenter,
                 worldCenter,
-                plotRelativeCandidate,
                 toVec3(pose.position()),
                 toVec3(pose.rotationPoint()),
                 toVec3(pose.scale())

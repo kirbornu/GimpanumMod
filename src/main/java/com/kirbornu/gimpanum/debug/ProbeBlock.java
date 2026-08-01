@@ -24,15 +24,20 @@ import java.util.Optional;
  * Диагностический блок. В финальном моде его не будет — он существует, чтобы
  * выяснить на живом сервере, как Sable обходится с блоками на конструкциях.
  *
- * <p>Отвечает на два вопроса, от которых зависит вся логика Ядра:
- * <ol>
- *   <li>какая трансформация переводит координаты делянки в мировые;</li>
- *   <li>какие хуки разрушения вообще срабатывают, когда блок стоит на
- *       конструкции.</li>
- * </ol>
+ * <p>Что уже выяснено на живом сервере (2026-08-01):
+ * <ul>
+ *   <li>мировую позицию даёт {@code pose.transformPosition(rawCenter)};</li>
+ *   <li>{@code onRemove} срабатывает и от кирки, и от взрыва, то есть покрывает
+ *       оба нужных триггера;</li>
+ *   <li>сущность, созданная в координатах делянки, едет вместе с конструкцией,
+ *       а созданная в мировых — остаётся в открытом мире.</li>
+ * </ul>
  *
- * <p>ПКМ пустой рукой — отчёт о положении. Shift+ПКМ — проверка эффектов:
- * маркеры в обеих координатах-кандидатах и безобидный взрыв в мировой.
+ * <p>Открытый вопрос: срабатывает ли {@code onRemove} при сборке и разборке
+ * конструкции. Если да — Ядро будет «взрываться» при каждой сборке корабля, и
+ * перенос придётся отличать от разрушения.
+ *
+ * <p>ПКМ пустой рукой — отчёт о положении. Shift+ПКМ — проверка эффектов.
  */
 public class ProbeBlock extends Block {
 
@@ -71,31 +76,21 @@ public class ProbeBlock extends Block {
 
         SubLevelInfo info = maybeInfo.get();
         Vec3 playerPos = player.position();
+        double distWorld = info.worldCenter().distanceTo(playerPos);
 
-        send(player, "Конструкция: " + info.name() + " [" + info.subLevelId() + "]", ChatFormatting.AQUA);
+        send(player, "Конструкция: " + info.displayName() + " [" + info.subLevelId() + "]",
+                ChatFormatting.AQUA);
         send(player, "Делянка (чанк): " + info.plotPos(), ChatFormatting.GRAY);
         send(player, "Поза position:      " + fmt(info.posePosition()), ChatFormatting.GRAY);
         send(player, "Поза rotationPoint: " + fmt(info.poseRotationPoint()), ChatFormatting.GRAY);
         send(player, "Поза scale:         " + fmt(info.poseScale()), ChatFormatting.GRAY);
-
-        // Ключевая проверка: игрок стоит вплотную к блоку, поэтому верный
-        // кандидат обязан оказаться заметно ближе к нему, чем остальные.
-        double distRaw = info.rawCenter().distanceTo(playerPos);
-        double distWorld = info.worldCenter().distanceTo(playerPos);
-        double distPlotRel = info.plotCenterCandidate().distanceTo(playerPos);
-
-        send(player, "-- кандидаты (меньшая дистанция = верный) --", ChatFormatting.GOLD);
-        send(player, String.format("сырой:        %s  -> %.2f", fmt(info.rawCenter()), distRaw),
-                ChatFormatting.WHITE);
-        send(player, String.format("transform:    %s  -> %.2f", fmt(info.worldCenter()), distWorld),
-                pickColour(distWorld, distRaw, distPlotRel));
-        send(player, String.format("отн. делянки: %s  -> %.2f", fmt(info.plotCenterCandidate()), distPlotRel),
-                pickColour(distPlotRel, distRaw, distWorld));
+        send(player, "Сырой центр:  " + fmt(info.rawCenter()), ChatFormatting.GRAY);
+        send(player, String.format("Мировой центр: %s  (до игрока %.2f)", fmt(info.worldCenter()), distWorld),
+                ChatFormatting.GREEN);
         send(player, "Позиция игрока: " + fmt(playerPos), ChatFormatting.GRAY);
 
-        Gimpanum.LOGGER.info("[зонд] raw={} world={} plotRel={} player={} distRaw={} distWorld={} distPlotRel={}",
-                fmt(info.rawCenter()), fmt(info.worldCenter()), fmt(info.plotCenterCandidate()),
-                fmt(playerPos), distRaw, distWorld, distPlotRel);
+        Gimpanum.LOGGER.info("[зонд] raw={} world={} player={} distWorld={}",
+                fmt(info.rawCenter()), fmt(info.worldCenter()), fmt(playerPos), distWorld);
     }
 
     /**
@@ -113,8 +108,10 @@ public class ProbeBlock extends Block {
         dropMarker(level, rawCenter, Items.REDSTONE_BLOCK, "сырой");
         if (maybeInfo.isPresent()) {
             dropMarker(level, worldCenter, Items.EMERALD_BLOCK, "мировой");
-            dropMarker(level, maybeInfo.get().plotCenterCandidate(), Items.GOLD_BLOCK, "отн. делянки");
-            send(player, "Маркеры: редстоун=сырой, изумруд=мировой, золото=отн.делянки",
+            // В момент броска обе точки визуально совпадают. Разница вылезает
+            // только когда конструкция сдвинется: редстоун лежит внутри делянки
+            // и поедет вместе с ней, изумруд останется в открытом мире.
+            send(player, "Редстоун=на конструкции, изумруд=в мире. Сдвинь штуковину — разъедутся.",
                     ChatFormatting.GRAY);
         } else {
             send(player, "Не на конструкции — брошен только сырой маркер.", ChatFormatting.YELLOW);
@@ -160,10 +157,6 @@ public class ProbeBlock extends Block {
         Vec3 world = SubLevelSupport.worldCenter(level, pos);
         Gimpanum.LOGGER.info("[зонд] хук={} наКонструкции={} сырой={} мировой={} {}",
                 hook, onSubLevel, pos.toShortString(), fmt(world), extra);
-    }
-
-    private static ChatFormatting pickColour(double self, double a, double b) {
-        return (self <= a && self <= b) ? ChatFormatting.GREEN : ChatFormatting.RED;
     }
 
     private static String fmt(Vec3 v) {
