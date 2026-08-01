@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum;
 
+import com.kirbornu.gimpanum.registry.GimpanumContent;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
@@ -14,7 +15,7 @@ public class Gimpanum {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public Gimpanum(IEventBus modBus, ModContainer container) {
-        LOGGER.info("Gimpanum loading");
+        GimpanumContent.register(modBus);
     }
 
     public static ResourceLocation id(String path) {

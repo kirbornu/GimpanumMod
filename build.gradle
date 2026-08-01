@@ -44,9 +44,34 @@ repositories {
     mavenCentral()
 }
 
+// --- Sable как локальная compileOnly-зависимость ---------------------------
+// Sable не опубликован в публичном maven, поэтому берём джарку из модпака.
+// Часть API (Pose3d/Pose3dc) лежит во вложенных jarjar-джарках, их надо
+// распаковать. Если джарки нет — сборка обязана всё равно проходить, просто
+// без поддержки sublevel'ов.
+def sableJar = file("other_mods_in_modpack/sable-neoforge-1.21.1-${sable_version}.jar")
+def sableDepsDir = layout.buildDirectory.dir('sable-deps')
+
+def extractSableNestedJars = tasks.register('extractSableNestedJars', Copy) {
+    onlyIf { sableJar.exists() }
+    if (sableJar.exists()) {
+        from(zipTree(sableJar)) {
+            include 'META-INF/jarjar/sable-companion-common-*.jar'
+            include 'META-INF/jarjar/veil-*.jar'
+        }
+    }
+    eachFile { it.relativePath = new RelativePath(true, it.name) }
+    includeEmptyDirs = false
+    into sableDepsDir
+}
+
 dependencies {
-    // Sable подключается как compileOnly-зависимость в фазе feat/sublevel-support.
-    // Мод обязан собираться и работать без неё.
+    if (sableJar.exists()) {
+        compileOnly files(sableJar)
+        compileOnly fileTree(dir: sableDepsDir, include: '*.jar').builtBy(extractSableNestedJars)
+    } else {
+        logger.lifecycle("Sable jar not found at ${sableJar} — building without sublevel support.")
+    }
 }
 
 // Подстановка версий из gradle.properties в neoforge.mods.toml
