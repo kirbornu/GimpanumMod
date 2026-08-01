@@ -1,6 +1,7 @@
 package com.kirbornu.gimpanum.debug;
 
 import com.kirbornu.gimpanum.Gimpanum;
+import com.kirbornu.gimpanum.destruction.DestructionArbiter;
 import com.kirbornu.gimpanum.sublevel.SubLevelInfo;
 import com.kirbornu.gimpanum.sublevel.SubLevelSupport;
 import net.minecraft.ChatFormatting;
@@ -13,6 +14,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -39,10 +42,15 @@ import java.util.Optional;
  *
  * <p>ПКМ пустой рукой — отчёт о положении. Shift+ПКМ — проверка эффектов.
  */
-public class ProbeBlock extends Block {
+public class ProbeBlock extends Block implements EntityBlock {
 
     public ProbeBlock(BlockBehaviour.Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new ProbeBlockEntity(pos, state);
     }
 
     @Override
@@ -143,10 +151,46 @@ public class ProbeBlock extends Block {
     @Override
     protected void onRemove(BlockState state, Level level, BlockPos pos,
                             BlockState newState, boolean movedByPiston) {
-        if (!state.is(newState.getBlock())) {
+        if (!state.is(newState.getBlock()) && !level.isClientSide) {
             logDestruction(level, pos, "onRemove", "поршень=" + movedByPiston);
+            // Данные снимаем до super: он удалит блок-сущность вместе с UUID,
+            // а мировую позицию после сдвига конструкции уже не восстановить.
+            queueDestruction(level, pos, movedByPiston);
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
+    /**
+     * Ставит удаление в очередь арбитра. Настоящим уничтожением оно будет
+     * признано, только если блок с тем же UUID не объявится где-то ещё.
+     */
+    private void queueDestruction(Level level, BlockPos pos, boolean movedByPiston) {
+        if (!(level.getBlockEntity(pos) instanceof ProbeBlockEntity probe)) {
+            Gimpanum.LOGGER.warn("[зонд] удаление в {} без блок-сущности — пропущено",
+                    pos.toShortString());
+            return;
+        }
+
+        boolean onSubLevel = SubLevelSupport.isOnSubLevel(level, pos);
+        DestructionArbiter.onRemoved(new DestructionArbiter.PendingRemoval(
+                probe.blockId(),
+                level.dimension(),
+                pos.immutable(),
+                SubLevelSupport.worldCenter(level, pos),
+                onSubLevel,
+                DestructionArbiter.currentTick(),
+                ProbeBlock::onConfirmedDestroyed
+        ));
+    }
+
+    /**
+     * Сюда попадают только подтверждённые уничтожения. Зонд ничего не взрывает
+     * — он лишь фиксирует вердикт, чтобы схему можно было проверить, не рискуя
+     * испытуемой конструкцией.
+     */
+    private static void onConfirmedDestroyed(DestructionArbiter.PendingRemoval removal) {
+        Gimpanum.LOGGER.info("[зонд] ВЕРДИКТ: уничтожен id={} наКонструкции={} мировой={}",
+                removal.blockId(), removal.wasOnSubLevel(), fmt(removal.worldPos()));
     }
 
     private void logDestruction(Level level, BlockPos pos, String hook, String extra) {
