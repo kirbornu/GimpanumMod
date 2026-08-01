@@ -1,9 +1,16 @@
 package com.kirbornu.gimpanum.registry;
 
 import com.kirbornu.gimpanum.Gimpanum;
+import com.kirbornu.gimpanum.core.CoreBlock;
+import com.kirbornu.gimpanum.core.CoreBlockEntity;
 import com.kirbornu.gimpanum.debug.ProbeBlock;
 import com.kirbornu.gimpanum.debug.ProbeBlockEntity;
+import com.kirbornu.gimpanum.item.SealItem;
+import com.mojang.serialization.Codec;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.world.item.Item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
@@ -18,6 +25,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 public final class GimpanumContent {
@@ -28,6 +36,8 @@ public final class GimpanumContent {
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Gimpanum.MOD_ID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Gimpanum.MOD_ID);
+    public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS =
+            DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, Gimpanum.MOD_ID);
 
     /**
      * Диагностический блок-зонд. Не часть задуманной механики — служит только
@@ -48,12 +58,51 @@ public final class GimpanumContent {
             BLOCK_ENTITIES.register("probe",
                     () -> BlockEntityType.Builder.of(ProbeBlockEntity::new, PROBE.get()).build(null));
 
+    /**
+     * Ядро. {@code noLootTable} — принципиально: обычный игрок может Ядро
+     * только уничтожить, но не унести.
+     */
+    public static final DeferredBlock<CoreBlock> CORE = BLOCKS.registerBlock(
+            "core",
+            CoreBlock::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BLACK)
+                    .strength(5.0F)
+                    .sound(SoundType.NETHERITE_BLOCK)
+                    .lightLevel(state -> 7)
+                    .noLootTable()
+    );
+
+    public static final DeferredItem<?> CORE_ITEM = ITEMS.registerSimpleBlockItem(CORE);
+
+    public static final Supplier<BlockEntityType<CoreBlockEntity>> CORE_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("core",
+                    () -> BlockEntityType.Builder.of(CoreBlockEntity::new, CORE.get()).build(null));
+
+    /** Ники, записанные в Печать. */
+    public static final Supplier<DataComponentType<List<String>>> BOUND_PLAYERS =
+            DATA_COMPONENTS.register("bound_players",
+                    () -> DataComponentType.<List<String>>builder()
+                            .persistent(Codec.STRING.listOf())
+                            .networkSynchronized(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()))
+                            .build());
+
+    public static final DeferredItem<SealItem> SEAL = ITEMS.registerItem(
+            "seal",
+            SealItem::new,
+            new Item.Properties().stacksTo(1)
+    );
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register(
             "main",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.gimpanum.main"))
-                    .icon(() -> new ItemStack(PROBE.get()))
-                    .displayItems((params, output) -> output.accept(PROBE_ITEM.get()))
+                    .icon(() -> new ItemStack(CORE.get()))
+                    .displayItems((params, output) -> {
+                        output.accept(CORE_ITEM.get());
+                        output.accept(SEAL.get());
+                        output.accept(PROBE_ITEM.get());
+                    })
                     .build()
     );
 
@@ -65,6 +114,7 @@ public final class GimpanumContent {
         ITEMS.register(modBus);
         TABS.register(modBus);
         BLOCK_ENTITIES.register(modBus);
+        DATA_COMPONENTS.register(modBus);
     }
 
     /** Удобный доступ без {@code .get()} на каждом вызове. */

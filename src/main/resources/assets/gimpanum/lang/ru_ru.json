@@ -1,4 +1,18 @@
 {
     "itemGroup.gimpanum.main": "Gimpanum",
-    "block.gimpanum.probe": "Зонд конструкций"
+
+    "block.gimpanum.core": "Ядро",
+    "block.gimpanum.probe": "Зонд конструкций",
+    "item.gimpanum.seal": "Печать",
+
+    "item.gimpanum.seal.bound": "Привязанные игроки:",
+    "item.gimpanum.seal.empty": "Ни к кому не привязана",
+
+    "gimpanum.core.header": "=== Настройка Ядра ===",
+    "gimpanum.core.players": "Привязанные игроки:",
+    "gimpanum.core.no_players": "Игроки не привязаны",
+    "gimpanum.core.commands": "Команды при уничтожении:",
+    "gimpanum.core.no_commands": "Команды не заданы",
+    "gimpanum.core.explosion": "Взрыв: мощность %s, огонь %s",
+    "gimpanum.core.on_sublevel": "На физической конструкции: %s"
 }

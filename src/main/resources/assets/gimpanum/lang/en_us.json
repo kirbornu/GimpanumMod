@@ -1,4 +1,18 @@
 {
     "itemGroup.gimpanum.main": "Gimpanum",
-    "block.gimpanum.probe": "Sublevel Probe"
+
+    "block.gimpanum.core": "Core",
+    "block.gimpanum.probe": "Sublevel Probe",
+    "item.gimpanum.seal": "Seal",
+
+    "item.gimpanum.seal.bound": "Bound players:",
+    "item.gimpanum.seal.empty": "Not bound to anyone",
+
+    "gimpanum.core.header": "=== Core configuration ===",
+    "gimpanum.core.players": "Bound players:",
+    "gimpanum.core.no_players": "No players bound",
+    "gimpanum.core.commands": "Commands on destruction:",
+    "gimpanum.core.no_commands": "No commands set",
+    "gimpanum.core.explosion": "Explosion: power %s, fire %s",
+    "gimpanum.core.on_sublevel": "On a physical contraption: %s"
 }

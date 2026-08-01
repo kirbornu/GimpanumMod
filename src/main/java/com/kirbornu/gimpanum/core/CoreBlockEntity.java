@@ -1,0 +1,84 @@
+package com.kirbornu.gimpanum.core;
+
+import com.kirbornu.gimpanum.Gimpanum;
+import com.kirbornu.gimpanum.destruction.DestructionArbiter;
+import com.kirbornu.gimpanum.registry.GimpanumContent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.UUID;
+
+/** Хранилище настройки Ядра и его постоянного идентификатора. */
+public class CoreBlockEntity extends BlockEntity {
+
+    private static final String KEY_ID = "GimpanumCoreId";
+    private static final String KEY_CONFIG = "GimpanumCoreConfig";
+
+    private UUID coreId;
+    private CoreConfig config = CoreConfig.EMPTY;
+
+    public CoreBlockEntity(BlockPos pos, BlockState state) {
+        super(GimpanumContent.CORE_BLOCK_ENTITY.get(), pos, state);
+    }
+
+    /**
+     * Постоянный идентификатор Ядра. Обязан пережить сборку конструкции: по
+     * нему {@link DestructionArbiter} отличает переезд от уничтожения.
+     */
+    public UUID coreId() {
+        if (coreId == null) {
+            coreId = UUID.randomUUID();
+            setChanged();
+        }
+        return coreId;
+    }
+
+    public CoreConfig config() {
+        return config;
+    }
+
+    public void setConfig(CoreConfig config) {
+        this.config = config;
+        setChanged();
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) {
+            // Появление Ядра где угодно отменяет ожидающее удаление с тем же
+            // идентификатором: значит блок переехал, а не погиб.
+            DestructionArbiter.onAppeared(coreId());
+        }
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        if (tag.hasUUID(KEY_ID)) {
+            coreId = tag.getUUID(KEY_ID);
+        }
+        if (tag.contains(KEY_CONFIG)) {
+            config = CoreConfig.CODEC
+                    .parse(NbtOps.INSTANCE, tag.get(KEY_CONFIG))
+                    .resultOrPartial(error -> Gimpanum.LOGGER.error(
+                            "Настройка Ядра в {} повреждена: {}", getBlockPos().toShortString(), error))
+                    .orElse(CoreConfig.EMPTY);
+        }
+    }
+
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.putUUID(KEY_ID, coreId());
+        CoreConfig.CODEC.encodeStart(NbtOps.INSTANCE, config)
+                .resultOrPartial(error -> Gimpanum.LOGGER.error(
+                        "Не удалось сохранить настройку Ядра в {}: {}",
+                        getBlockPos().toShortString(), error))
+                .ifPresent(encoded -> tag.put(KEY_CONFIG, encoded));
+    }
+}
