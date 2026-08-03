@@ -47,7 +47,9 @@
     "item.gimpanum.core.configured": "Carries a Core configuration",
     "item.gimpanum.core.bound": "Bound: %s player(s), %s crew(s)",
     "item.gimpanum.core.commands": "Commands: %s",
-    "item.gimpanum.core.tags": "Armed %s · invulnerable %s · seal %s · explosion %s",
+    "item.gimpanum.core.tags": "Armed %s · invulnerable %s · auto-drop %s · seal %s · explosion %s",
     "gimpanum.core.seal": "Seal: %s",
-    "gimpanum.command.seal_enabled_set": "Seal: %s"
+    "gimpanum.command.seal_enabled_set": "Seal: %s",
+    "gimpanum.core.autofragile": "Drop invulnerability on arming: %s",
+    "gimpanum.command.autofragile_set": "Drop invulnerability on arming: %s"
 }

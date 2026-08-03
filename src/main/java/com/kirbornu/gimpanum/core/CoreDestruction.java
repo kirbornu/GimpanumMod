@@ -32,19 +32,22 @@ public final class CoreDestruction {
     }
 
     /**
-     * Порядок задан замыслом: сначала команды, потом взрыв, и только потом
-     * Печать. Печать появляется последней намеренно — так взрыв заведомо не
-     * может её задеть.
+     * Порядок задан замыслом: сначала взрыв, потом команды, и только потом
+     * Печать.
+     *
+     * <p>Взрыв идёт первым, чтобы привязанных игроков ещё застало на месте: к
+     * моменту команд их может уже унести телепортом. Печать появляется
+     * последней — так взрыв заведомо не может её задеть.
      */
     public static void run(ServerLevel level, Vec3 worldPos, CoreConfig config) {
         MinecraftServer server = level.getServer();
         SealContents contents = config.sealContents();
 
-        runCommands(server, level, worldPos, config, contents);
-
         if (config.explosionEnabled()) {
             explode(level, worldPos, config);
         }
+        runCommands(server, level, worldPos, config, contents);
+
         if (config.sealEnabled()) {
             dropSeal(level, worldPos, contents);
         }

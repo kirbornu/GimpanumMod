@@ -58,6 +58,7 @@ public class CoreBlockItem extends BlockItem {
 
         tooltip.add(Component.translatable("item.gimpanum.core.tags",
                         yesNo(config.armed()), yesNo(config.invulnerable()),
+                        yesNo(config.autoDisableInvulnerable()),
                         yesNo(config.sealEnabled()), yesNo(config.explosionEnabled()))
                 .withStyle(ChatFormatting.DARK_GRAY));
     }
