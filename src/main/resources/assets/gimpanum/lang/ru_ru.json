@@ -19,7 +19,7 @@
     "gimpanum.core.no_players": "Привязок нет",
     "gimpanum.core.no_commands": "Команды не заданы",
     "gimpanum.core.postfix": "Приставка Печати: %s",
-    "gimpanum.core.seal": "Печать: %s",
+    "gimpanum.core.seal": "Печать: %s, цена %s",
     "gimpanum.core.explosion": "Взрыв: включён %s, мощность %s, огонь %s",
     "gimpanum.core.invulnerable": "Неразрушимость: %s",
     "gimpanum.core.on_sublevel": "На физической конструкции: %s",
@@ -51,5 +51,13 @@
     "gimpanum.command.explosion_enabled_set": "Взрыв включён: %s",
     "gimpanum.command.explosion_set": "Взрыв: мощность %s, огонь %s",
     "gimpanum.core.autofragile": "Автоснятие неразрушимости: %s",
-    "gimpanum.command.autofragile_set": "Автоснятие неразрушимости: %s"
+    "gimpanum.command.autofragile_set": "Автоснятие неразрушимости: %s",
+    "item.gimpanum.seal.price": "Цена: %s",
+    "gimpanum.core.spawn": "Выдача: %s, каждые %s с, предмет %s",
+    "gimpanum.core.spawn_seal": "Печать",
+    "gimpanum.command.price_set": "Цена Печати: %s",
+    "gimpanum.command.spawn_enabled_set": "Периодическая выдача: %s",
+    "gimpanum.command.spawn_interval_set": "Промежуток выдачи: %s с",
+    "gimpanum.command.spawn_item_set": "Выдаваемый предмет: %s",
+    "gimpanum.command.spawn_item_seal": "Выдаваться будет Печать"
 }

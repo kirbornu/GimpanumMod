@@ -58,13 +58,7 @@ public final class CoreDestruction {
      * не уезжает вместе с обломками конструкции.
      */
     private static void dropSeal(ServerLevel level, Vec3 worldPos, SealContents contents) {
-        ItemStack seal = SealItem.create(contents);
-        ItemEntity entity = new ItemEntity(level, worldPos.x, worldPos.y, worldPos.z, seal);
-        entity.setDeltaMovement(Vec3.ZERO);
-        entity.setNoPickUpDelay();
-        // Взрыв уже отгремел, но огонь после него мог остаться.
-        entity.setInvulnerable(true);
-        level.addFreshEntity(entity);
+        SealDrops.spawnSeal(level, worldPos, contents);
     }
 
     /**

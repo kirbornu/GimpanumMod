@@ -105,10 +105,11 @@ public final class GimpanumContent {
                             .networkSynchronized(SealContents.STREAM_CODEC)
                             .build());
 
+    /** {@code fireResistant} — чтобы Печать не сгорела даже там, где её не защитили. */
     public static final DeferredItem<SealItem> SEAL = ITEMS.registerItem(
             "seal",
             SealItem::new,
-            new Item.Properties().stacksTo(1)
+            new Item.Properties().stacksTo(1).fireResistant()
     );
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register(

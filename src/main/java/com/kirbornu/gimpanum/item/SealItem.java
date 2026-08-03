@@ -52,6 +52,9 @@ public class SealItem extends Item {
         super.appendHoverText(stack, context, tooltip, flag);
 
         SealContents contents = contents(stack);
+        tooltip.add(Component.translatable("item.gimpanum.seal.price", contents.price())
+                .withStyle(ChatFormatting.GOLD));
+
         if (contents.isEmpty()) {
             tooltip.add(Component.translatable("item.gimpanum.seal.empty")
                     .withStyle(ChatFormatting.DARK_GRAY));

@@ -17,12 +17,17 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -89,7 +94,8 @@ public final class CoreCommand {
         };
     }
 
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher,
+                                CommandBuildContext buildContext) {
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("gimpanum")
                 // Уровень 2 — тот же порог, что и на открытие настройки ПКМ.
                 .requires(source -> source.hasPermission(CoreBlock.REQUIRED_PERMISSION_LEVEL));
@@ -98,11 +104,11 @@ public final class CoreCommand {
 
         root.then(subcommands(
                 Commands.argument("core", StringArgumentType.word()).suggests(CORE_NAMES),
-                CoreCommand::byName));
+                CoreCommand::byName, buildContext));
 
         root.then(Commands.literal("at").then(subcommands(
                 Commands.argument("pos", BlockPosArgument.blockPos()),
-                CoreCommand::byPosition)));
+                CoreCommand::byPosition, buildContext)));
 
         dispatcher.register(root);
     }
@@ -112,7 +118,7 @@ public final class CoreCommand {
      * поэтому строится функцией, а не дублируется.
      */
     private static <T extends ArgumentBuilder<CommandSourceStack, T>> T subcommands(
-            T parent, CoreResolver resolver) {
+            T parent, CoreResolver resolver, CommandBuildContext buildContext) {
         return parent
                 .then(Commands.literal("show")
                         .executes(context -> show(context, resolver)))
@@ -167,8 +173,24 @@ public final class CoreCommand {
                         .then(Commands.literal("clear")
                                 .executes(context -> clearPostfix(context, resolver))))
                 .then(Commands.literal("seal")
-                        .then(Commands.argument("value", BoolArgumentType.bool())
-                                .executes(context -> setSealEnabled(context, resolver))))
+                        .then(Commands.literal("enabled")
+                                .then(Commands.argument("value", BoolArgumentType.bool())
+                                        .executes(context -> setSealEnabled(context, resolver))))
+                        .then(Commands.literal("price")
+                                .then(Commands.argument("price", IntegerArgumentType.integer(0))
+                                        .executes(context -> setSealPrice(context, resolver)))))
+                .then(Commands.literal("spawn")
+                        .then(Commands.literal("enabled")
+                                .then(Commands.argument("value", BoolArgumentType.bool())
+                                        .executes(context -> setSpawnEnabled(context, resolver))))
+                        .then(Commands.literal("interval")
+                                .then(Commands.argument("seconds", IntegerArgumentType.integer(1))
+                                        .executes(context -> setSpawnInterval(context, resolver))))
+                        .then(Commands.literal("item")
+                                .then(Commands.argument("item", ItemArgument.item(buildContext))
+                                        .executes(context -> setSpawnItem(context, resolver))))
+                        .then(Commands.literal("seal")
+                                .executes(context -> clearSpawnItem(context, resolver))))
                 .then(Commands.literal("explosion")
                         .then(Commands.literal("enabled")
                                 .then(Commands.argument("value", BoolArgumentType.bool())
@@ -247,7 +269,11 @@ public final class CoreCommand {
         config.sealPostfix().ifPresent(postfix -> source.sendSuccess(
                 () -> Component.translatable("gimpanum.core.postfix", postfix), false));
         source.sendSuccess(() -> Component.translatable("gimpanum.core.seal",
-                config.sealEnabled()), false);
+                config.sealEnabled(), config.sealPrice()), false);
+        source.sendSuccess(() -> Component.translatable("gimpanum.core.spawn",
+                config.spawnEnabled(), config.spawnIntervalSeconds(),
+                config.spawnItem().map(ResourceLocation::toString)
+                        .orElse(Component.translatable("gimpanum.core.spawn_seal").getString())), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.core.explosion",
                 config.explosionEnabled(), config.explosionPower(), config.explosionFire()), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.core.invulnerable",
@@ -462,6 +488,57 @@ public final class CoreCommand {
         core.setConfig(core.config().withSealEnabled(value));
         context.getSource().sendSuccess(
                 () -> Component.translatable("gimpanum.command.seal_enabled_set", value), true);
+        return 1;
+    }
+
+    private static int setSealPrice(CommandContext<CommandSourceStack> context, CoreResolver resolver)
+            throws CommandSyntaxException {
+        CoreBlockEntity core = resolver.resolve(context);
+        int price = IntegerArgumentType.getInteger(context, "price");
+        core.setConfig(core.config().withSealPrice(price));
+        context.getSource().sendSuccess(
+                () -> Component.translatable("gimpanum.command.price_set", price), true);
+        return price;
+    }
+
+    private static int setSpawnEnabled(CommandContext<CommandSourceStack> context, CoreResolver resolver)
+            throws CommandSyntaxException {
+        CoreBlockEntity core = resolver.resolve(context);
+        boolean value = BoolArgumentType.getBool(context, "value");
+        core.setConfig(core.config().withSpawnEnabled(value));
+        context.getSource().sendSuccess(
+                () -> Component.translatable("gimpanum.command.spawn_enabled_set", value), true);
+        return 1;
+    }
+
+    private static int setSpawnInterval(CommandContext<CommandSourceStack> context, CoreResolver resolver)
+            throws CommandSyntaxException {
+        CoreBlockEntity core = resolver.resolve(context);
+        int seconds = IntegerArgumentType.getInteger(context, "seconds");
+        core.setConfig(core.config().withSpawnInterval(seconds));
+        context.getSource().sendSuccess(
+                () -> Component.translatable("gimpanum.command.spawn_interval_set", seconds), true);
+        return seconds;
+    }
+
+    private static int setSpawnItem(CommandContext<CommandSourceStack> context, CoreResolver resolver)
+            throws CommandSyntaxException {
+        CoreBlockEntity core = resolver.resolve(context);
+        Item item = ItemArgument.getItem(context, "item").getItem();
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+
+        core.setConfig(core.config().withSpawnItem(Optional.of(id)));
+        context.getSource().sendSuccess(
+                () -> Component.translatable("gimpanum.command.spawn_item_set", item.getDescription()), true);
+        return 1;
+    }
+
+    private static int clearSpawnItem(CommandContext<CommandSourceStack> context, CoreResolver resolver)
+            throws CommandSyntaxException {
+        CoreBlockEntity core = resolver.resolve(context);
+        core.setConfig(core.config().withSpawnItem(Optional.empty()));
+        context.getSource().sendSuccess(
+                () -> Component.translatable("gimpanum.command.spawn_item_seal"), true);
         return 1;
     }
 

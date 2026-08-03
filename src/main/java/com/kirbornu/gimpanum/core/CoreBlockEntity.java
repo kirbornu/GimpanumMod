@@ -3,18 +3,26 @@ package com.kirbornu.gimpanum.core;
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.destruction.DestructionArbiter;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
+import com.kirbornu.gimpanum.sublevel.SubLevelSupport;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /** Хранилище настройки Ядра и его постоянного идентификатора. */
@@ -25,6 +33,13 @@ public class CoreBlockEntity extends BlockEntity {
 
     private UUID coreId;
     private CoreConfig config = CoreConfig.EMPTY;
+
+    /**
+     * Отсчёт до следующей выдачи предмета. Намеренно не сохраняется: после
+     * перезагрузки отсчёт начинается заново, и это честнее, чем выдать всё
+     * накопленное разом.
+     */
+    private int spawnTimer;
 
     public CoreBlockEntity(BlockPos pos, BlockState state) {
         super(GimpanumContent.CORE_BLOCK_ENTITY.get(), pos, state);
@@ -136,6 +151,43 @@ public class CoreBlockEntity extends BlockEntity {
     protected void collectImplicitComponents(DataComponentMap.Builder builder) {
         super.collectImplicitComponents(builder);
         builder.set(GimpanumContent.CORE_CONFIG.get(), config.asTemplate());
+    }
+
+    /**
+     * Периодическая выдача предмета.
+     *
+     * <p>Предохранитель здесь ни при чём: он отвечает за последствия гибели, а
+     * выдача — отдельный тег со своим выключателем.
+     */
+    public void serverTick() {
+        if (!config.spawnEnabled()) {
+            spawnTimer = 0;
+            return;
+        }
+        if (++spawnTimer < config.spawnIntervalTicks()) {
+            return;
+        }
+        spawnTimer = 0;
+
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        // Мировая позиция, а не BlockPos: на конструкции они разные.
+        Vec3 worldPos = SubLevelSupport.worldCenter(level, worldPosition);
+
+        Optional<ResourceLocation> customItem = config.spawnItem();
+        if (customItem.isEmpty()) {
+            SealDrops.spawnSeal(serverLevel, worldPos, config.sealContents());
+            return;
+        }
+
+        Item item = BuiltInRegistries.ITEM.getOptional(customItem.get()).orElse(null);
+        if (item == null) {
+            Gimpanum.LOGGER.warn("Ядро '{}': предмет {} не найден, выдача пропущена",
+                    config.name(), customItem.get());
+            return;
+        }
+        SealDrops.spawn(serverLevel, worldPos, new ItemStack(item));
     }
 
     /** Данные для клиента при загрузке чанка. */
