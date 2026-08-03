@@ -126,6 +126,9 @@ public final class CoreCommand {
                 .then(Commands.literal("invulnerable")
                         .then(Commands.argument("value", BoolArgumentType.bool())
                                 .executes(context -> setInvulnerable(context, resolver))))
+                .then(Commands.literal("autofragile")
+                        .then(Commands.argument("value", BoolArgumentType.bool())
+                                .executes(context -> setAutoFragile(context, resolver))))
                 .then(Commands.literal("player")
                         .then(Commands.literal("add")
                                 .then(Commands.argument("name", StringArgumentType.word())
@@ -249,6 +252,8 @@ public final class CoreCommand {
                 config.explosionEnabled(), config.explosionPower(), config.explosionFire()), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.core.invulnerable",
                 config.invulnerable()), false);
+        source.sendSuccess(() -> Component.translatable("gimpanum.core.autofragile",
+                config.autoDisableInvulnerable()), false);
         return 1;
     }
 
@@ -283,6 +288,16 @@ public final class CoreCommand {
         core.setConfig(core.config().withInvulnerable(value));
         context.getSource().sendSuccess(
                 () -> Component.translatable("gimpanum.command.invulnerable_set", value), true);
+        return 1;
+    }
+
+    private static int setAutoFragile(CommandContext<CommandSourceStack> context, CoreResolver resolver)
+            throws CommandSyntaxException {
+        CoreBlockEntity core = resolver.resolve(context);
+        boolean value = BoolArgumentType.getBool(context, "value");
+        core.setConfig(core.config().withAutoDisableInvulnerable(value));
+        context.getSource().sendSuccess(
+                () -> Component.translatable("gimpanum.command.autofragile_set", value), true);
         return 1;
     }
 

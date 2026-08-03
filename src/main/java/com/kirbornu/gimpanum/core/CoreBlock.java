@@ -173,6 +173,8 @@ public class CoreBlock extends Block implements EntityBlock {
                 .withStyle(ChatFormatting.GRAY));
         player.sendSystemMessage(Component.translatable("gimpanum.core.invulnerable",
                 config.invulnerable()).withStyle(ChatFormatting.GRAY));
+        player.sendSystemMessage(Component.translatable("gimpanum.core.autofragile",
+                config.autoDisableInvulnerable()).withStyle(ChatFormatting.GRAY));
         player.sendSystemMessage(Component.translatable("gimpanum.core.on_sublevel",
                 SubLevelSupport.isOnSubLevel(level, pos)).withStyle(ChatFormatting.DARK_GRAY));
     }

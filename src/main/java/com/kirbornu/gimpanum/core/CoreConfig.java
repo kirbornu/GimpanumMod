@@ -32,6 +32,9 @@ import java.util.Optional;
  * @param invulnerable     неразрушимо и недвижимо, как бедрок; включено по
  *                         умолчанию, чтобы свежепоставленное Ядро нельзя было
  *                         снести случайно во время стройки
+ * @param autoDisableInvulnerable снимать ли неразрушимость вместе с
+ *                         предохранителем; включено по умолчанию, чтобы боевое
+ *                         Ядро не осталось неуязвимым по забывчивости
  * @param sealEnabled      ронять ли Печать
  * @param explosionEnabled взрывается ли Ядро при гибели; выключено по
  *                         умолчанию — взрыв включается осознанно
@@ -46,6 +49,7 @@ public record CoreConfig(
         Optional<String> sealPostfix,
         boolean armed,
         boolean invulnerable,
+        boolean autoDisableInvulnerable,
         boolean sealEnabled,
         boolean explosionEnabled,
         float explosionPower,
@@ -56,7 +60,7 @@ public record CoreConfig(
 
     public static final CoreConfig EMPTY = new CoreConfig(
             "", List.of(), List.of(), List.of(), Optional.empty(),
-            false, true, true, false, DEFAULT_POWER, true);
+            false, true, true, true, false, DEFAULT_POWER, true);
 
     public static final Codec<CoreConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.optionalFieldOf("name", "").forGetter(CoreConfig::name),
@@ -66,6 +70,8 @@ public record CoreConfig(
             Codec.STRING.optionalFieldOf("seal_postfix").forGetter(CoreConfig::sealPostfix),
             Codec.BOOL.optionalFieldOf("armed", false).forGetter(CoreConfig::armed),
             Codec.BOOL.optionalFieldOf("invulnerable", true).forGetter(CoreConfig::invulnerable),
+            Codec.BOOL.optionalFieldOf("auto_disable_invulnerable", true)
+                    .forGetter(CoreConfig::autoDisableInvulnerable),
             Codec.BOOL.optionalFieldOf("seal_enabled", true).forGetter(CoreConfig::sealEnabled),
             Codec.BOOL.optionalFieldOf("explosion_enabled", false).forGetter(CoreConfig::explosionEnabled),
             Codec.FLOAT.optionalFieldOf("explosion_power", DEFAULT_POWER).forGetter(CoreConfig::explosionPower),
@@ -83,53 +89,76 @@ public record CoreConfig(
     }
 
     public CoreConfig withName(String newName) {
-        return new CoreConfig(newName, boundPlayers, boundTeams, commands, sealPostfix,
-                armed, invulnerable, sealEnabled, explosionEnabled, explosionPower, explosionFire);
+        return new CoreConfig(newName, boundPlayers, boundTeams, commands, sealPostfix, armed,
+                invulnerable, autoDisableInvulnerable, sealEnabled, explosionEnabled,
+                explosionPower, explosionFire);
     }
 
     public CoreConfig withBoundPlayers(List<String> names) {
-        return new CoreConfig(name, names, boundTeams, commands, sealPostfix,
-                armed, invulnerable, sealEnabled, explosionEnabled, explosionPower, explosionFire);
+        return new CoreConfig(name, names, boundTeams, commands, sealPostfix, armed,
+                invulnerable, autoDisableInvulnerable, sealEnabled, explosionEnabled,
+                explosionPower, explosionFire);
     }
 
     public CoreConfig withBoundTeams(List<BoundTeam> teams) {
-        return new CoreConfig(name, boundPlayers, teams, commands, sealPostfix,
-                armed, invulnerable, sealEnabled, explosionEnabled, explosionPower, explosionFire);
+        return new CoreConfig(name, boundPlayers, teams, commands, sealPostfix, armed,
+                invulnerable, autoDisableInvulnerable, sealEnabled, explosionEnabled,
+                explosionPower, explosionFire);
     }
 
     public CoreConfig withCommands(List<String> newCommands) {
-        return new CoreConfig(name, boundPlayers, boundTeams, newCommands, sealPostfix,
-                armed, invulnerable, sealEnabled, explosionEnabled, explosionPower, explosionFire);
+        return new CoreConfig(name, boundPlayers, boundTeams, newCommands, sealPostfix, armed,
+                invulnerable, autoDisableInvulnerable, sealEnabled, explosionEnabled,
+                explosionPower, explosionFire);
     }
 
     public CoreConfig withSealPostfix(Optional<String> postfix) {
-        return new CoreConfig(name, boundPlayers, boundTeams, commands, postfix,
-                armed, invulnerable, sealEnabled, explosionEnabled, explosionPower, explosionFire);
+        return new CoreConfig(name, boundPlayers, boundTeams, commands, postfix, armed,
+                invulnerable, autoDisableInvulnerable, sealEnabled, explosionEnabled,
+                explosionPower, explosionFire);
     }
 
+    /**
+     * Снимает или ставит предохранитель.
+     *
+     * <p>Правило автоснятия живёт здесь, а не в команде, намеренно: снятие
+     * предохранителя любым путём обязано срабатывать одинаково.
+     */
     public CoreConfig withArmed(boolean value) {
-        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix,
-                value, invulnerable, sealEnabled, explosionEnabled, explosionPower, explosionFire);
+        boolean stillInvulnerable = value && autoDisableInvulnerable ? false : invulnerable;
+        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, value,
+                stillInvulnerable, autoDisableInvulnerable, sealEnabled, explosionEnabled,
+                explosionPower, explosionFire);
     }
 
     public CoreConfig withInvulnerable(boolean value) {
-        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix,
-                armed, value, sealEnabled, explosionEnabled, explosionPower, explosionFire);
+        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
+                value, autoDisableInvulnerable, sealEnabled, explosionEnabled,
+                explosionPower, explosionFire);
+    }
+
+    public CoreConfig withAutoDisableInvulnerable(boolean value) {
+        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
+                invulnerable, value, sealEnabled, explosionEnabled,
+                explosionPower, explosionFire);
     }
 
     public CoreConfig withSealEnabled(boolean value) {
-        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix,
-                armed, invulnerable, value, explosionEnabled, explosionPower, explosionFire);
+        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
+                invulnerable, autoDisableInvulnerable, value, explosionEnabled,
+                explosionPower, explosionFire);
     }
 
     public CoreConfig withExplosionEnabled(boolean value) {
-        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix,
-                armed, invulnerable, sealEnabled, value, explosionPower, explosionFire);
+        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
+                invulnerable, autoDisableInvulnerable, sealEnabled, value,
+                explosionPower, explosionFire);
     }
 
     public CoreConfig withExplosion(float power, boolean fire) {
-        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix,
-                armed, invulnerable, sealEnabled, explosionEnabled, power, fire);
+        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
+                invulnerable, autoDisableInvulnerable, sealEnabled, explosionEnabled,
+                power, fire);
     }
 
     /**

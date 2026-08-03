@@ -1,23 +1,18 @@
 {
     "itemGroup.gimpanum.main": "Gimpanum",
-
     "block.gimpanum.core": "Ядро фоносомики",
     "block.gimpanum.probe": "Зонд конструкций",
     "item.gimpanum.seal": "Хрустальная печать",
-
     "gimpanum.yes": "да",
     "gimpanum.no": "нет",
-
     "item.gimpanum.core.blank": "Без настройки",
     "item.gimpanum.core.configured": "Содержит настройку Ядра",
     "item.gimpanum.core.bound": "Привязок: игроков %s, экипажей %s",
     "item.gimpanum.core.commands": "Команд: %s",
-    "item.gimpanum.core.tags": "Боевое %s · неразрушимо %s · печать %s · взрыв %s",
-
+    "item.gimpanum.core.tags": "Боевое %s · неразрушимо %s · автоснятие %s · печать %s · взрыв %s",
     "item.gimpanum.seal.bound": "Привязанные игроки:",
     "item.gimpanum.seal.team": "Экипаж «%s»:",
     "item.gimpanum.seal.empty": "Ни к кому не привязана",
-
     "gimpanum.core.header": "=== Ядро «%s» ===",
     "gimpanum.core.armed": "Предохранитель СНЯТ — Ядро боевое",
     "gimpanum.core.safe": "На предохранителе — последствий не будет",
@@ -28,7 +23,6 @@
     "gimpanum.core.explosion": "Взрыв: включён %s, мощность %s, огонь %s",
     "gimpanum.core.invulnerable": "Неразрушимость: %s",
     "gimpanum.core.on_sublevel": "На физической конструкции: %s",
-
     "gimpanum.command.not_a_core": "В указанной позиции нет Ядра",
     "gimpanum.command.unknown_core": "Ядро с таким именем не найдено среди загруженных",
     "gimpanum.command.no_cores": "Загруженных Ядер нет",
@@ -55,5 +49,7 @@
     "gimpanum.command.postfix_cleared": "Приставка Печати убрана",
     "gimpanum.command.seal_enabled_set": "Печать: %s",
     "gimpanum.command.explosion_enabled_set": "Взрыв включён: %s",
-    "gimpanum.command.explosion_set": "Взрыв: мощность %s, огонь %s"
+    "gimpanum.command.explosion_set": "Взрыв: мощность %s, огонь %s",
+    "gimpanum.core.autofragile": "Автоснятие неразрушимости: %s",
+    "gimpanum.command.autofragile_set": "Автоснятие неразрушимости: %s"
 }
