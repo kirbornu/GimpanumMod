@@ -48,8 +48,16 @@
     "item.gimpanum.core.bound": "Bound: %s player(s), %s crew(s)",
     "item.gimpanum.core.commands": "Commands: %s",
     "item.gimpanum.core.tags": "Armed %s · invulnerable %s · auto-drop %s · seal %s · explosion %s",
-    "gimpanum.core.seal": "Seal: %s",
+    "gimpanum.core.seal": "Seal: %s, price %s",
     "gimpanum.command.seal_enabled_set": "Seal: %s",
     "gimpanum.core.autofragile": "Drop invulnerability on arming: %s",
-    "gimpanum.command.autofragile_set": "Drop invulnerability on arming: %s"
+    "gimpanum.command.autofragile_set": "Drop invulnerability on arming: %s",
+    "item.gimpanum.seal.price": "Price: %s",
+    "gimpanum.core.spawn": "Spawning: %s, every %ss, item %s",
+    "gimpanum.core.spawn_seal": "Seal",
+    "gimpanum.command.price_set": "Seal price: %s",
+    "gimpanum.command.spawn_enabled_set": "Periodic spawning: %s",
+    "gimpanum.command.spawn_interval_set": "Spawn interval: %ss",
+    "gimpanum.command.spawn_item_set": "Spawned item: %s",
+    "gimpanum.command.spawn_item_seal": "Will spawn a Seal"
 }

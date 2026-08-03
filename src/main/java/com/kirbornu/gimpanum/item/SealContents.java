@@ -19,19 +19,25 @@ import java.util.Set;
  * @param players ники, привязанные поимённо
  * @param teams   привязанные команды со снимками составов
  * @param postfix приписка к названию Печати — обычно название экипажа
+ * @param price   цена Печати
  */
 public record SealContents(
         List<String> players,
         List<BoundTeam> teams,
-        Optional<String> postfix
+        Optional<String> postfix,
+        int price
 ) {
 
-    public static final SealContents EMPTY = new SealContents(List.of(), List.of(), Optional.empty());
+    public static final int DEFAULT_PRICE = 1;
+
+    public static final SealContents EMPTY =
+            new SealContents(List.of(), List.of(), Optional.empty(), DEFAULT_PRICE);
 
     public static final Codec<SealContents> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.listOf().optionalFieldOf("players", List.of()).forGetter(SealContents::players),
             BoundTeam.CODEC.listOf().optionalFieldOf("teams", List.of()).forGetter(SealContents::teams),
-            Codec.STRING.optionalFieldOf("postfix").forGetter(SealContents::postfix)
+            Codec.STRING.optionalFieldOf("postfix").forGetter(SealContents::postfix),
+            Codec.INT.optionalFieldOf("price", DEFAULT_PRICE).forGetter(SealContents::price)
     ).apply(instance, SealContents::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SealContents> STREAM_CODEC =
@@ -39,6 +45,7 @@ public record SealContents(
                     ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), SealContents::players,
                     BoundTeam.STREAM_CODEC.apply(ByteBufCodecs.list()), SealContents::teams,
                     ByteBufCodecs.optional(ByteBufCodecs.STRING_UTF8), SealContents::postfix,
+                    ByteBufCodecs.VAR_INT, SealContents::price,
                     SealContents::new
             );
 

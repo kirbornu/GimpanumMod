@@ -13,6 +13,6 @@ public final class GimpanumCommands {
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
-        CoreCommand.register(event.getDispatcher());
+        CoreCommand.register(event.getDispatcher(), event.getBuildContext());
     }
 }

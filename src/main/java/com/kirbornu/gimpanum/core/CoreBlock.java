@@ -18,6 +18,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -88,6 +90,20 @@ public class CoreBlock extends Block implements EntityBlock {
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new CoreBlockEntity(pos, state);
+    }
+
+    /** Тикает только на сервере и только ради периодической выдачи предметов. */
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
+                                                                  BlockEntityType<T> type) {
+        if (level.isClientSide || type != GimpanumContent.CORE_BLOCK_ENTITY.get()) {
+            return null;
+        }
+        return (tickLevel, pos, tickState, blockEntity) -> {
+            if (blockEntity instanceof CoreBlockEntity core) {
+                core.serverTick();
+            }
+        };
     }
 
     // --- Прочность -----------------------------------------------------------
@@ -166,8 +182,15 @@ public class CoreBlock extends Block implements EntityBlock {
 
         config.sealPostfix().ifPresent(postfix -> player.sendSystemMessage(
                 Component.translatable("gimpanum.core.postfix", postfix).withStyle(ChatFormatting.GRAY)));
-        player.sendSystemMessage(Component.translatable("gimpanum.core.seal", config.sealEnabled())
-                .withStyle(ChatFormatting.GRAY));
+        player.sendSystemMessage(Component.translatable("gimpanum.core.seal",
+                config.sealEnabled(), config.sealPrice()).withStyle(ChatFormatting.GRAY));
+        if (config.spawnEnabled()) {
+            player.sendSystemMessage(Component.translatable("gimpanum.core.spawn",
+                            config.spawnEnabled(), config.spawnIntervalSeconds(),
+                            config.spawnItem().map(Object::toString)
+                                    .orElse(Component.translatable("gimpanum.core.spawn_seal").getString()))
+                    .withStyle(ChatFormatting.GRAY));
+        }
         player.sendSystemMessage(Component.translatable("gimpanum.core.explosion",
                 config.explosionEnabled(), config.explosionPower(), config.explosionFire())
                 .withStyle(ChatFormatting.GRAY));
