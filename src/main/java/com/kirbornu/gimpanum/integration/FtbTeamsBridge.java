@@ -32,30 +32,79 @@ final class FtbTeamsBridge {
     }
 
     /**
-     * Снимает состав команды на текущий момент.
+     * Снимает состав экипажа на текущий момент.
      *
      * <p>Именно снимок, а не ссылка на команду: расклад боя должен быть
      * предсказуем и не меняться от того, кто вступил в команду после настройки
      * Ядра.
      */
-    static Optional<BoundTeam> snapshot(MinecraftServer server, String teamName) {
+    static Optional<BoundTeam> snapshot(MinecraftServer server, String query) {
         if (!FTBTeamsAPI.api().isManagerLoaded()) {
             return Optional.empty();
         }
-        TeamManager manager = FTBTeamsAPI.api().getManager();
-        return manager.getTeamByName(teamName)
+        return findCrew(FTBTeamsAPI.api().getManager(), query)
                 .map(team -> new BoundTeam(displayName(team), members(server, team)));
     }
 
-    static List<String> teamNames() {
+    /** Отображаемые имена экипажей для подсказок. */
+    static List<String> crewNames() {
         if (!FTBTeamsAPI.api().isManagerLoaded()) {
             return List.of();
         }
         List<String> names = new ArrayList<>();
-        for (Team team : FTBTeamsAPI.api().getManager().getTeams()) {
-            names.add(team.getShortName());
+        for (Team team : crews(FTBTeamsAPI.api().getManager())) {
+            names.add(displayName(team));
         }
         return names;
+    }
+
+    /**
+     * Экипажами считаем только party- и server-команды.
+     *
+     * <p>У каждого игрока в FTB Teams есть собственная личная «команда» из него
+     * одного. В подсказках они выглядели как дубликаты ников и только мешали, а
+     * привязать одного игрока и без того можно через {@code player add}.
+     */
+    private static List<Team> crews(TeamManager manager) {
+        List<Team> crews = new ArrayList<>();
+        for (Team team : manager.getTeams()) {
+            if (team.isPartyTeam() || team.isServerTeam()) {
+                crews.add(team);
+            }
+        }
+        return crews;
+    }
+
+    /**
+     * Ищет экипаж снисходительно.
+     *
+     * <p>{@code getTeamByName} у FTB Teams — точный поиск по короткому имени
+     * вида {@code test#4add1687}, которое вручную не набрать. Поэтому сначала
+     * пробуем отображаемое имя, а короткое остаётся запасным вариантом.
+     */
+    private static Optional<Team> findCrew(TeamManager manager, String query) {
+        String needle = query.trim();
+        List<Team> crews = crews(manager);
+
+        for (Team team : crews) {
+            if (displayName(team).equalsIgnoreCase(needle)) {
+                return Optional.of(team);
+            }
+        }
+        for (Team team : crews) {
+            if (team.getShortName().equalsIgnoreCase(needle)) {
+                return Optional.of(team);
+            }
+        }
+        // Короткое имя без хеша: «test» найдёт «test#4add1687».
+        for (Team team : crews) {
+            String shortName = team.getShortName();
+            int hash = shortName.indexOf('#');
+            if (hash > 0 && shortName.substring(0, hash).equalsIgnoreCase(needle)) {
+                return Optional.of(team);
+            }
+        }
+        return Optional.empty();
     }
 
     private static String displayName(Team team) {

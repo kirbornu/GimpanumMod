@@ -54,7 +54,7 @@ public final class CoreCommand {
     private static final SuggestionProvider<CommandSourceStack> CORE_NAMES =
             (context, builder) -> SharedSuggestionProvider.suggest(CoreIndex.names(), builder);
     private static final SuggestionProvider<CommandSourceStack> TEAM_NAMES =
-            (context, builder) -> SharedSuggestionProvider.suggest(FtbTeamsSupport.teamNames(), builder);
+            (context, builder) -> SharedSuggestionProvider.suggest(FtbTeamsSupport.crewNames(), builder);
 
     /** Как добраться до Ядра: по имени или по координатам. */
     @FunctionalInterface
@@ -111,12 +111,14 @@ public final class CoreCommand {
                                         .executes(context -> removePlayer(context, resolver))))
                         .then(Commands.literal("clear")
                                 .executes(context -> clearPlayers(context, resolver))))
+                // Имя экипажа берём жадно: короткие имена FTB содержат '#', а
+                // отображаемые — пробелы, и обычный word() их не принимает.
                 .then(Commands.literal("team")
                         .then(Commands.literal("add")
-                                .then(Commands.argument("team", StringArgumentType.word()).suggests(TEAM_NAMES)
+                                .then(Commands.argument("team", StringArgumentType.greedyString()).suggests(TEAM_NAMES)
                                         .executes(context -> addTeam(context, resolver))))
                         .then(Commands.literal("remove")
-                                .then(Commands.argument("team", StringArgumentType.word())
+                                .then(Commands.argument("team", StringArgumentType.greedyString())
                                         .executes(context -> removeTeam(context, resolver))))
                         .then(Commands.literal("clear")
                                 .executes(context -> clearTeams(context, resolver))))
@@ -325,7 +327,7 @@ public final class CoreCommand {
     private static int removeTeam(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
         CoreBlockEntity core = resolver.resolve(context);
-        String teamName = StringArgumentType.getString(context, "team");
+        String teamName = StringArgumentType.getString(context, "team").trim();
 
         List<BoundTeam> teams = new ArrayList<>(core.config().boundTeams());
         if (!teams.removeIf(existing -> existing.teamName().equalsIgnoreCase(teamName))) {

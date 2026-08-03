@@ -24,7 +24,7 @@
     "gimpanum.command.no_cores": "No Cores are loaded",
     "gimpanum.command.no_such_index": "No command with that number",
     "gimpanum.command.name_taken": "That name is already used by another Core",
-    "gimpanum.command.no_such_team": "Team not found (or FTB Teams unavailable)",
+    "gimpanum.command.no_such_team": "Crew not found. Personal player teams do not count as crews — use player add for a single player",
     "gimpanum.command.renamed": "Core renamed to \"%s\"",
     "gimpanum.command.armed": "Core \"%s\": armed",
     "gimpanum.command.disarmed": "Core \"%s\": safety on",
