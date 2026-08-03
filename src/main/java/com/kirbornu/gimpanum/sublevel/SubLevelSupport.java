@@ -73,8 +73,19 @@ public final class SubLevelSupport {
      * указывает в служебный регион карты.
      */
     public static Vec3 worldCenter(Level level, BlockPos pos) {
-        return describe(level, pos)
-                .map(SubLevelInfo::worldCenter)
-                .orElseGet(() -> Vec3.atCenterOf(pos));
+        if (!isSableLoaded() || bridgeFailed) {
+            return Vec3.atCenterOf(pos);
+        }
+        try {
+            // Облегчённый путь: это вызывается по нескольку раз в секунду на
+            // каждое Ядро, и собирать полное описание ради одной точки незачем.
+            Vec3 worldCenter = SableBridge.worldCenterOrNull(level, pos);
+            return worldCenter != null ? worldCenter : Vec3.atCenterOf(pos);
+        } catch (Throwable t) {
+            bridgeFailed = true;
+            Gimpanum.LOGGER.error("Мост к Sable отключён после ошибки; "
+                    + "поддержка конструкций выключена до перезапуска", t);
+            return Vec3.atCenterOf(pos);
+        }
     }
 }

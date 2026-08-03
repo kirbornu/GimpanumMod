@@ -24,23 +24,40 @@ final class SableBridge {
     private SableBridge() {
     }
 
-    static Optional<SubLevelInfo> describe(Level level, BlockPos pos) {
+    /**
+     * Только мировая позиция, без сбора остальных сведений.
+     *
+     * <p>Отдельно от {@link #describe} потому, что это горячий путь: позиция
+     * нужна каждому Ядру по нескольку раз в секунду ради частиц и выдачи
+     * предметов, а полное описание тянет за собой лишние объекты.
+     *
+     * @return {@code null}, если блок стоит в обычном мире
+     */
+    static Vec3 worldCenterOrNull(Level level, BlockPos pos) {
+        SubLevel subLevel = subLevelAt(level, pos);
+        return subLevel == null ? null : subLevel.logicalPose().transformPosition(Vec3.atCenterOf(pos));
+    }
+
+    private static SubLevel subLevelAt(Level level, BlockPos pos) {
         SubLevelContainer container = SubLevelContainer.getContainer(level);
         if (container == null || !container.inBounds(pos)) {
+            return null;
+        }
+        LevelPlot plot = container.getPlot(new ChunkPos(pos));
+        if (plot == null) {
+            return null;
+        }
+        SubLevel subLevel = plot.getSubLevel();
+        return subLevel == null || subLevel.isRemoved() ? null : subLevel;
+    }
+
+    static Optional<SubLevelInfo> describe(Level level, BlockPos pos) {
+        SubLevel subLevel = subLevelAt(level, pos);
+        if (subLevel == null) {
             // Блок в обычном мире, а не в служебном регионе конструкций.
             return Optional.empty();
         }
-
-        ChunkPos chunkPos = new ChunkPos(pos);
-        LevelPlot plot = container.getPlot(chunkPos);
-        if (plot == null) {
-            return Optional.empty();
-        }
-
-        SubLevel subLevel = plot.getSubLevel();
-        if (subLevel == null || subLevel.isRemoved()) {
-            return Optional.empty();
-        }
+        LevelPlot plot = subLevel.getPlot();
 
         Pose3dc pose = subLevel.logicalPose();
         Vec3 rawCenter = Vec3.atCenterOf(pos);

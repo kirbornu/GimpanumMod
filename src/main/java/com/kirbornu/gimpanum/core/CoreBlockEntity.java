@@ -7,6 +7,7 @@ import com.kirbornu.gimpanum.sublevel.SubLevelSupport;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -14,6 +15,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -31,6 +33,9 @@ public class CoreBlockEntity extends BlockEntity {
     private static final String KEY_ID = "GimpanumCoreId";
     private static final String KEY_CONFIG = "GimpanumCoreConfig";
 
+    /** Дважды в секунду — заметно глазу и не грузит сеть. */
+    private static final int PARTICLE_INTERVAL_TICKS = 10;
+
     private UUID coreId;
     private CoreConfig config = CoreConfig.EMPTY;
 
@@ -40,6 +45,18 @@ public class CoreBlockEntity extends BlockEntity {
      * накопленное разом.
      */
     private int spawnTimer;
+
+    /**
+     * Состояние блока ещё не приведено в соответствие с настройкой.
+     *
+     * <p>Делать это в {@code onLoad} нельзя: {@code setBlock} во время загрузки
+     * чанка — известный источник проблем, а при массовой загрузке кораблей это
+     * происходило бы десятками. Откладываем до первого тика.
+     */
+    private boolean stateSyncPending;
+
+    /** Отсчёт до следующей порции частиц у боевого Ядра. */
+    private int particleTimer;
 
     public CoreBlockEntity(BlockPos pos, BlockState state) {
         super(GimpanumContent.CORE_BLOCK_ENTITY.get(), pos, state);
@@ -69,8 +86,9 @@ public class CoreBlockEntity extends BlockEntity {
         if (level == null || level.isClientSide) {
             return;
         }
-        if (!previous.name().equals(config.name())) {
-            CoreIndex.put(config.name(), coreId(), level.dimension(), worldPosition);
+        MinecraftServer server = level.getServer();
+        if (server != null && !previous.name().equals(config.name())) {
+            CoreIndex.put(server, config.name(), coreId(), level.dimension(), worldPosition);
         }
         if (previous.invulnerable() != config.invulnerable()) {
             syncInvulnerableState();
@@ -121,12 +139,15 @@ public class CoreBlockEntity extends BlockEntity {
         // идентификатором: значит блок переехал, а не погиб.
         DestructionArbiter.onAppeared(coreId());
 
-        if (config.name().isEmpty()) {
-            config = config.withName(CoreIndex.nextFreeName());
-            setChanged();
+        MinecraftServer server = level.getServer();
+        if (server != null) {
+            if (config.name().isEmpty()) {
+                config = config.withName(CoreIndex.nextFreeName(server));
+                setChanged();
+            }
+            CoreIndex.put(server, config.name(), coreId(), level.dimension(), worldPosition);
         }
-        CoreIndex.put(config.name(), coreId(), level.dimension(), worldPosition);
-        syncInvulnerableState();
+        stateSyncPending = true;
     }
 
     /**
@@ -160,6 +181,12 @@ public class CoreBlockEntity extends BlockEntity {
      * выдача — отдельный тег со своим выключателем.
      */
     public void serverTick() {
+        if (stateSyncPending) {
+            stateSyncPending = false;
+            syncInvulnerableState();
+        }
+        emitParticles();
+
         if (!config.spawnEnabled()) {
             spawnTimer = 0;
             return;
@@ -188,6 +215,32 @@ public class CoreBlockEntity extends BlockEntity {
             return;
         }
         SealDrops.spawn(serverLevel, worldPos, new ItemStack(item));
+    }
+
+    /**
+     * Частицы у боевого Ядра: видно издалека, что цель под снятым
+     * предохранителем.
+     *
+     * <p>Частицы рассылает сервер, а не {@code animateTick} на клиенте. Клиент
+     * дёргает {@code animateTick} для блоков рядом с игроком, а Ядро на
+     * конструкции лежит в служебном регионе за миллионы блоков — туда бы не
+     * дошло. Мировая позиция считается так же, как для взрыва и дропа.
+     */
+    private void emitParticles() {
+        if (!config.armed() || !(level instanceof ServerLevel serverLevel)) {
+            particleTimer = 0;
+            return;
+        }
+        if (++particleTimer < PARTICLE_INTERVAL_TICKS) {
+            return;
+        }
+        particleTimer = 0;
+
+        Vec3 worldPos = SubLevelSupport.worldCenter(level, worldPosition);
+        // sendParticles сам отсеивает игроков дальше 32 блоков.
+        serverLevel.sendParticles(ParticleTypes.END_ROD,
+                worldPos.x, worldPos.y, worldPos.z,
+                2, 0.3, 0.3, 0.3, 0.004);
     }
 
     /** Данные для клиента при загрузке чанка. */

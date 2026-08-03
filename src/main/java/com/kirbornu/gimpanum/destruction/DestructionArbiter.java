@@ -125,7 +125,11 @@ public final class DestructionArbiter {
             }
         }
 
-        recentAppearances.values().removeIf(tick -> currentTick - tick >= WINDOW_TICKS);
+        // Проверка на пустоту не лишняя: тик идёт двадцать раз в секунду, а обе
+        // памяти почти всегда пусты, и removeIf каждый раз заводил бы итератор.
+        if (!recentAppearances.isEmpty()) {
+            recentAppearances.values().removeIf(tick -> currentTick - tick >= WINDOW_TICKS);
+        }
     }
 
     /** Сброс при остановке сервера: незавершённые ожидания не переносим. */
