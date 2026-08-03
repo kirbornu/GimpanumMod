@@ -5,6 +5,7 @@ import com.kirbornu.gimpanum.destruction.DestructionArbiter;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.level.block.Block;
@@ -92,6 +93,29 @@ public class CoreBlockEntity extends BlockEntity {
         }
         CoreIndex.put(config.name(), coreId(), level.dimension(), worldPosition);
         syncInvulnerableState();
+    }
+
+    /**
+     * Принимает настройку из предмета при установке Ядра.
+     *
+     * <p>Имя в шаблоне пустое, поэтому {@link #onLoad} выдаст новому Ядру
+     * собственное. Идентификатор в настройку не входит и потому не копируется —
+     * иначе две копии оказались бы для арбитра одним и тем же блоком.
+     */
+    @Override
+    protected void applyImplicitComponents(DataComponentInput input) {
+        super.applyImplicitComponents(input);
+        CoreConfig stored = input.get(GimpanumContent.CORE_CONFIG.get());
+        if (stored != null) {
+            config = stored.asTemplate();
+        }
+    }
+
+    /** Отдаёт настройку в предмет при копировании Ядра. */
+    @Override
+    protected void collectImplicitComponents(DataComponentMap.Builder builder) {
+        super.collectImplicitComponents(builder);
+        builder.set(GimpanumContent.CORE_CONFIG.get(), config.asTemplate());
     }
 
     @Override

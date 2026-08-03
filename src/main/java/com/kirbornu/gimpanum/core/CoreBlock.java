@@ -2,6 +2,7 @@ package com.kirbornu.gimpanum.core;
 
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.destruction.DestructionArbiter;
+import com.kirbornu.gimpanum.registry.GimpanumContent;
 import com.kirbornu.gimpanum.sublevel.SubLevelSupport;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -9,7 +10,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -21,6 +24,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -54,7 +58,26 @@ public class CoreBlock extends Block implements EntityBlock {
 
     public CoreBlock(BlockBehaviour.Properties properties) {
         super(properties);
-        registerDefaultState(getStateDefinition().any().setValue(INVULNERABLE, false));
+        // Совпадает со значением по умолчанию в CoreConfig, поэтому
+        // свежепоставленному Ядру не приходится сразу переписывать состояние.
+        registerDefaultState(getStateDefinition().any().setValue(INVULNERABLE, true));
+    }
+
+    /**
+     * Средняя кнопка мыши забирает Ядро вместе с настройкой.
+     *
+     * <p>Ядер на боевой карте делается много, и настраивать каждое заново
+     * вручную невозможно. Поставленная копия получит все привязки и теги, но
+     * своё собственное имя — см. {@link CoreConfig#asTemplate()}.
+     */
+    @Override
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level,
+                                       BlockPos pos, Player player) {
+        ItemStack stack = super.getCloneItemStack(state, target, level, pos, player);
+        if (level.getBlockEntity(pos) instanceof CoreBlockEntity core) {
+            stack.set(GimpanumContent.CORE_CONFIG.get(), core.config().asTemplate());
+        }
+        return stack;
     }
 
     @Override
@@ -143,6 +166,8 @@ public class CoreBlock extends Block implements EntityBlock {
 
         config.sealPostfix().ifPresent(postfix -> player.sendSystemMessage(
                 Component.translatable("gimpanum.core.postfix", postfix).withStyle(ChatFormatting.GRAY)));
+        player.sendSystemMessage(Component.translatable("gimpanum.core.seal", config.sealEnabled())
+                .withStyle(ChatFormatting.GRAY));
         player.sendSystemMessage(Component.translatable("gimpanum.core.explosion",
                 config.explosionEnabled(), config.explosionPower(), config.explosionFire())
                 .withStyle(ChatFormatting.GRAY));
