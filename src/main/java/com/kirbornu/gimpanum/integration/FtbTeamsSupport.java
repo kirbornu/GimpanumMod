@@ -43,26 +43,29 @@ public final class FtbTeamsSupport {
         }
     }
 
-    /** Снимок состава команды на текущий момент. */
-    public static Optional<BoundTeam> snapshot(MinecraftServer server, String teamName) {
+    /**
+     * Снимок состава экипажа на текущий момент. Принимает как отображаемое имя,
+     * так и короткое имя FTB вида {@code test#4add1687}.
+     */
+    public static Optional<BoundTeam> snapshot(MinecraftServer server, String query) {
         if (!isAvailable()) {
             return Optional.empty();
         }
         try {
-            return FtbTeamsBridge.snapshot(server, teamName);
+            return FtbTeamsBridge.snapshot(server, query);
         } catch (Throwable t) {
             fail(t);
             return Optional.empty();
         }
     }
 
-    /** Имена команд для подсказок в командах. */
-    public static List<String> teamNames() {
+    /** Имена экипажей для подсказок; личные команды игроков сюда не попадают. */
+    public static List<String> crewNames() {
         if (!isAvailable()) {
             return List.of();
         }
         try {
-            return FtbTeamsBridge.teamNames();
+            return FtbTeamsBridge.crewNames();
         } catch (Throwable t) {
             fail(t);
             return List.of();

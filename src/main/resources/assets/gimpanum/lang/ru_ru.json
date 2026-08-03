@@ -24,7 +24,7 @@
     "gimpanum.command.no_cores": "Загруженных Ядер нет",
     "gimpanum.command.no_such_index": "Команды с таким номером нет",
     "gimpanum.command.name_taken": "Имя уже занято другим Ядром",
-    "gimpanum.command.no_such_team": "Команда не найдена (или FTB Teams недоступен)",
+    "gimpanum.command.no_such_team": "Экипаж не найден. Личные команды игроков экипажами не считаются — для одного игрока используй player add",
     "gimpanum.command.renamed": "Ядро переименовано в «%s»",
     "gimpanum.command.armed": "Ядро «%s»: предохранитель снят",
     "gimpanum.command.disarmed": "Ядро «%s»: предохранитель поставлен",
