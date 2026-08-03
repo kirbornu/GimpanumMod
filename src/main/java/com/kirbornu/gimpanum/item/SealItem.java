@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.item;
 
+import com.kirbornu.gimpanum.core.BoundTeam;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -10,10 +11,11 @@ import net.minecraft.world.item.TooltipFlag;
 import java.util.List;
 
 /**
- * Печать — то, что остаётся от Ядра.
+ * Хрустальная печать — то, что остаётся от Ядра.
  *
- * <p>Хранит ники, привязанные к породившему её Ядру, и показывает их в
- * описании. Список снимается с Ядра в момент гибели и дальше неизменен.
+ * <p>Хранит привязки породившего её Ядра и показывает их в описании: отдельных
+ * игроков и экипажи с составами. Приставка из настройки Ядра попадает в само
+ * название предмета — обычно это название экипажа, чьё Ядро было уничтожено.
  */
 public class SealItem extends Item {
 
@@ -21,15 +23,27 @@ public class SealItem extends Item {
         super(properties);
     }
 
-    /** Ники, записанные в Печать; пусто, если Ядро было ни к кому не привязано. */
-    public static List<String> boundPlayers(ItemStack stack) {
-        return stack.getOrDefault(GimpanumContent.BOUND_PLAYERS.get(), List.of());
+    public static SealContents contents(ItemStack stack) {
+        return stack.getOrDefault(GimpanumContent.SEAL_CONTENTS.get(), SealContents.EMPTY);
     }
 
-    public static ItemStack create(List<String> boundPlayers) {
+    public static ItemStack create(SealContents contents) {
         ItemStack stack = new ItemStack(GimpanumContent.SEAL.get());
-        stack.set(GimpanumContent.BOUND_PLAYERS.get(), List.copyOf(boundPlayers));
+        stack.set(GimpanumContent.SEAL_CONTENTS.get(), contents);
         return stack;
+    }
+
+    /**
+     * Приставка дописывается к названию здесь, а не через CUSTOM_NAME: так
+     * название остаётся переводимым и не выводится курсивом, как переименованные
+     * в наковальне предметы.
+     */
+    @Override
+    public Component getName(ItemStack stack) {
+        return contents(stack).postfix()
+                .map(postfix -> (Component) Component.translatable(getDescriptionId())
+                        .append(Component.literal(" \"" + postfix + "\"")))
+                .orElseGet(() -> super.getName(stack));
     }
 
     @Override
@@ -37,17 +51,27 @@ public class SealItem extends Item {
                                 List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
 
-        List<String> bound = boundPlayers(stack);
-        if (bound.isEmpty()) {
+        SealContents contents = contents(stack);
+        if (contents.isEmpty()) {
             tooltip.add(Component.translatable("item.gimpanum.seal.empty")
                     .withStyle(ChatFormatting.DARK_GRAY));
             return;
         }
 
-        tooltip.add(Component.translatable("item.gimpanum.seal.bound")
-                .withStyle(ChatFormatting.GRAY));
-        for (String name : bound) {
-            tooltip.add(Component.literal(" • " + name).withStyle(ChatFormatting.AQUA));
+        if (!contents.players().isEmpty()) {
+            tooltip.add(Component.translatable("item.gimpanum.seal.bound")
+                    .withStyle(ChatFormatting.GRAY));
+            for (String name : contents.players()) {
+                tooltip.add(Component.literal(" • " + name).withStyle(ChatFormatting.AQUA));
+            }
+        }
+
+        for (BoundTeam team : contents.teams()) {
+            tooltip.add(Component.translatable("item.gimpanum.seal.team", team.teamName())
+                    .withStyle(ChatFormatting.LIGHT_PURPLE));
+            for (String name : team.members()) {
+                tooltip.add(Component.literal(" • " + name).withStyle(ChatFormatting.AQUA));
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 {
     "variants": {
-        "": { "model": "gimpanum:block/core" }
+        "invulnerable=false": { "model": "gimpanum:block/core" },
+        "invulnerable=true": { "model": "gimpanum:block/core_invulnerable" }
     }
 }

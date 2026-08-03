@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -42,18 +43,55 @@ public class CoreBlockEntity extends BlockEntity {
     }
 
     public void setConfig(CoreConfig config) {
+        CoreConfig previous = this.config;
         this.config = config;
         setChanged();
+
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        if (!previous.name().equals(config.name())) {
+            CoreIndex.put(config.name(), coreId(), level.dimension(), worldPosition);
+        }
+        if (previous.invulnerable() != config.invulnerable()) {
+            syncInvulnerableState();
+        }
+    }
+
+    /**
+     * Переносит признак неразрушимости в состояние блока: неподвижность для
+     * поршней читается только из состояния, позиция там недоступна.
+     */
+    private void syncInvulnerableState() {
+        BlockState state = getBlockState();
+        if (!state.hasProperty(CoreBlock.INVULNERABLE)
+                || state.getValue(CoreBlock.INVULNERABLE) == config.invulnerable()) {
+            return;
+        }
+        // Блок тот же, меняется только свойство, поэтому onRemove не сработает
+        // и ложного «уничтожения» не будет.
+        level.setBlock(worldPosition,
+                state.setValue(CoreBlock.INVULNERABLE, config.invulnerable()),
+                Block.UPDATE_ALL);
     }
 
     @Override
     public void onLoad() {
         super.onLoad();
-        if (level != null && !level.isClientSide) {
-            // Появление Ядра где угодно отменяет ожидающее удаление с тем же
-            // идентификатором: значит блок переехал, а не погиб.
-            DestructionArbiter.onAppeared(coreId());
+        if (level == null || level.isClientSide) {
+            return;
         }
+
+        // Появление Ядра где угодно отменяет ожидающее удаление с тем же
+        // идентификатором: значит блок переехал, а не погиб.
+        DestructionArbiter.onAppeared(coreId());
+
+        if (config.name().isEmpty()) {
+            config = config.withName(CoreIndex.nextFreeName());
+            setChanged();
+        }
+        CoreIndex.put(config.name(), coreId(), level.dimension(), worldPosition);
+        syncInvulnerableState();
     }
 
     @Override

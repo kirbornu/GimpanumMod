@@ -9,21 +9,31 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Ядро — цель для боёв на физических конструкциях.
+ * Ядро фоносомики — цель для боёв на физических конструкциях.
  *
  * <p>Выдаётся только в креативе и никогда не выпадает предметом: обычному
  * игроку его можно лишь уничтожить. При подтверждённом уничтожении роняет
- * Печать, выполняет настроенные команды для привязанных игроков и взрывается.
+ * Печать, выполняет настроенные команды для привязанных игроков и взрывается —
+ * но только если снят предохранитель.
+ *
+ * <p>По умолчанию Ядро предельно хрупкое: ломается мгновенно и не держит
+ * никакого взрыва. Тег неразрушимости превращает его в подобие бедрока — это
+ * же и способ спокойно строить корабль, не боясь снести цель случайным ударом.
  *
  * <p>Уничтожение подтверждается не сразу: сборка физической конструкции
  * удаляет блок из мира, и без арбитража Ядро срабатывало бы при каждой сборке
@@ -34,14 +44,49 @@ public class CoreBlock extends Block implements EntityBlock {
     /** Настраивать Ядро может только оператор. */
     public static final int REQUIRED_PERMISSION_LEVEL = 2;
 
+    /**
+     * Признак неразрушимости продублирован в состоянии блока: неподвижность для
+     * поршней и скорость разрушения читаются там, где позиция блока недоступна.
+     */
+    public static final BooleanProperty INVULNERABLE = BooleanProperty.create("invulnerable");
+
+    private static final float INVULNERABLE_RESISTANCE = 3_600_000.0F;
+
     public CoreBlock(BlockBehaviour.Properties properties) {
         super(properties);
+        registerDefaultState(getStateDefinition().any().setValue(INVULNERABLE, false));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(INVULNERABLE);
     }
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new CoreBlockEntity(pos, state);
     }
+
+    // --- Прочность -----------------------------------------------------------
+
+    @Override
+    protected float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos) {
+        // 0 — не ломается вовсе; 1 — ломается мгновенно с одного удара.
+        return state.getValue(INVULNERABLE) ? 0.0F : 1.0F;
+    }
+
+    @Override
+    public float getExplosionResistance(BlockState state, BlockGetter level, BlockPos pos,
+                                        Explosion explosion) {
+        return state.getValue(INVULNERABLE) ? INVULNERABLE_RESISTANCE : 0.0F;
+    }
+
+    @Override
+    public PushReaction getPistonPushReaction(BlockState state) {
+        return state.getValue(INVULNERABLE) ? PushReaction.BLOCK : PushReaction.NORMAL;
+    }
+
+    // --- Настройка -----------------------------------------------------------
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
@@ -61,25 +106,28 @@ public class CoreBlock extends Block implements EntityBlock {
         return InteractionResult.SUCCESS;
     }
 
-    /**
-     * Показывает оператору текущую настройку. Полноценный экран появится
-     * позже — пока настройка правится командами.
-     */
+    /** Показывает оператору текущую настройку. */
     private void describeTo(Player player, CoreBlockEntity core, Level level, BlockPos pos) {
         CoreConfig config = core.config();
 
-        player.sendSystemMessage(Component.translatable("gimpanum.core.header")
+        player.sendSystemMessage(Component.translatable("gimpanum.core.header", config.name())
                 .withStyle(ChatFormatting.GOLD));
+        player.sendSystemMessage(Component.translatable(
+                config.armed() ? "gimpanum.core.armed" : "gimpanum.core.safe")
+                .withStyle(config.armed() ? ChatFormatting.RED : ChatFormatting.GREEN));
 
-        if (config.boundPlayers().isEmpty()) {
+        if (config.boundPlayers().isEmpty() && config.boundTeams().isEmpty()) {
             player.sendSystemMessage(Component.translatable("gimpanum.core.no_players")
                     .withStyle(ChatFormatting.YELLOW));
         } else {
-            player.sendSystemMessage(Component.translatable("gimpanum.core.players")
-                    .withStyle(ChatFormatting.GRAY));
             for (String name : config.boundPlayers()) {
                 player.sendSystemMessage(Component.literal(" • " + name)
                         .withStyle(ChatFormatting.AQUA));
+            }
+            for (BoundTeam team : config.boundTeams()) {
+                player.sendSystemMessage(Component.literal(
+                                " ⚑ " + team.teamName() + " (" + team.members().size() + ")")
+                        .withStyle(ChatFormatting.LIGHT_PURPLE));
             }
         }
 
@@ -87,25 +135,30 @@ public class CoreBlock extends Block implements EntityBlock {
             player.sendSystemMessage(Component.translatable("gimpanum.core.no_commands")
                     .withStyle(ChatFormatting.YELLOW));
         } else {
-            player.sendSystemMessage(Component.translatable("gimpanum.core.commands")
-                    .withStyle(ChatFormatting.GRAY));
             for (String command : config.commands()) {
                 player.sendSystemMessage(Component.literal(" • " + command)
                         .withStyle(ChatFormatting.WHITE));
             }
         }
 
+        config.sealPostfix().ifPresent(postfix -> player.sendSystemMessage(
+                Component.translatable("gimpanum.core.postfix", postfix).withStyle(ChatFormatting.GRAY)));
         player.sendSystemMessage(Component.translatable("gimpanum.core.explosion",
-                config.explosionPower(), config.explosionFire()).withStyle(ChatFormatting.GRAY));
+                config.explosionEnabled(), config.explosionPower(), config.explosionFire())
+                .withStyle(ChatFormatting.GRAY));
+        player.sendSystemMessage(Component.translatable("gimpanum.core.invulnerable",
+                config.invulnerable()).withStyle(ChatFormatting.GRAY));
         player.sendSystemMessage(Component.translatable("gimpanum.core.on_sublevel",
                 SubLevelSupport.isOnSubLevel(level, pos)).withStyle(ChatFormatting.DARK_GRAY));
     }
+
+    // --- Уничтожение ---------------------------------------------------------
 
     @Override
     protected void onRemove(BlockState state, Level level, BlockPos pos,
                             BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock()) && !level.isClientSide) {
-            queueDestruction(level, pos, movedByPiston);
+            queueDestruction(level, pos);
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
     }
@@ -115,14 +168,18 @@ public class CoreBlock extends Block implements EntityBlock {
      * блок-сущность, и передаёт арбитру. Мировую позицию тоже надо взять
      * сейчас: конструкция сдвинется, и точку гибели уже не восстановить.
      */
-    private void queueDestruction(Level level, BlockPos pos, boolean movedByPiston) {
+    private void queueDestruction(Level level, BlockPos pos) {
         if (!(level.getBlockEntity(pos) instanceof CoreBlockEntity core)) {
-            Gimpanum.LOGGER.warn("Ядро в {} удалено без блок-сущности — последствий не будет",
-                    pos.toShortString());
             return;
         }
 
         CoreConfig config = core.config();
+        if (!config.armed()) {
+            // Предохранитель на месте — Ядро ведёт себя как обычный блок.
+            CoreIndex.remove(core.coreId());
+            return;
+        }
+
         DestructionArbiter.onRemoved(new DestructionArbiter.PendingRemoval(
                 core.coreId(),
                 level.dimension(),
@@ -140,9 +197,11 @@ public class CoreBlock extends Block implements EntityBlock {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
+        CoreIndex.remove(removal.blockId());
+
         Vec3 worldPos = removal.worldPos();
-        Gimpanum.LOGGER.info("Ядро {} уничтожено в {}; привязано игроков: {}",
-                removal.blockId(), worldPos, config.boundPlayers().size());
+        Gimpanum.LOGGER.info("Ядро '{}' ({}) уничтожено в {}",
+                config.name(), removal.blockId(), worldPos);
         CoreDestruction.run(serverLevel, worldPos, config);
     }
 }

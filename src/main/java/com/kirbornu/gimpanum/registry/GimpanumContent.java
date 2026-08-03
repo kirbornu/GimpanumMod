@@ -5,11 +5,10 @@ import com.kirbornu.gimpanum.core.CoreBlock;
 import com.kirbornu.gimpanum.core.CoreBlockEntity;
 import com.kirbornu.gimpanum.debug.ProbeBlock;
 import com.kirbornu.gimpanum.debug.ProbeBlockEntity;
+import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
-import com.mojang.serialization.Codec;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.item.Item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -25,7 +24,6 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 public final class GimpanumContent {
@@ -61,13 +59,16 @@ public final class GimpanumContent {
     /**
      * Ядро. {@code noLootTable} — принципиально: обычный игрок может Ядро
      * только уничтожить, но не унести.
+     *
+     * <p>Прочность здесь не задаётся: она зависит от тега неразрушимости и
+     * потому вычисляется в {@link CoreBlock#getDestroyProgress} и
+     * {@link CoreBlock#getExplosionResistance}.
      */
     public static final DeferredBlock<CoreBlock> CORE = BLOCKS.registerBlock(
             "core",
             CoreBlock::new,
             BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_BLACK)
-                    .strength(5.0F)
                     .sound(SoundType.NETHERITE_BLOCK)
                     .lightLevel(state -> 7)
                     .noLootTable()
@@ -79,12 +80,12 @@ public final class GimpanumContent {
             BLOCK_ENTITIES.register("core",
                     () -> BlockEntityType.Builder.of(CoreBlockEntity::new, CORE.get()).build(null));
 
-    /** Ники, записанные в Печать. */
-    public static final Supplier<DataComponentType<List<String>>> BOUND_PLAYERS =
-            DATA_COMPONENTS.register("bound_players",
-                    () -> DataComponentType.<List<String>>builder()
-                            .persistent(Codec.STRING.listOf())
-                            .networkSynchronized(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()))
+    /** Привязки, записанные в Печать. */
+    public static final Supplier<DataComponentType<SealContents>> SEAL_CONTENTS =
+            DATA_COMPONENTS.register("seal_contents",
+                    () -> DataComponentType.<SealContents>builder()
+                            .persistent(SealContents.CODEC)
+                            .networkSynchronized(SealContents.STREAM_CODEC)
                             .build());
 
     public static final DeferredItem<SealItem> SEAL = ITEMS.registerItem(
