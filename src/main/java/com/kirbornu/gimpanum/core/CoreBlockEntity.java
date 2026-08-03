@@ -8,6 +8,9 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -56,6 +59,22 @@ public class CoreBlockEntity extends BlockEntity {
         }
         if (previous.invulnerable() != config.invulnerable()) {
             syncInvulnerableState();
+        }
+        sendToClients();
+    }
+
+    /**
+     * Толкает настройку клиентам.
+     *
+     * <p>Без этого не работает копирование средней кнопкой: pick-block целиком
+     * клиентская операция, и {@code getCloneItemStack} читает ту блок-сущность,
+     * что есть у клиента. Несинхронизированная настройка означала бы копию с
+     * пустыми полями.
+     */
+    private void sendToClients() {
+        if (level != null && !level.isClientSide) {
+            BlockState state = getBlockState();
+            level.sendBlockUpdated(worldPosition, state, state, Block.UPDATE_CLIENTS);
         }
     }
 
@@ -108,6 +127,7 @@ public class CoreBlockEntity extends BlockEntity {
         CoreConfig stored = input.get(GimpanumContent.CORE_CONFIG.get());
         if (stored != null) {
             config = stored.asTemplate();
+            setChanged();
         }
     }
 
@@ -116,6 +136,18 @@ public class CoreBlockEntity extends BlockEntity {
     protected void collectImplicitComponents(DataComponentMap.Builder builder) {
         super.collectImplicitComponents(builder);
         builder.set(GimpanumContent.CORE_CONFIG.get(), config.asTemplate());
+    }
+
+    /** Данные для клиента при загрузке чанка. */
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return saveWithoutMetadata(registries);
+    }
+
+    /** Данные для клиента при изменении настройки. */
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
