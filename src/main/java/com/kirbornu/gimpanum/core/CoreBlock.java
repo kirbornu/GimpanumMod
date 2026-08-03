@@ -116,6 +116,15 @@ public class CoreBlock extends Block implements EntityBlock {
         return state.getValue(INVULNERABLE) ? 0.0F : 1.0F;
     }
 
+    /**
+     * Сопротивление ванильным взрывам.
+     *
+     * <p>Внимание: этот переопределённый метод видят не все. Create Big Cannons
+     * считает броню блока через безаргументный {@code Block.getExplosionResistance()},
+     * то есть читает поле из свойств блока и сюда не заходит. Для него броня
+     * задана датапаком в {@code data/gimpanum/block_armor/core.json} — если
+     * менять поведение неразрушимости, править надо оба места.
+     */
     @Override
     public float getExplosionResistance(BlockState state, BlockGetter level, BlockPos pos,
                                         Explosion explosion) {
