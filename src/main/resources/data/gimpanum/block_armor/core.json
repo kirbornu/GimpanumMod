@@ -1,0 +1,17 @@
+{
+    "_comment": "Броня Ядра для Create Big Cannons. Без этого файла CBC берёт запасное значение — Block.getExplosionResistance() из свойств блока, а оно у Ядра равно нулю, и снаряды пробивали даже неразрушимое Ядро. Бедрок держит именно потому, что у него там 3600000. Пер-состояниевые переопределения в коде CBC не читает, поэтому разница между боевым и неразрушимым состоянием задаётся здесь.",
+
+    "default_toughness": 0.0,
+    "material_toughness_multiplier": 0.0,
+    "default_hardness": 1.0,
+    "material_hardness_multiplier": 1.0,
+
+    "variants": {
+        "invulnerable=true": {
+            "default_toughness": 3600000.0,
+            "material_toughness_multiplier": 3600000.0,
+            "default_hardness": 1.0,
+            "material_hardness_multiplier": 1.0
+        }
+    }
+}
