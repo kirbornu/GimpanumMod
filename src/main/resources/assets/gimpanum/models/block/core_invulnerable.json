@@ -1,6 +1,6 @@
 {
     "parent": "minecraft:block/cube_all",
     "textures": {
-        "all": "minecraft:block/obsidian"
+        "all": "gimpanum:block/core_invulnerable"
     }
 }
