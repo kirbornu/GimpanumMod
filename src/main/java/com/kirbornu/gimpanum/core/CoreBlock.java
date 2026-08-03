@@ -76,7 +76,9 @@ public class CoreBlock extends Block implements EntityBlock {
     public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level,
                                        BlockPos pos, Player player) {
         ItemStack stack = super.getCloneItemStack(state, target, level, pos, player);
-        if (level.getBlockEntity(pos) instanceof CoreBlockEntity core) {
+        // Настройку копирует только оператор: остальным достаётся пустое Ядро.
+        if (player.hasPermissions(REQUIRED_PERMISSION_LEVEL)
+                && level.getBlockEntity(pos) instanceof CoreBlockEntity core) {
             stack.set(GimpanumContent.CORE_CONFIG.get(), core.config().asTemplate());
         }
         return stack;
@@ -130,12 +132,14 @@ public class CoreBlock extends Block implements EntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                Player player, BlockHitResult hitResult) {
-        if (level.isClientSide) {
-            return InteractionResult.SUCCESS;
-        }
-        // Проверка прав только на сервере: клиенту в этом вопросе верить нельзя.
+        // Проверка идёт до разделения сторон, чтобы у не-оператора не проигрывался
+        // даже замах: для него нажатие не делает ровно ничего. На сервере это
+        // проверяется заново, поэтому подделать клиент бесполезно.
         if (!player.hasPermissions(REQUIRED_PERMISSION_LEVEL)) {
             return InteractionResult.PASS;
+        }
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
         }
         if (!(level.getBlockEntity(pos) instanceof CoreBlockEntity core)) {
             return InteractionResult.PASS;
@@ -226,7 +230,9 @@ public class CoreBlock extends Block implements EntityBlock {
         CoreConfig config = core.config();
         if (!config.armed()) {
             // Предохранитель на месте — Ядро ведёт себя как обычный блок.
-            CoreIndex.remove(core.coreId());
+            if (level.getServer() != null) {
+                CoreIndex.remove(level.getServer(), core.coreId());
+            }
             return;
         }
 
@@ -247,7 +253,7 @@ public class CoreBlock extends Block implements EntityBlock {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
-        CoreIndex.remove(removal.blockId());
+        CoreIndex.remove(serverLevel.getServer(), removal.blockId());
 
         Vec3 worldPos = removal.worldPos();
         Gimpanum.LOGGER.info("Ядро '{}' ({}) уничтожено в {}",

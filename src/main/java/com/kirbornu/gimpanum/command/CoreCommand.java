@@ -27,12 +27,17 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.IntFunction;
+import java.util.function.UnaryOperator;
 
 /**
  * Настройка Ядра командами.
@@ -40,8 +45,13 @@ import java.util.Optional;
  * <p>Ядро адресуется условным именем — координаты блока на физической
  * конструкции достигают восьмизначных значений и для ручного ввода непригодны.
  * Имя выдаётся автоматически при первой загрузке ({@code core1}, {@code core2}
- * и далее) и переименовывается командой {@code name}. Ветка {@code at}
- * оставлена на случай, когда имя неизвестно.
+ * и далее; приставка меняется командой {@code default_name}) и
+ * переименовывается командой {@code name}. Ветка {@code at} оставлена на
+ * случай, когда имя неизвестно.
+ *
+ * <p>Имя может быть образцом: {@code tank+} задаёт все Ядра, чьё имя
+ * начинается с {@code tank}, и подкоманда применится к каждому. Переименование
+ * так работать не может — имена обязаны оставаться уникальными.
  */
 public final class CoreCommand {
 
@@ -53,11 +63,16 @@ public final class CoreCommand {
             new SimpleCommandExceptionType(Component.translatable("gimpanum.command.no_such_index"));
     private static final SimpleCommandExceptionType ERROR_NAME_TAKEN =
             new SimpleCommandExceptionType(Component.translatable("gimpanum.command.name_taken"));
+    private static final SimpleCommandExceptionType ERROR_NO_MATCH =
+            new SimpleCommandExceptionType(Component.translatable("gimpanum.command.no_match"));
+    private static final SimpleCommandExceptionType ERROR_PATTERN_NOT_ALLOWED =
+            new SimpleCommandExceptionType(Component.translatable("gimpanum.command.pattern_not_allowed"));
     private static final SimpleCommandExceptionType ERROR_NO_SUCH_TEAM =
             new SimpleCommandExceptionType(Component.translatable("gimpanum.command.no_such_team"));
 
     private static final SuggestionProvider<CommandSourceStack> CORE_NAMES =
-            (context, builder) -> SharedSuggestionProvider.suggest(CoreIndex.names(), builder);
+            (context, builder) -> SharedSuggestionProvider.suggest(
+                    CoreIndex.names(context.getSource().getServer()), builder);
     private static final SuggestionProvider<CommandSourceStack> TEAM_NAMES =
             (context, builder) -> SharedSuggestionProvider.suggest(FtbTeamsSupport.crewNames(), builder);
 
@@ -66,10 +81,17 @@ public final class CoreCommand {
             (context, builder) -> SharedSuggestionProvider.suggest(
                     context.getSource().getOnlinePlayerNames(), builder);
 
-    /** Как добраться до Ядра: по имени или по координатам. */
+    /**
+     * Как добраться до Ядра: по имени или по координатам.
+     *
+     * <p>{@code allowChunkLoad} различает исполнение команды и построение
+     * подсказок. Подсказки строятся на каждое нажатие клавиши, и подгрузка
+     * чанков оттуда уронила бы сервер.
+     */
     @FunctionalInterface
     private interface CoreResolver {
-        CoreBlockEntity resolve(CommandContext<CommandSourceStack> context) throws CommandSyntaxException;
+        List<CoreBlockEntity> resolve(CommandContext<CommandSourceStack> context, boolean allowChunkLoad)
+                throws CommandSyntaxException;
     }
 
     private CoreCommand() {
@@ -84,11 +106,13 @@ public final class CoreCommand {
      */
     private static SuggestionProvider<CommandSourceStack> boundPlayersOf(CoreResolver resolver) {
         return (context, builder) -> {
-            List<String> names;
+            Set<String> names = new LinkedHashSet<>();
             try {
-                names = resolver.resolve(context).config().boundPlayers();
-            } catch (Exception e) {
-                names = List.of();
+                for (CoreBlockEntity core : resolver.resolve(context, false)) {
+                    names.addAll(core.config().boundPlayers());
+                }
+            } catch (Exception ignored) {
+                // Команда ещё недописана — подсказывать нечего.
             }
             return SharedSuggestionProvider.suggest(names, builder);
         };
@@ -101,6 +125,11 @@ public final class CoreCommand {
                 .requires(source -> source.hasPermission(CoreBlock.REQUIRED_PERMISSION_LEVEL));
 
         root.then(Commands.literal("list").executes(CoreCommand::list));
+
+        // Приставка для имён новых Ядер: общая на весь сервер, не для отдельного Ядра.
+        root.then(Commands.literal("default_name")
+                .then(Commands.argument("prefix", StringArgumentType.word())
+                        .executes(CoreCommand::setDefaultName)));
 
         root.then(subcommands(
                 Commands.argument("core", StringArgumentType.word()).suggests(CORE_NAMES),
@@ -203,43 +232,90 @@ public final class CoreCommand {
 
     // --- Адресация -----------------------------------------------------------
 
-    private static CoreBlockEntity byName(CommandContext<CommandSourceStack> context)
-            throws CommandSyntaxException {
-        String name = StringArgumentType.getString(context, "core");
-        return CoreIndex.find(context.getSource().getServer(), name)
-                .orElseThrow(ERROR_UNKNOWN_CORE::create);
+    private static List<CoreBlockEntity> byName(CommandContext<CommandSourceStack> context,
+                                                boolean allowChunkLoad) throws CommandSyntaxException {
+        String selector = StringArgumentType.getString(context, "core");
+        MinecraftServer server = context.getSource().getServer();
+
+        if (CoreIndex.isPattern(selector)) {
+            List<CoreBlockEntity> matched = CoreIndex.findMatching(server, selector, allowChunkLoad);
+            if (matched.isEmpty()) {
+                throw ERROR_NO_MATCH.create();
+            }
+            return matched;
+        }
+        return List.of(CoreIndex.find(server, selector, allowChunkLoad)
+                .orElseThrow(ERROR_UNKNOWN_CORE::create));
     }
 
-    private static CoreBlockEntity byPosition(CommandContext<CommandSourceStack> context)
-            throws CommandSyntaxException {
+    private static List<CoreBlockEntity> byPosition(CommandContext<CommandSourceStack> context,
+                                                    boolean allowChunkLoad) throws CommandSyntaxException {
         BlockPos pos = BlockPosArgument.getLoadedBlockPos(context, "pos");
         Level level = context.getSource().getLevel();
         if (!(level.getBlockEntity(pos) instanceof CoreBlockEntity core)) {
             throw ERROR_NOT_A_CORE.create();
         }
-        return core;
+        return List.of(core);
+    }
+
+    /**
+     * Ровно одно Ядро — для действий, которые нельзя выполнить над многими.
+     *
+     * <p>Переименование именно такое: имя обязано быть уникальным, и образцом
+     * назначить всем Ядрам одно имя было бы прямой порчей указателя.
+     */
+    private static CoreBlockEntity requireSingle(List<CoreBlockEntity> cores)
+            throws CommandSyntaxException {
+        if (cores.size() != 1) {
+            throw ERROR_PATTERN_NOT_ALLOWED.create();
+        }
+        return cores.get(0);
     }
 
     // --- Подкоманды ----------------------------------------------------------
 
     private static int list(CommandContext<CommandSourceStack> context) {
-        List<String> names = CoreIndex.names();
+        List<String> names = CoreIndex.names(context.getSource().getServer());
         CommandSourceStack source = context.getSource();
         if (names.isEmpty()) {
             source.sendSuccess(() -> Component.translatable("gimpanum.command.no_cores"), false);
             return 0;
         }
         for (String name : names) {
-            source.sendSuccess(() -> Component.literal(" • " + name), false);
+            String where = CoreIndex.describe(source.getServer(), name).orElse("?");
+            source.sendSuccess(() -> Component.literal(" • " + name + " — " + where), false);
         }
         return names.size();
     }
 
+    /**
+     * Применяет изменение ко всем выбранным Ядрам.
+     *
+     * <p>Все изменяющие подкоманды идут через него: иначе поддержка образцов
+     * означала бы одинаковый цикл в каждой из полутора десятков.
+     */
+    private static int apply(CommandContext<CommandSourceStack> context, CoreResolver resolver,
+                             UnaryOperator<CoreConfig> change,
+                             IntFunction<Component> message) throws CommandSyntaxException {
+        List<CoreBlockEntity> cores = resolver.resolve(context, true);
+        for (CoreBlockEntity core : cores) {
+            core.setConfig(change.apply(core.config()));
+        }
+        int count = cores.size();
+        context.getSource().sendSuccess(() -> message.apply(count), true);
+        return count;
+    }
+
     private static int show(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreConfig config = resolver.resolve(context).config();
         CommandSourceStack source = context.getSource();
+        for (CoreBlockEntity core : resolver.resolve(context, true)) {
+            describe(source, core.config());
+        }
+        return 1;
+    }
 
+    private static void describe(CommandSourceStack source, CoreConfig config) {
         source.sendSuccess(() -> Component.translatable("gimpanum.core.header", config.name()), false);
         source.sendSuccess(() -> Component.translatable(
                 config.armed() ? "gimpanum.core.armed" : "gimpanum.core.safe"), false);
@@ -248,11 +324,11 @@ public final class CoreCommand {
             source.sendSuccess(() -> Component.translatable("gimpanum.core.no_players"), false);
         } else {
             for (String name : config.boundPlayers()) {
-                source.sendSuccess(() -> Component.literal(" • " + name), false);
+                source.sendSuccess(() -> Component.literal(" \u2022 " + name), false);
             }
             for (BoundTeam team : config.boundTeams()) {
                 source.sendSuccess(() -> Component.literal(
-                        " ⚑ " + team.teamName() + ": " + String.join(", ", team.members())), false);
+                        " \u2691 " + team.teamName() + ": " + String.join(", ", team.members())), false);
             }
         }
 
@@ -280,15 +356,15 @@ public final class CoreCommand {
                 config.invulnerable()), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.core.autofragile",
                 config.autoDisableInvulnerable()), false);
-        return 1;
     }
 
+    /** Переименование работает только над одним Ядром: имена уникальны. */
     private static int rename(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
+        CoreBlockEntity core = requireSingle(resolver.resolve(context, true));
         String newName = StringArgumentType.getString(context, "new_name");
 
-        if (CoreIndex.isNameTaken(newName, core.coreId())) {
+        if (CoreIndex.isNameTaken(context.getSource().getServer(), newName, core.coreId())) {
             throw ERROR_NAME_TAKEN.create();
         }
         core.setConfig(core.config().withName(newName));
@@ -297,270 +373,195 @@ public final class CoreCommand {
         return 1;
     }
 
+    private static int setDefaultName(CommandContext<CommandSourceStack> context) {
+        String prefix = StringArgumentType.getString(context, "prefix");
+        CoreIndex.setDefaultNamePrefix(context.getSource().getServer(), prefix);
+        context.getSource().sendSuccess(
+                () -> Component.translatable("gimpanum.command.default_name_set", prefix), true);
+        return 1;
+    }
+
     private static int setArmed(CommandContext<CommandSourceStack> context, CoreResolver resolver,
                                 boolean armed) throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
-        core.setConfig(core.config().withArmed(armed));
-        context.getSource().sendSuccess(() -> Component.translatable(
-                armed ? "gimpanum.command.armed" : "gimpanum.command.disarmed",
-                core.config().name()), true);
-        return 1;
+        return apply(context, resolver, config -> config.withArmed(armed),
+                count -> Component.translatable(
+                        armed ? "gimpanum.command.armed" : "gimpanum.command.disarmed", count));
     }
 
     private static int setInvulnerable(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         boolean value = BoolArgumentType.getBool(context, "value");
-        core.setConfig(core.config().withInvulnerable(value));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.invulnerable_set", value), true);
-        return 1;
+        return apply(context, resolver, config -> config.withInvulnerable(value),
+                count -> Component.translatable("gimpanum.command.invulnerable_set", value, count));
     }
 
     private static int setAutoFragile(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         boolean value = BoolArgumentType.getBool(context, "value");
-        core.setConfig(core.config().withAutoDisableInvulnerable(value));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.autofragile_set", value), true);
-        return 1;
+        return apply(context, resolver, config -> config.withAutoDisableInvulnerable(value),
+                count -> Component.translatable("gimpanum.command.autofragile_set", value, count));
     }
 
     private static int addPlayer(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         String name = StringArgumentType.getString(context, "name");
-
-        List<String> names = new ArrayList<>(core.config().boundPlayers());
-        if (names.contains(name)) {
-            context.getSource().sendFailure(
-                    Component.translatable("gimpanum.command.player_already_bound", name));
-            return 0;
-        }
-        names.add(name);
-        core.setConfig(core.config().withBoundPlayers(names));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.player_added", name), true);
-        return 1;
+        return apply(context, resolver, config -> {
+            // Повтор просто ничего не меняет: при массовом применении часть Ядер
+            // уже может быть привязана, и это не повод считать команду неудачной.
+            if (config.boundPlayers().contains(name)) {
+                return config;
+            }
+            List<String> names = new ArrayList<>(config.boundPlayers());
+            names.add(name);
+            return config.withBoundPlayers(names);
+        }, count -> Component.translatable("gimpanum.command.player_added", name, count));
     }
 
     private static int removePlayer(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         String name = StringArgumentType.getString(context, "name");
-
-        List<String> names = new ArrayList<>(core.config().boundPlayers());
-        if (!names.remove(name)) {
-            context.getSource().sendFailure(
-                    Component.translatable("gimpanum.command.player_not_bound", name));
-            return 0;
-        }
-        core.setConfig(core.config().withBoundPlayers(names));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.player_removed", name), true);
-        return 1;
+        return apply(context, resolver, config -> {
+            List<String> names = new ArrayList<>(config.boundPlayers());
+            return names.remove(name) ? config.withBoundPlayers(names) : config;
+        }, count -> Component.translatable("gimpanum.command.player_removed", name, count));
     }
 
     private static int clearPlayers(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
-        int removed = core.config().boundPlayers().size();
-        core.setConfig(core.config().withBoundPlayers(List.of()));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.players_cleared", removed), true);
-        return removed;
+        return apply(context, resolver, config -> config.withBoundPlayers(List.of()),
+                count -> Component.translatable("gimpanum.command.players_cleared", count));
     }
 
     private static int addTeam(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         String teamName = StringArgumentType.getString(context, "team");
+        BoundTeam team = FtbTeamsSupport.snapshot(context.getSource().getServer(), teamName)
+                .orElseThrow(ERROR_NO_SUCH_TEAM::create);
 
-        Optional<BoundTeam> snapshot =
-                FtbTeamsSupport.snapshot(context.getSource().getServer(), teamName);
-        if (snapshot.isEmpty()) {
-            throw ERROR_NO_SUCH_TEAM.create();
-        }
-        BoundTeam team = snapshot.get();
-
-        // Повторная привязка обновляет снимок состава — это единственный способ
-        // подтянуть изменившийся экипаж.
-        List<BoundTeam> teams = new ArrayList<>(core.config().boundTeams());
-        teams.removeIf(existing -> existing.teamName().equalsIgnoreCase(team.teamName()));
-        teams.add(team);
-        core.setConfig(core.config().withBoundTeams(teams));
-
-        context.getSource().sendSuccess(() -> Component.translatable(
-                "gimpanum.command.team_added", team.teamName(), team.members().size()), true);
-        return team.members().size();
+        return apply(context, resolver, config -> {
+            // Повторная привязка обновляет снимок состава — это единственный
+            // способ подтянуть изменившийся экипаж.
+            List<BoundTeam> teams = new ArrayList<>(config.boundTeams());
+            teams.removeIf(existing -> existing.teamName().equalsIgnoreCase(team.teamName()));
+            teams.add(team);
+            return config.withBoundTeams(teams);
+        }, count -> Component.translatable("gimpanum.command.team_added",
+                team.teamName(), team.members().size(), count));
     }
 
     private static int removeTeam(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         String teamName = StringArgumentType.getString(context, "team").trim();
-
-        List<BoundTeam> teams = new ArrayList<>(core.config().boundTeams());
-        if (!teams.removeIf(existing -> existing.teamName().equalsIgnoreCase(teamName))) {
-            context.getSource().sendFailure(
-                    Component.translatable("gimpanum.command.team_not_bound", teamName));
-            return 0;
-        }
-        core.setConfig(core.config().withBoundTeams(teams));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.team_removed", teamName), true);
-        return 1;
+        return apply(context, resolver, config -> {
+            List<BoundTeam> teams = new ArrayList<>(config.boundTeams());
+            return teams.removeIf(existing -> existing.teamName().equalsIgnoreCase(teamName))
+                    ? config.withBoundTeams(teams) : config;
+        }, count -> Component.translatable("gimpanum.command.team_removed", teamName, count));
     }
 
     private static int clearTeams(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
-        int removed = core.config().boundTeams().size();
-        core.setConfig(core.config().withBoundTeams(List.of()));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.teams_cleared", removed), true);
-        return removed;
+        return apply(context, resolver, config -> config.withBoundTeams(List.of()),
+                count -> Component.translatable("gimpanum.command.teams_cleared", count));
     }
 
     private static int addCommand(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         String command = StringArgumentType.getString(context, "command");
-
-        List<String> commands = new ArrayList<>(core.config().commands());
-        commands.add(command);
-        core.setConfig(core.config().withCommands(commands));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.command_added", command), true);
-        return 1;
+        return apply(context, resolver, config -> {
+            List<String> commands = new ArrayList<>(config.commands());
+            commands.add(command);
+            return config.withCommands(commands);
+        }, count -> Component.translatable("gimpanum.command.command_added", command, count));
     }
 
     private static int removeCommand(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         int index = IntegerArgumentType.getInteger(context, "index");
-
-        List<String> commands = new ArrayList<>(core.config().commands());
-        if (index > commands.size()) {
-            throw ERROR_NO_SUCH_INDEX.create();
-        }
-        String removed = commands.remove(index - 1);
-        core.setConfig(core.config().withCommands(commands));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.command_removed", removed), true);
-        return 1;
+        return apply(context, resolver, config -> {
+            List<String> commands = new ArrayList<>(config.commands());
+            if (index > commands.size()) {
+                return config;
+            }
+            commands.remove(index - 1);
+            return config.withCommands(commands);
+        }, count -> Component.translatable("gimpanum.command.command_removed", index, count));
     }
 
     private static int clearCommands(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
-        int removed = core.config().commands().size();
-        core.setConfig(core.config().withCommands(List.of()));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.commands_cleared", removed), true);
-        return removed;
+        return apply(context, resolver, config -> config.withCommands(List.of()),
+                count -> Component.translatable("gimpanum.command.commands_cleared", count));
     }
 
     private static int setPostfix(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         String text = StringArgumentType.getString(context, "text");
-        core.setConfig(core.config().withSealPostfix(Optional.of(text)));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.postfix_set", text), true);
-        return 1;
+        return apply(context, resolver, config -> config.withSealPostfix(Optional.of(text)),
+                count -> Component.translatable("gimpanum.command.postfix_set", text, count));
     }
 
     private static int clearPostfix(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
-        core.setConfig(core.config().withSealPostfix(Optional.empty()));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.postfix_cleared"), true);
-        return 1;
+        return apply(context, resolver, config -> config.withSealPostfix(Optional.empty()),
+                count -> Component.translatable("gimpanum.command.postfix_cleared", count));
     }
 
     private static int setSealEnabled(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         boolean value = BoolArgumentType.getBool(context, "value");
-        core.setConfig(core.config().withSealEnabled(value));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.seal_enabled_set", value), true);
-        return 1;
+        return apply(context, resolver, config -> config.withSealEnabled(value),
+                count -> Component.translatable("gimpanum.command.seal_enabled_set", value, count));
     }
 
     private static int setSealPrice(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         int price = IntegerArgumentType.getInteger(context, "price");
-        core.setConfig(core.config().withSealPrice(price));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.price_set", price), true);
-        return price;
+        return apply(context, resolver, config -> config.withSealPrice(price),
+                count -> Component.translatable("gimpanum.command.price_set", price, count));
     }
 
     private static int setSpawnEnabled(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         boolean value = BoolArgumentType.getBool(context, "value");
-        core.setConfig(core.config().withSpawnEnabled(value));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.spawn_enabled_set", value), true);
-        return 1;
+        return apply(context, resolver, config -> config.withSpawnEnabled(value),
+                count -> Component.translatable("gimpanum.command.spawn_enabled_set", value, count));
     }
 
     private static int setSpawnInterval(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         int seconds = IntegerArgumentType.getInteger(context, "seconds");
-        core.setConfig(core.config().withSpawnInterval(seconds));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.spawn_interval_set", seconds), true);
-        return seconds;
+        return apply(context, resolver, config -> config.withSpawnInterval(seconds),
+                count -> Component.translatable("gimpanum.command.spawn_interval_set", seconds, count));
     }
 
     private static int setSpawnItem(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         Item item = ItemArgument.getItem(context, "item").getItem();
         ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
-
-        core.setConfig(core.config().withSpawnItem(Optional.of(id)));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.spawn_item_set", item.getDescription()), true);
-        return 1;
+        return apply(context, resolver, config -> config.withSpawnItem(Optional.of(id)),
+                count -> Component.translatable("gimpanum.command.spawn_item_set",
+                        item.getDescription(), count));
     }
 
     private static int clearSpawnItem(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
-        core.setConfig(core.config().withSpawnItem(Optional.empty()));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.spawn_item_seal"), true);
-        return 1;
+        return apply(context, resolver, config -> config.withSpawnItem(Optional.empty()),
+                count -> Component.translatable("gimpanum.command.spawn_item_seal", count));
     }
 
     private static int setExplosionEnabled(CommandContext<CommandSourceStack> context,
                                            CoreResolver resolver) throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         boolean value = BoolArgumentType.getBool(context, "value");
-        core.setConfig(core.config().withExplosionEnabled(value));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.explosion_enabled_set", value), true);
-        return 1;
+        return apply(context, resolver, config -> config.withExplosionEnabled(value),
+                count -> Component.translatable("gimpanum.command.explosion_enabled_set", value, count));
     }
 
     private static int setExplosion(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        CoreBlockEntity core = resolver.resolve(context);
         float power = FloatArgumentType.getFloat(context, "power");
         boolean fire = BoolArgumentType.getBool(context, "fire");
-
-        core.setConfig(core.config().withExplosion(power, fire));
-        context.getSource().sendSuccess(
-                () -> Component.translatable("gimpanum.command.explosion_set", power, fire), true);
-        return 1;
+        return apply(context, resolver, config -> config.withExplosion(power, fire),
+                count -> Component.translatable("gimpanum.command.explosion_set", power, fire, count));
     }
 }
