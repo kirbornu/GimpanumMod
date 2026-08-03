@@ -121,7 +121,15 @@ public final class DestructionArbiter {
                 }
                 Gimpanum.LOGGER.info("[арбитр] {} — уничтожение подтверждено, мировая позиция {}",
                         pending.blockId(), pending.worldPos());
-                pending.onConfirmedDestroyed().accept(pending);
+                try {
+                    pending.onConfirmedDestroyed().accept(pending);
+                } catch (Throwable t) {
+                    // Последствия выполняются внутри серверного тика: взрыв на
+                    // физической конструкции идёт через чужие миксины, и одно
+                    // исключение оттуда положило бы весь тик, а с ним сервер.
+                    Gimpanum.LOGGER.error("Последствия гибели Ядра {} прерваны ошибкой",
+                            pending.blockId(), t);
+                }
             }
         }
 

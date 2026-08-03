@@ -181,6 +181,19 @@ public class CoreBlockEntity extends BlockEntity {
      * выдача — отдельный тег со своим выключателем.
      */
     public void serverTick() {
+        try {
+            tickInternal();
+        } catch (Throwable t) {
+            // Тик Ядра идёт в общем цикле блок-сущностей; исключение отсюда
+            // остановило бы тик всего чанка. Гасим выдачу у этого Ядра и живём
+            // дальше.
+            config = config.withSpawnEnabled(false);
+            Gimpanum.LOGGER.error("Тик Ядра '{}' прерван ошибкой, выдача отключена",
+                    config.name(), t);
+        }
+    }
+
+    private void tickInternal() {
         if (stateSyncPending) {
             stateSyncPending = false;
             syncInvulnerableState();
