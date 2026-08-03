@@ -65,12 +65,26 @@ def extractSableNestedJars = tasks.register('extractSableNestedJars', Copy) {
     into sableDepsDir
 }
 
+// FTB Teams — тоже необязательная зависимость, тоже из модпака. ftb-library и
+// architectury нужны лишь для того, чтобы javac разрешил сигнатуры TeamManager.
+def ftbJars = files(
+        "other_mods_in_modpack/ftb-teams-neoforge-${ftb_teams_version}.jar",
+        "other_mods_in_modpack/ftb-library-neoforge-${ftb_library_version}.jar",
+        "other_mods_in_modpack/architectury-${architectury_version}-neoforge.jar"
+).filter { it.exists() }
+
 dependencies {
     if (sableJar.exists()) {
         compileOnly files(sableJar)
         compileOnly fileTree(dir: sableDepsDir, include: '*.jar').builtBy(extractSableNestedJars)
     } else {
         logger.lifecycle("Sable jar not found at ${sableJar} — building without sublevel support.")
+    }
+
+    if (!ftbJars.isEmpty()) {
+        compileOnly ftbJars
+    } else {
+        logger.lifecycle("FTB Teams jars not found — building without team support.")
     }
 }
 
