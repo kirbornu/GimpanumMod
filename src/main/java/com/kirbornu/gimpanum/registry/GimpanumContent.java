@@ -3,6 +3,8 @@ package com.kirbornu.gimpanum.registry;
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.core.CoreBlock;
 import com.kirbornu.gimpanum.core.CoreBlockEntity;
+import com.kirbornu.gimpanum.core.CoreBlockItem;
+import com.kirbornu.gimpanum.core.CoreConfig;
 import com.kirbornu.gimpanum.debug.ProbeBlock;
 import com.kirbornu.gimpanum.debug.ProbeBlockEntity;
 import com.kirbornu.gimpanum.item.SealContents;
@@ -74,7 +76,22 @@ public final class GimpanumContent {
                     .noLootTable()
     );
 
-    public static final DeferredItem<?> CORE_ITEM = ITEMS.registerSimpleBlockItem(CORE);
+    /**
+     * Настройка, перенесённая в предмет. Благодаря этому Ядро копируется
+     * средней кнопкой вместе со всеми привязками и тегами.
+     */
+    public static final Supplier<DataComponentType<CoreConfig>> CORE_CONFIG =
+            DATA_COMPONENTS.register("core_config",
+                    () -> DataComponentType.<CoreConfig>builder()
+                            .persistent(CoreConfig.CODEC)
+                            .networkSynchronized(CoreConfig.STREAM_CODEC)
+                            .build());
+
+    public static final DeferredItem<CoreBlockItem> CORE_ITEM = ITEMS.registerItem(
+            "core",
+            properties -> new CoreBlockItem(CORE.get(), properties),
+            new Item.Properties()
+    );
 
     public static final Supplier<BlockEntityType<CoreBlockEntity>> CORE_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("core",

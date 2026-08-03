@@ -56,6 +56,11 @@ public final class CoreCommand {
     private static final SuggestionProvider<CommandSourceStack> TEAM_NAMES =
             (context, builder) -> SharedSuggestionProvider.suggest(FtbTeamsSupport.crewNames(), builder);
 
+    /** Ники игроков в сети — привязывают обычно присутствующих. */
+    private static final SuggestionProvider<CommandSourceStack> ONLINE_PLAYERS =
+            (context, builder) -> SharedSuggestionProvider.suggest(
+                    context.getSource().getOnlinePlayerNames(), builder);
+
     /** Как добраться до Ядра: по имени или по координатам. */
     @FunctionalInterface
     private interface CoreResolver {
@@ -63,6 +68,25 @@ public final class CoreCommand {
     }
 
     private CoreCommand() {
+    }
+
+    /**
+     * Подсказывает уже привязанные ники — отвязывать имеет смысл только их.
+     *
+     * <p>Ядро на этот момент уже разобрано из аргументов, но подсказки строятся
+     * и по недописанной команде, поэтому промах здесь нормален и просто даёт
+     * пустой список.
+     */
+    private static SuggestionProvider<CommandSourceStack> boundPlayersOf(CoreResolver resolver) {
+        return (context, builder) -> {
+            List<String> names;
+            try {
+                names = resolver.resolve(context).config().boundPlayers();
+            } catch (Exception e) {
+                names = List.of();
+            }
+            return SharedSuggestionProvider.suggest(names, builder);
+        };
     }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -105,9 +129,11 @@ public final class CoreCommand {
                 .then(Commands.literal("player")
                         .then(Commands.literal("add")
                                 .then(Commands.argument("name", StringArgumentType.word())
+                                        .suggests(ONLINE_PLAYERS)
                                         .executes(context -> addPlayer(context, resolver))))
                         .then(Commands.literal("remove")
                                 .then(Commands.argument("name", StringArgumentType.word())
+                                        .suggests(boundPlayersOf(resolver))
                                         .executes(context -> removePlayer(context, resolver))))
                         .then(Commands.literal("clear")
                                 .executes(context -> clearPlayers(context, resolver))))
@@ -137,6 +163,9 @@ public final class CoreCommand {
                                         .executes(context -> setPostfix(context, resolver))))
                         .then(Commands.literal("clear")
                                 .executes(context -> clearPostfix(context, resolver))))
+                .then(Commands.literal("seal")
+                        .then(Commands.argument("value", BoolArgumentType.bool())
+                                .executes(context -> setSealEnabled(context, resolver))))
                 .then(Commands.literal("explosion")
                         .then(Commands.literal("enabled")
                                 .then(Commands.argument("value", BoolArgumentType.bool())
@@ -214,6 +243,8 @@ public final class CoreCommand {
 
         config.sealPostfix().ifPresent(postfix -> source.sendSuccess(
                 () -> Component.translatable("gimpanum.core.postfix", postfix), false));
+        source.sendSuccess(() -> Component.translatable("gimpanum.core.seal",
+                config.sealEnabled()), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.core.explosion",
                 config.explosionEnabled(), config.explosionPower(), config.explosionFire()), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.core.invulnerable",
@@ -406,6 +437,16 @@ public final class CoreCommand {
         core.setConfig(core.config().withSealPostfix(Optional.empty()));
         context.getSource().sendSuccess(
                 () -> Component.translatable("gimpanum.command.postfix_cleared"), true);
+        return 1;
+    }
+
+    private static int setSealEnabled(CommandContext<CommandSourceStack> context, CoreResolver resolver)
+            throws CommandSyntaxException {
+        CoreBlockEntity core = resolver.resolve(context);
+        boolean value = BoolArgumentType.getBool(context, "value");
+        core.setConfig(core.config().withSealEnabled(value));
+        context.getSource().sendSuccess(
+                () -> Component.translatable("gimpanum.command.seal_enabled_set", value), true);
         return 1;
     }
 

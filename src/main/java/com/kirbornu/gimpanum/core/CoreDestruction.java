@@ -31,16 +31,22 @@ public final class CoreDestruction {
     private CoreDestruction() {
     }
 
-    /** Порядок задан замыслом: сначала Печать, потом команды, потом взрыв. */
+    /**
+     * Порядок задан замыслом: сначала команды, потом взрыв, и только потом
+     * Печать. Печать появляется последней намеренно — так взрыв заведомо не
+     * может её задеть.
+     */
     public static void run(ServerLevel level, Vec3 worldPos, CoreConfig config) {
         MinecraftServer server = level.getServer();
         SealContents contents = config.sealContents();
 
-        dropSeal(level, worldPos, contents);
         runCommands(server, level, worldPos, config, contents);
 
         if (config.explosionEnabled()) {
             explode(level, worldPos, config);
+        }
+        if (config.sealEnabled()) {
+            dropSeal(level, worldPos, contents);
         }
     }
 
@@ -53,7 +59,7 @@ public final class CoreDestruction {
         ItemEntity entity = new ItemEntity(level, worldPos.x, worldPos.y, worldPos.z, seal);
         entity.setDeltaMovement(Vec3.ZERO);
         entity.setNoPickUpDelay();
-        // Взрыв следует сразу за дропом и иначе уничтожил бы Печать.
+        // Взрыв уже отгремел, но огонь после него мог остаться.
         entity.setInvulnerable(true);
         level.addFreshEntity(entity);
     }

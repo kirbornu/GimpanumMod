@@ -1,14 +1,11 @@
 {
     "itemGroup.gimpanum.main": "Gimpanum",
-
     "block.gimpanum.core": "Phonosomics Core",
     "block.gimpanum.probe": "Sublevel Probe",
     "item.gimpanum.seal": "Crystal Seal",
-
     "item.gimpanum.seal.bound": "Bound players:",
     "item.gimpanum.seal.team": "Crew \"%s\":",
     "item.gimpanum.seal.empty": "Not bound to anyone",
-
     "gimpanum.core.header": "=== Core \"%s\" ===",
     "gimpanum.core.armed": "ARMED — this Core is live",
     "gimpanum.core.safe": "Safety on — nothing will happen",
@@ -18,7 +15,6 @@
     "gimpanum.core.explosion": "Explosion: enabled %s, power %s, fire %s",
     "gimpanum.core.invulnerable": "Invulnerable: %s",
     "gimpanum.core.on_sublevel": "On a physical contraption: %s",
-
     "gimpanum.command.not_a_core": "There is no Core at that position",
     "gimpanum.command.unknown_core": "No loaded Core by that name",
     "gimpanum.command.no_cores": "No Cores are loaded",
@@ -44,5 +40,14 @@
     "gimpanum.command.postfix_set": "Seal postfix: %s",
     "gimpanum.command.postfix_cleared": "Seal postfix cleared",
     "gimpanum.command.explosion_enabled_set": "Explosion enabled: %s",
-    "gimpanum.command.explosion_set": "Explosion: power %s, fire %s"
+    "gimpanum.command.explosion_set": "Explosion: power %s, fire %s",
+    "gimpanum.yes": "yes",
+    "gimpanum.no": "no",
+    "item.gimpanum.core.blank": "No configuration",
+    "item.gimpanum.core.configured": "Carries a Core configuration",
+    "item.gimpanum.core.bound": "Bound: %s player(s), %s crew(s)",
+    "item.gimpanum.core.commands": "Commands: %s",
+    "item.gimpanum.core.tags": "Armed %s · invulnerable %s · seal %s · explosion %s",
+    "gimpanum.core.seal": "Seal: %s",
+    "gimpanum.command.seal_enabled_set": "Seal: %s"
 }
