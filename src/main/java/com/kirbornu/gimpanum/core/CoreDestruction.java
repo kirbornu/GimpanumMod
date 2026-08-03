@@ -102,8 +102,15 @@ public final class CoreDestruction {
         }
     }
 
+    /**
+     * Взрыв идёт от постоянного фиктивного игрока, а не «ничей».
+     *
+     * <p>Безымянный взрыв моды на защиту территорий обрабатывают по-разному, и
+     * предсказать это нельзя. С устойчивым источником достаточно один раз выдать
+     * ему права в клейме — см. {@link CoreFakePlayer}.
+     */
     private static void explode(ServerLevel level, Vec3 worldPos, CoreConfig config) {
-        level.explode(null, worldPos.x, worldPos.y, worldPos.z,
+        level.explode(CoreFakePlayer.get(level), worldPos.x, worldPos.y, worldPos.z,
                 config.explosionPower(), config.explosionFire(),
                 Level.ExplosionInteraction.BLOCK);
     }
