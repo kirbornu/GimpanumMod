@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 
 import java.util.List;
 
@@ -19,8 +20,22 @@ import java.util.List;
  */
 public class SealItem extends Item {
 
+    /**
+     * Час до исчезновения вместо ванильных пяти минут.
+     *
+     * <p>Задано на предмете, а не на выброшенной сущности, чтобы Печать жила
+     * одинаково долго независимо от того, откуда она взялась: из погибшего Ядра,
+     * из периодической выдачи или просто выброшена игроком из инвентаря.
+     */
+    private static final int LIFESPAN_TICKS = 60 * 60 * 20;
+
     public SealItem(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public int getEntityLifespan(ItemStack stack, Level level) {
+        return LIFESPAN_TICKS;
     }
 
     public static SealContents contents(ItemStack stack) {

@@ -27,7 +27,7 @@ public final class SealDrops {
         ItemEntity entity = new ItemEntity(level, worldPos.x, worldPos.y, worldPos.z, stack);
         entity.setDeltaMovement(Vec3.ZERO);
         entity.setNoPickUpDelay();
-        protect(entity);
+        protect(entity, stack, level);
         level.addFreshEntity(entity);
     }
 
@@ -35,14 +35,17 @@ public final class SealDrops {
      * Печать — трофей, и пропасть она не должна.
      *
      * <p>{@code setInvulnerable} закрывает урон: взрыв, огонь, лаву, кактус.
-     * {@code setUnlimitedLifetime} убирает пятиминутный таймер исчезновения.
-     *
-     * <p>Полностью неуязвимой сущность в Minecraft сделать нельзя: источники с
+     * Полностью неуязвимой сущность в Minecraft сделать нельзя: источники с
      * тегом {@code BYPASSES_INVULNERABILITY} — падение в пустоту, {@code /kill}
      * и удар игрока в креативе — проходят всегда, по устройству игры.
+     *
+     * <p>Срок жизни берётся у самого предмета, а не назначается здесь: у Печати
+     * он свой ({@code SealItem}), у прочих выдаваемых предметов остаётся
+     * ванильным. Так выброшенная Печать живёт одинаково долго независимо от
+     * того, откуда она взялась.
      */
-    private static void protect(ItemEntity entity) {
+    private static void protect(ItemEntity entity, ItemStack stack, ServerLevel level) {
         entity.setInvulnerable(true);
-        entity.setUnlimitedLifetime();
+        entity.lifespan = stack.getItem().getEntityLifespan(stack, level);
     }
 }
