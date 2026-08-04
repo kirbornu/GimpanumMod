@@ -2,6 +2,14 @@
     "itemGroup.gimpanum.main": "Gimpanum",
     "block.gimpanum.core": "Ядро фоносомики",
     "block.gimpanum.probe": "Зонд конструкций",
+    "block.gimpanum.capture_point": "Контрольная точка",
+    "gimpanum.point.neutral": "Контрольная точка ничья",
+    "gimpanum.point.held_by": "Контрольная точка за экипажем «%s»",
+    "gimpanum.point.captured": "Контрольную точку захватил экипаж «%s» (%s)",
+    "gimpanum.point.released": "Контрольная точка снова ничья",
+    "gimpanum.point.no_team": "Захватывать точку может только участник команды FTB",
+    "gimpanum.point.hint": "Присесть + ПКМ — сделать точку ничьей",
+    "gimpanum.point.claim_name": "Контрольная точка",
     "item.gimpanum.seal": "Хрустальная печать",
     "gimpanum.yes": "да",
     "gimpanum.no": "нет",
@@ -62,5 +70,7 @@
     "gimpanum.command.spawn_item_seal": "Выдаваться будет Печать. Ядер: %s",
     "gimpanum.command.no_match": "Под образец не подошло ни одного Ядра",
     "gimpanum.command.pattern_not_allowed": "Здесь образец недопустим: имя Ядра должно быть уникальным",
-    "gimpanum.command.default_name_set": "Приставка для имён новых Ядер: %s"
+    "gimpanum.command.default_name_set": "Приставка для имён новых Ядер: %s",
+    "gimpanum.core.death_commands": "Выполнять команды при гибели: %s",
+    "gimpanum.command.death_commands_set": "Команды при гибели: %s. Ядер: %s"
 }

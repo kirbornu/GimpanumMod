@@ -1,6 +1,8 @@
 package com.kirbornu.gimpanum.registry;
 
 import com.kirbornu.gimpanum.Gimpanum;
+import com.kirbornu.gimpanum.capture.CapturePointBlock;
+import com.kirbornu.gimpanum.capture.CapturePointBlockEntity;
 import com.kirbornu.gimpanum.core.CoreBlock;
 import com.kirbornu.gimpanum.core.CoreBlockEntity;
 import com.kirbornu.gimpanum.core.CoreBlockItem;
@@ -97,6 +99,39 @@ public final class GimpanumContent {
             BLOCK_ENTITIES.register("core",
                     () -> BlockEntityType.Builder.of(CoreBlockEntity::new, CORE.get()).build(null));
 
+    /**
+     * Контрольная точка. {@code strength(-1, 3600000)} — те же числа, что у
+     * бедрока, и это не украшение:
+     * <ul>
+     *   <li>нулевая прочность {@code -1} делает блок неломаемым в выживании и
+     *       заодно отсеивает его из сборки конструкций — {@code Simulated}
+     *       проверяет ровно это значение;</li>
+     *   <li>сопротивление взрыву читает и Create Big Cannons через
+     *       безаргументный {@code getExplosionResistance()}, поэтому снаряды
+     *       точку не берут и датапак брони ей не нужен.</li>
+     * </ul>
+     *
+     * <p>{@code noLootTable}: точку, как и Ядро, нельзя унести — только снести
+     * в креативе.
+     */
+    public static final DeferredBlock<CapturePointBlock> CAPTURE_POINT = BLOCKS.registerBlock(
+            "capture_point",
+            CapturePointBlock::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_CYAN)
+                    .sound(SoundType.NETHERITE_BLOCK)
+                    .strength(-1.0F, 3_600_000.0F)
+                    .lightLevel(state -> 10)
+                    .noLootTable()
+    );
+
+    public static final DeferredItem<?> CAPTURE_POINT_ITEM = ITEMS.registerSimpleBlockItem(CAPTURE_POINT);
+
+    public static final Supplier<BlockEntityType<CapturePointBlockEntity>> CAPTURE_POINT_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("capture_point",
+                    () -> BlockEntityType.Builder.of(CapturePointBlockEntity::new,
+                            CAPTURE_POINT.get()).build(null));
+
     /** Привязки, записанные в Печать. */
     public static final Supplier<DataComponentType<SealContents>> SEAL_CONTENTS =
             DATA_COMPONENTS.register("seal_contents",
@@ -119,6 +154,7 @@ public final class GimpanumContent {
                     .icon(() -> new ItemStack(CORE.get()))
                     .displayItems((params, output) -> {
                         output.accept(CORE_ITEM.get());
+                        output.accept(CAPTURE_POINT_ITEM.get());
                         output.accept(SEAL.get());
                         output.accept(PROBE_ITEM.get());
                     })

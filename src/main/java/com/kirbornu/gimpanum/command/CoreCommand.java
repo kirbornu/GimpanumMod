@@ -186,6 +186,8 @@ public final class CoreCommand {
                                         .executes(context -> removeTeam(context, resolver))))
                         .then(Commands.literal("clear")
                                 .executes(context -> clearTeams(context, resolver))))
+                // Список команд один на гибель Ядра и на периодическую выдачу;
+                // on_death задаёт, срабатывает ли он посмертно.
                 .then(Commands.literal("command")
                         .then(Commands.literal("add")
                                 .then(Commands.argument("command", StringArgumentType.greedyString())
@@ -194,7 +196,10 @@ public final class CoreCommand {
                                 .then(Commands.argument("index", IntegerArgumentType.integer(1))
                                         .executes(context -> removeCommand(context, resolver))))
                         .then(Commands.literal("clear")
-                                .executes(context -> clearCommands(context, resolver))))
+                                .executes(context -> clearCommands(context, resolver)))
+                        .then(Commands.literal("on_death")
+                                .then(Commands.argument("value", BoolArgumentType.bool())
+                                        .executes(context -> setDeathCommands(context, resolver)))))
                 .then(Commands.literal("postfix")
                         .then(Commands.literal("set")
                                 .then(Commands.argument("text", StringArgumentType.greedyString())
@@ -340,6 +345,8 @@ public final class CoreCommand {
                 String line = " " + (i + 1) + ". " + commands.get(i);
                 source.sendSuccess(() -> Component.literal(line), false);
             }
+            source.sendSuccess(() -> Component.translatable("gimpanum.core.death_commands",
+                    config.deathCommands()), false);
         }
 
         config.sealPostfix().ifPresent(postfix -> source.sendSuccess(
@@ -347,8 +354,8 @@ public final class CoreCommand {
         source.sendSuccess(() -> Component.translatable("gimpanum.core.seal",
                 config.sealEnabled(), config.sealPrice()), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.core.spawn",
-                config.spawnEnabled(), config.spawnIntervalSeconds(),
-                config.spawnItem().map(ResourceLocation::toString)
+                config.spawn().enabled(), config.spawn().intervalSeconds(),
+                config.spawn().item().map(ResourceLocation::toString)
                         .orElse(Component.translatable("gimpanum.core.spawn_seal").getString())), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.core.explosion",
                 config.explosionEnabled(), config.explosionPower(), config.explosionFire()), false);
@@ -494,6 +501,13 @@ public final class CoreCommand {
                 count -> Component.translatable("gimpanum.command.commands_cleared", count));
     }
 
+    private static int setDeathCommands(CommandContext<CommandSourceStack> context, CoreResolver resolver)
+            throws CommandSyntaxException {
+        boolean value = BoolArgumentType.getBool(context, "value");
+        return apply(context, resolver, config -> config.withDeathCommands(value),
+                count -> Component.translatable("gimpanum.command.death_commands_set", value, count));
+    }
+
     private static int setPostfix(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
         String text = StringArgumentType.getString(context, "text");
@@ -524,14 +538,15 @@ public final class CoreCommand {
     private static int setSpawnEnabled(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
         boolean value = BoolArgumentType.getBool(context, "value");
-        return apply(context, resolver, config -> config.withSpawnEnabled(value),
+        return apply(context, resolver, config -> config.withSpawn(config.spawn().withEnabled(value)),
                 count -> Component.translatable("gimpanum.command.spawn_enabled_set", value, count));
     }
 
     private static int setSpawnInterval(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
         int seconds = IntegerArgumentType.getInteger(context, "seconds");
-        return apply(context, resolver, config -> config.withSpawnInterval(seconds),
+        return apply(context, resolver,
+                config -> config.withSpawn(config.spawn().withIntervalSeconds(seconds)),
                 count -> Component.translatable("gimpanum.command.spawn_interval_set", seconds, count));
     }
 
@@ -539,14 +554,16 @@ public final class CoreCommand {
             throws CommandSyntaxException {
         Item item = ItemArgument.getItem(context, "item").getItem();
         ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
-        return apply(context, resolver, config -> config.withSpawnItem(Optional.of(id)),
+        return apply(context, resolver,
+                config -> config.withSpawn(config.spawn().withItem(Optional.of(id))),
                 count -> Component.translatable("gimpanum.command.spawn_item_set",
                         item.getDescription(), count));
     }
 
     private static int clearSpawnItem(CommandContext<CommandSourceStack> context, CoreResolver resolver)
             throws CommandSyntaxException {
-        return apply(context, resolver, config -> config.withSpawnItem(Optional.empty()),
+        return apply(context, resolver,
+                config -> config.withSpawn(config.spawn().withItem(Optional.empty())),
                 count -> Component.translatable("gimpanum.command.spawn_item_seal", count));
     }
 
