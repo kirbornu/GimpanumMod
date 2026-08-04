@@ -72,5 +72,6 @@
     "gimpanum.command.pattern_not_allowed": "Здесь образец недопустим: имя Ядра должно быть уникальным",
     "gimpanum.command.default_name_set": "Приставка для имён новых Ядер: %s",
     "gimpanum.core.death_commands": "Выполнять команды при гибели: %s",
-    "gimpanum.command.death_commands_set": "Команды при гибели: %s. Ядер: %s"
+    "gimpanum.command.death_commands_set": "Команды при гибели: %s. Ядер: %s",
+    "item.gimpanum.crystal_bead": "Хрусталик"
 }

@@ -147,6 +147,19 @@ public final class GimpanumContent {
             new Item.Properties().stacksTo(1).fireResistant()
     );
 
+    /**
+     * Хрусталик — валюта и ничего кроме. Ни свойств, ни применений: весь смысл в
+     * том, чтобы его копили и обменивали между собой.
+     *
+     * <p>{@code fireResistant} — единственная поблажка, та же, что у Печати:
+     * накопленное не должно сгорать в лаве. Срок жизни выброшенного Хрусталика
+     * ванильный, в отличие от Печати.
+     */
+    public static final DeferredItem<Item> CRYSTAL_BEAD = ITEMS.registerSimpleItem(
+            "crystal_bead",
+            new Item.Properties().fireResistant()
+    );
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register(
             "main",
             () -> CreativeModeTab.builder()
@@ -156,6 +169,7 @@ public final class GimpanumContent {
                         output.accept(CORE_ITEM.get());
                         output.accept(CAPTURE_POINT_ITEM.get());
                         output.accept(SEAL.get());
+                        output.accept(CRYSTAL_BEAD.get());
                         output.accept(PROBE_ITEM.get());
                     })
                     .build()
