@@ -5,6 +5,7 @@ import com.kirbornu.gimpanum.core.CoreBlock;
 import com.kirbornu.gimpanum.core.CoreBlockEntity;
 import com.kirbornu.gimpanum.core.CoreConfig;
 import com.kirbornu.gimpanum.core.CoreIndex;
+import com.kirbornu.gimpanum.core.SpawnSettings;
 import com.kirbornu.gimpanum.integration.FtbTeamsSupport;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
@@ -220,6 +221,10 @@ public final class CoreCommand {
                         .then(Commands.literal("interval")
                                 .then(Commands.argument("seconds", IntegerArgumentType.integer(1))
                                         .executes(context -> setSpawnInterval(context, resolver))))
+                        .then(Commands.literal("count")
+                                .then(Commands.argument("count",
+                                                IntegerArgumentType.integer(1, SpawnSettings.MAX_COUNT))
+                                        .executes(context -> setSpawnCount(context, resolver))))
                         .then(Commands.literal("item")
                                 .then(Commands.argument("item", ItemArgument.item(buildContext))
                                         .executes(context -> setSpawnItem(context, resolver))))
@@ -356,7 +361,8 @@ public final class CoreCommand {
         source.sendSuccess(() -> Component.translatable("gimpanum.core.spawn",
                 config.spawn().enabled(), config.spawn().intervalSeconds(),
                 config.spawn().item().map(ResourceLocation::toString)
-                        .orElse(Component.translatable("gimpanum.core.spawn_seal").getString())), false);
+                        .orElse(Component.translatable("gimpanum.core.spawn_seal").getString()),
+                config.spawn().count()), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.core.explosion",
                 config.explosionEnabled(), config.explosionPower(), config.explosionFire()), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.core.invulnerable",
@@ -548,6 +554,13 @@ public final class CoreCommand {
         return apply(context, resolver,
                 config -> config.withSpawn(config.spawn().withIntervalSeconds(seconds)),
                 count -> Component.translatable("gimpanum.command.spawn_interval_set", seconds, count));
+    }
+
+    private static int setSpawnCount(CommandContext<CommandSourceStack> context, CoreResolver resolver)
+            throws CommandSyntaxException {
+        int count = IntegerArgumentType.getInteger(context, "count");
+        return apply(context, resolver, config -> config.withSpawn(config.spawn().withCount(count)),
+                result -> Component.translatable("gimpanum.command.spawn_count_set", count, result));
     }
 
     private static int setSpawnItem(CommandContext<CommandSourceStack> context, CoreResolver resolver)

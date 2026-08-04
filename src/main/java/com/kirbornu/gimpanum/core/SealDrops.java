@@ -23,6 +23,23 @@ public final class SealDrops {
         spawn(level, worldPos, SealItem.create(contents));
     }
 
+    /**
+     * Выдаёт несколько штук предмета, разбивая их по стопкам.
+     *
+     * <p>Одна сущность на стопку, как это делает ваниль. Слить всё в одну
+     * сущность нельзя: количество больше стопки не переживает сохранение мира —
+     * {@code ItemStack.CODEC} принимает только {@code 1..99}.
+     */
+    public static void spawnBatch(ServerLevel level, Vec3 worldPos, ItemStack prototype, int count) {
+        int remaining = Math.max(1, count);
+        int perStack = Math.max(1, prototype.getMaxStackSize());
+        while (remaining > 0) {
+            int size = Math.min(remaining, perStack);
+            spawn(level, worldPos, prototype.copyWithCount(size));
+            remaining -= size;
+        }
+    }
+
     public static void spawn(ServerLevel level, Vec3 worldPos, ItemStack stack) {
         ItemEntity entity = new ItemEntity(level, worldPos.x, worldPos.y, worldPos.z, stack);
         entity.setDeltaMovement(Vec3.ZERO);

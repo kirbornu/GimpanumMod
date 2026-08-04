@@ -203,7 +203,8 @@ public class CoreBlock extends Block implements EntityBlock {
             player.sendSystemMessage(Component.translatable("gimpanum.core.spawn",
                             config.spawn().enabled(), config.spawn().intervalSeconds(),
                             config.spawn().item().map(Object::toString)
-                                    .orElse(Component.translatable("gimpanum.core.spawn_seal").getString()))
+                                    .orElse(Component.translatable("gimpanum.core.spawn_seal").getString()),
+                            config.spawn().count())
                     .withStyle(ChatFormatting.GRAY));
         }
         player.sendSystemMessage(Component.translatable("gimpanum.core.explosion",
