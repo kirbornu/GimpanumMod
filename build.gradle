@@ -73,6 +73,11 @@ def ftbJars = files(
         "other_mods_in_modpack/architectury-${architectury_version}-neoforge.jar"
 ).filter { it.exists() }
 
+// Open Parties and Claims — единственный клеймовый мод сборки с публичным API.
+// Нужен только для компиляции моста; без него Контрольная точка работает, но
+// чанк не клеймит.
+def opacJar = file("other_mods_in_modpack/open-parties-and-claims-neoforge-${minecraft_version}-${opac_version}.jar")
+
 dependencies {
     if (sableJar.exists()) {
         compileOnly files(sableJar)
@@ -85,6 +90,12 @@ dependencies {
         compileOnly ftbJars
     } else {
         logger.lifecycle("FTB Teams jars not found — building without team support.")
+    }
+
+    if (opacJar.exists()) {
+        compileOnly files(opacJar)
+    } else {
+        logger.lifecycle("Open Parties and Claims jar not found at ${opacJar} — building without claim support.")
     }
 }
 

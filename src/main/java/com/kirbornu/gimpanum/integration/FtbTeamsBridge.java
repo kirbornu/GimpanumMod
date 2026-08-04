@@ -5,6 +5,7 @@ import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
 import dev.ftb.mods.ftbteams.api.TeamManager;
+import dev.ftb.mods.ftbteams.api.property.TeamProperties;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.GameProfileCache;
@@ -29,6 +30,22 @@ final class FtbTeamsBridge {
 
     static boolean isManagerReady() {
         return FTBTeamsAPI.api().isManagerLoaded();
+    }
+
+    /**
+     * Команда, за которой закрепится захваченная Контрольная точка.
+     *
+     * <p>В отличие от {@link #crews(TeamManager)} личная команда игрока здесь
+     * годится: захватить точку в одиночку — законный расклад, и оформлять её
+     * тогда надо на самого захватчика.
+     */
+    static Optional<TeamOwner> ownerOf(ServerPlayer player) {
+        if (!FTBTeamsAPI.api().isManagerLoaded()) {
+            return Optional.empty();
+        }
+        return FTBTeamsAPI.api().getManager().getTeamForPlayer(player)
+                .map(team -> new TeamOwner(displayName(team), team.getOwner(),
+                        team.getProperty(TeamProperties.COLOR).rgb()));
     }
 
     /**
