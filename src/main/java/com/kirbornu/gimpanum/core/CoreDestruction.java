@@ -1,18 +1,9 @@
 package com.kirbornu.gimpanum.core;
 
-import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.item.SealContents;
-import com.kirbornu.gimpanum.item.SealItem;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.List;
 
 /**
  * Последствия подтверждённой гибели Ядра.
@@ -40,13 +31,16 @@ public final class CoreDestruction {
      * последней — так взрыв заведомо не может её задеть.
      */
     public static void run(ServerLevel level, Vec3 worldPos, CoreConfig config) {
-        MinecraftServer server = level.getServer();
         SealContents contents = config.sealContents();
 
         if (config.explosionEnabled()) {
             explode(level, worldPos, config);
         }
-        runCommands(server, level, worldPos, config, contents);
+        // Список команд общий с периодической выдачей, поэтому у посмертного
+        // исполнения свой выключатель.
+        if (config.deathCommands()) {
+            CoreCommandRunner.run(level, worldPos, config);
+        }
 
         if (config.sealEnabled()) {
             dropSeal(level, worldPos, contents);
@@ -62,47 +56,6 @@ public final class CoreDestruction {
     }
 
     /**
-     * Выполняет настроенные команды для каждого затронутого игрока — как
-     * привязанного лично, так и попавшего в привязанный экипаж.
-     *
-     * <p>Права уровня 4, как у консоли; {@code @s} — сам игрок; начало отсчёта
-     * для {@code ~} — мировая позиция погибшего Ядра.
-     */
-    private static void runCommands(MinecraftServer server, ServerLevel level, Vec3 worldPos,
-                                    CoreConfig config, SealContents contents) {
-        if (config.commands().isEmpty()) {
-            return;
-        }
-
-        List<String> targets = contents.allPlayers();
-        for (String name : targets) {
-            ServerPlayer player = server.getPlayerList().getPlayerByName(name);
-            if (player == null) {
-                Gimpanum.LOGGER.info("Ядро '{}': игрок {} не в сети, команды для него пропущены",
-                        config.name(), name);
-                continue;
-            }
-
-            CommandSourceStack source = server.createCommandSourceStack()
-                    .withLevel(level)
-                    .withEntity(player)
-                    .withPosition(worldPos)
-                    .withPermission(4)
-                    .withSuppressedOutput();
-
-            for (String command : config.commands()) {
-                // Одна кривая команда не должна отменять остальные и взрыв.
-                try {
-                    server.getCommands().performPrefixedCommand(source, stripSlash(command));
-                } catch (Exception e) {
-                    Gimpanum.LOGGER.error("Ядро '{}': команда '{}' для {} не выполнилась",
-                            config.name(), command, name, e);
-                }
-            }
-        }
-    }
-
-    /**
      * Взрыв идёт от постоянного фиктивного игрока, а не «ничей».
      *
      * <p>Безымянный взрыв моды на защиту территорий обрабатывают по-разному, и
@@ -113,9 +66,5 @@ public final class CoreDestruction {
         level.explode(CoreFakePlayer.get(level), worldPos.x, worldPos.y, worldPos.z,
                 config.explosionPower(), config.explosionFire(),
                 Level.ExplosionInteraction.BLOCK);
-    }
-
-    private static String stripSlash(String command) {
-        return command.startsWith("/") ? command.substring(1) : command;
     }
 }

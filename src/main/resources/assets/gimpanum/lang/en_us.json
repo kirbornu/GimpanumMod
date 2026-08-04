@@ -70,5 +70,7 @@
     "gimpanum.command.spawn_item_seal": "Will spawn a Seal. Cores: %s",
     "gimpanum.command.no_match": "No Core matched that pattern",
     "gimpanum.command.pattern_not_allowed": "A pattern is not allowed here: Core names must stay unique",
-    "gimpanum.command.default_name_set": "Prefix for new Core names: %s"
+    "gimpanum.command.default_name_set": "Prefix for new Core names: %s",
+    "gimpanum.core.death_commands": "Run commands on destruction: %s",
+    "gimpanum.command.death_commands_set": "Commands on destruction: %s. Cores: %s"
 }

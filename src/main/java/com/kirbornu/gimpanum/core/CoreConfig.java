@@ -22,10 +22,14 @@ import java.util.Optional;
  * <p>Эта же запись кладётся в предмет при копировании Ядра средней кнопкой,
  * поэтому у неё есть и сетевой кодек.
  *
- * <p><b>Полей ровно 16 — предел {@code RecordCodecBuilder}.</b> Следующее поле
- * в плоский список уже не влезет: придётся собрать связанные настройки во
- * вложенные записи, а это меняет структуру NBT и потребует переноса данных
- * уже расставленных Ядер.
+ * <p>Список команд один на оба случая — и на гибель Ядра, и на периодическую
+ * выдачу. Отдельными выключателями ({@link #deathCommands()} и
+ * {@link SpawnSettings#enabled()}) задаётся, где именно он срабатывает.
+ *
+ * <p><b>Полей не больше шестнадцати — предел {@code RecordCodecBuilder}.</b>
+ * Настройки выдачи уже вынесены в {@link SpawnSettings}; следующие связанные
+ * поля надо собирать так же, отдельной записью с {@code MapCodec} — тогда NBT
+ * останется плоским и переносить данные расставленных Ядер не придётся.
  *
  * @param name             условное имя Ядра для команд; уникально среди
  *                         загруженных Ядер
@@ -41,15 +45,15 @@ import java.util.Optional;
  * @param autoDisableInvulnerable снимать ли неразрушимость вместе с
  *                         предохранителем; включено по умолчанию, чтобы боевое
  *                         Ядро не осталось неуязвимым по забывчивости
+ * @param deathCommands    выполнять ли команды при гибели Ядра; выключается,
+ *                         когда список нужен только для периодической выдачи
  * @param sealEnabled      ронять ли Печать при гибели
  * @param sealPrice        цена Печати
  * @param explosionEnabled взрывается ли Ядро при гибели; выключено по
  *                         умолчанию — взрыв включается осознанно
  * @param explosionPower   мощность взрыва; 4.0 — как у динамита
  * @param explosionFire    оставлять ли огонь
- * @param spawnEnabled     выдаёт ли Ядро предмет через равные промежутки
- * @param spawnIntervalSeconds промежуток между выдачами, в секундах
- * @param spawnItem        что выдавать; пусто — Печать со всеми свойствами
+ * @param spawn            периодическая выдача предмета
  */
 public record CoreConfig(
         String name,
@@ -60,25 +64,23 @@ public record CoreConfig(
         boolean armed,
         boolean invulnerable,
         boolean autoDisableInvulnerable,
+        boolean deathCommands,
         boolean sealEnabled,
         int sealPrice,
         boolean explosionEnabled,
         float explosionPower,
         boolean explosionFire,
-        boolean spawnEnabled,
-        int spawnIntervalSeconds,
-        Optional<ResourceLocation> spawnItem
+        SpawnSettings spawn
 ) {
 
     public static final float DEFAULT_POWER = 4.0F;
-    public static final int DEFAULT_SPAWN_INTERVAL_SECONDS = 60;
 
     public static final CoreConfig EMPTY = new CoreConfig(
             "", List.of(), List.of(), List.of(), Optional.empty(),
-            false, true, true,
+            false, true, true, true,
             true, SealContents.DEFAULT_PRICE,
             false, DEFAULT_POWER, true,
-            false, DEFAULT_SPAWN_INTERVAL_SECONDS, Optional.empty());
+            SpawnSettings.DISABLED);
 
     public static final Codec<CoreConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.optionalFieldOf("name", "").forGetter(CoreConfig::name),
@@ -90,15 +92,13 @@ public record CoreConfig(
             Codec.BOOL.optionalFieldOf("invulnerable", true).forGetter(CoreConfig::invulnerable),
             Codec.BOOL.optionalFieldOf("auto_disable_invulnerable", true)
                     .forGetter(CoreConfig::autoDisableInvulnerable),
+            Codec.BOOL.optionalFieldOf("death_commands", true).forGetter(CoreConfig::deathCommands),
             Codec.BOOL.optionalFieldOf("seal_enabled", true).forGetter(CoreConfig::sealEnabled),
             Codec.INT.optionalFieldOf("seal_price", SealContents.DEFAULT_PRICE).forGetter(CoreConfig::sealPrice),
             Codec.BOOL.optionalFieldOf("explosion_enabled", false).forGetter(CoreConfig::explosionEnabled),
             Codec.FLOAT.optionalFieldOf("explosion_power", DEFAULT_POWER).forGetter(CoreConfig::explosionPower),
             Codec.BOOL.optionalFieldOf("explosion_fire", true).forGetter(CoreConfig::explosionFire),
-            Codec.BOOL.optionalFieldOf("spawn_enabled", false).forGetter(CoreConfig::spawnEnabled),
-            Codec.INT.optionalFieldOf("spawn_interval_seconds", DEFAULT_SPAWN_INTERVAL_SECONDS)
-                    .forGetter(CoreConfig::spawnIntervalSeconds),
-            ResourceLocation.CODEC.optionalFieldOf("spawn_item").forGetter(CoreConfig::spawnItem)
+            SpawnSettings.CODEC.forGetter(CoreConfig::spawn)
     ).apply(instance, CoreConfig::new));
 
     /** Полей больше, чем принимает composite, поэтому кодек оборачивается целиком. */
@@ -113,32 +113,32 @@ public record CoreConfig(
 
     public CoreConfig withName(String value) {
         return new CoreConfig(value, boundPlayers, boundTeams, commands, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                invulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, spawn);
     }
 
     public CoreConfig withBoundPlayers(List<String> value) {
         return new CoreConfig(name, value, boundTeams, commands, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                invulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, spawn);
     }
 
     public CoreConfig withBoundTeams(List<BoundTeam> value) {
         return new CoreConfig(name, boundPlayers, value, commands, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                invulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, spawn);
     }
 
     public CoreConfig withCommands(List<String> value) {
         return new CoreConfig(name, boundPlayers, boundTeams, value, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                invulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, spawn);
     }
 
     public CoreConfig withSealPostfix(Optional<String> value) {
         return new CoreConfig(name, boundPlayers, boundTeams, commands, value, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                invulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, spawn);
     }
 
     /**
@@ -150,62 +150,56 @@ public record CoreConfig(
     public CoreConfig withArmed(boolean value) {
         boolean stillInvulnerable = value && autoDisableInvulnerable ? false : invulnerable;
         return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, value,
-                stillInvulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                stillInvulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, spawn);
     }
 
     public CoreConfig withInvulnerable(boolean value) {
         return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
-                value, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                value, autoDisableInvulnerable, deathCommands, sealEnabled, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, spawn);
     }
 
     public CoreConfig withAutoDisableInvulnerable(boolean value) {
         return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
-                invulnerable, value, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                invulnerable, value, deathCommands, sealEnabled, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, spawn);
+    }
+
+    public CoreConfig withDeathCommands(boolean value) {
+        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
+                invulnerable, autoDisableInvulnerable, value, sealEnabled, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, spawn);
     }
 
     public CoreConfig withSealEnabled(boolean value) {
         return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, value, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                invulnerable, autoDisableInvulnerable, deathCommands, value, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, spawn);
     }
 
     public CoreConfig withSealPrice(int value) {
         return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, value, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                invulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, value,
+                explosionEnabled, explosionPower, explosionFire, spawn);
     }
 
     public CoreConfig withExplosionEnabled(boolean value) {
         return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, value,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                invulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, sealPrice,
+                value, explosionPower, explosionFire, spawn);
     }
 
     public CoreConfig withExplosion(float power, boolean fire) {
         return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                power, fire, spawnEnabled, spawnIntervalSeconds, spawnItem);
+                invulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, sealPrice,
+                explosionEnabled, power, fire, spawn);
     }
 
-    public CoreConfig withSpawnEnabled(boolean value) {
+    public CoreConfig withSpawn(SpawnSettings value) {
         return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, value, spawnIntervalSeconds, spawnItem);
-    }
-
-    public CoreConfig withSpawnInterval(int seconds) {
-        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, seconds, spawnItem);
-    }
-
-    public CoreConfig withSpawnItem(Optional<ResourceLocation> value) {
-        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
-                invulnerable, autoDisableInvulnerable, sealEnabled, sealPrice, explosionEnabled,
-                explosionPower, explosionFire, spawnEnabled, spawnIntervalSeconds, value);
+                invulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, sealPrice,
+                explosionEnabled, explosionPower, explosionFire, value);
     }
 
     /**
@@ -222,11 +216,6 @@ public record CoreConfig(
     /** Есть ли что переносить: пустой шаблон в предмет класть незачем. */
     public boolean isDefaultTemplate() {
         return asTemplate().equals(EMPTY);
-    }
-
-    /** Промежуток между выдачами в тиках; не меньше одной секунды. */
-    public int spawnIntervalTicks() {
-        return Math.max(1, spawnIntervalSeconds) * 20;
     }
 
     /** Содержимое будущей Печати. */

@@ -175,7 +175,7 @@ public class CoreBlockEntity extends BlockEntity {
     }
 
     /**
-     * Периодическая выдача предмета.
+     * Периодическая выдача предмета и команд.
      *
      * <p>Предохранитель здесь ни при чём: он отвечает за последствия гибели, а
      * выдача — отдельный тег со своим выключателем.
@@ -187,7 +187,7 @@ public class CoreBlockEntity extends BlockEntity {
             // Тик Ядра идёт в общем цикле блок-сущностей; исключение отсюда
             // остановило бы тик всего чанка. Гасим выдачу у этого Ядра и живём
             // дальше.
-            config = config.withSpawnEnabled(false);
+            config = config.withSpawn(config.spawn().withEnabled(false));
             Gimpanum.LOGGER.error("Тик Ядра '{}' прерван ошибкой, выдача отключена",
                     config.name(), t);
         }
@@ -200,11 +200,12 @@ public class CoreBlockEntity extends BlockEntity {
         }
         emitParticles();
 
-        if (!config.spawnEnabled()) {
+        SpawnSettings spawn = config.spawn();
+        if (!spawn.enabled()) {
             spawnTimer = 0;
             return;
         }
-        if (++spawnTimer < config.spawnIntervalTicks()) {
+        if (++spawnTimer < spawn.intervalTicks()) {
             return;
         }
         spawnTimer = 0;
@@ -215,7 +216,14 @@ public class CoreBlockEntity extends BlockEntity {
         // Мировая позиция, а не BlockPos: на конструкции они разные.
         Vec3 worldPos = SubLevelSupport.worldCenter(level, worldPosition);
 
-        Optional<ResourceLocation> customItem = config.spawnItem();
+        spawnItem(serverLevel, worldPos, spawn);
+        // Тот же список команд, что и при гибели Ядра, — здесь он выполняется
+        // каждую выдачу.
+        CoreCommandRunner.run(serverLevel, worldPos, config);
+    }
+
+    private void spawnItem(ServerLevel serverLevel, Vec3 worldPos, SpawnSettings spawn) {
+        Optional<ResourceLocation> customItem = spawn.item();
         if (customItem.isEmpty()) {
             SealDrops.spawnSeal(serverLevel, worldPos, config.sealContents());
             return;

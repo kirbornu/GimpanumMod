@@ -191,16 +191,18 @@ public class CoreBlock extends Block implements EntityBlock {
                 player.sendSystemMessage(Component.literal(" • " + command)
                         .withStyle(ChatFormatting.WHITE));
             }
+            player.sendSystemMessage(Component.translatable("gimpanum.core.death_commands",
+                    config.deathCommands()).withStyle(ChatFormatting.GRAY));
         }
 
         config.sealPostfix().ifPresent(postfix -> player.sendSystemMessage(
                 Component.translatable("gimpanum.core.postfix", postfix).withStyle(ChatFormatting.GRAY)));
         player.sendSystemMessage(Component.translatable("gimpanum.core.seal",
                 config.sealEnabled(), config.sealPrice()).withStyle(ChatFormatting.GRAY));
-        if (config.spawnEnabled()) {
+        if (config.spawn().enabled()) {
             player.sendSystemMessage(Component.translatable("gimpanum.core.spawn",
-                            config.spawnEnabled(), config.spawnIntervalSeconds(),
-                            config.spawnItem().map(Object::toString)
+                            config.spawn().enabled(), config.spawn().intervalSeconds(),
+                            config.spawn().item().map(Object::toString)
                                     .orElse(Component.translatable("gimpanum.core.spawn_seal").getString()))
                     .withStyle(ChatFormatting.GRAY));
         }

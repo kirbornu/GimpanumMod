@@ -70,5 +70,7 @@
     "gimpanum.command.spawn_item_seal": "Выдаваться будет Печать. Ядер: %s",
     "gimpanum.command.no_match": "Под образец не подошло ни одного Ядра",
     "gimpanum.command.pattern_not_allowed": "Здесь образец недопустим: имя Ядра должно быть уникальным",
-    "gimpanum.command.default_name_set": "Приставка для имён новых Ядер: %s"
+    "gimpanum.command.default_name_set": "Приставка для имён новых Ядер: %s",
+    "gimpanum.core.death_commands": "Выполнять команды при гибели: %s",
+    "gimpanum.command.death_commands_set": "Команды при гибели: %s. Ядер: %s"
 }
