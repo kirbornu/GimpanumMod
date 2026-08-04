@@ -211,7 +211,7 @@ public class CapturePointBlockEntity extends BlockEntity {
         if (claimPending) {
             claimPending = false;
             refreshColor();
-            applyClaim(serverLevel);
+            claimIfNeeded(serverLevel);
         }
         upkeep(serverLevel);
         emitParticles(serverLevel);
@@ -224,12 +224,22 @@ public class CapturePointBlockEntity extends BlockEntity {
         }
         upkeepTimer = 0;
 
+        claimIfNeeded(serverLevel);
+        refreshColor();
+    }
+
+    /**
+     * Переклеймливает чанк, только если он уже не за нужным владельцем.
+     *
+     * <p>Проверка не лишняя: без неё каждая загрузка чанка и каждая проверка
+     * заново переписывали бы клейм, а это лишняя запись данных и лишняя рассылка
+     * клиентам на ровном месте.
+     */
+    private void claimIfNeeded(ServerLevel serverLevel) {
         UUID expected = owner != null ? owner.ownerId() : CoreFakePlayer.UUID_VALUE;
-        UUID actual = ClaimsSupport.ownerAt(serverLevel, worldPosition);
-        if (!expected.equals(actual)) {
+        if (!expected.equals(ClaimsSupport.ownerAt(serverLevel, worldPosition))) {
             applyClaim(serverLevel);
         }
-        refreshColor();
     }
 
     /**
@@ -278,6 +288,9 @@ public class CapturePointBlockEntity extends BlockEntity {
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         if (tag.hasUUID(KEY_OWNER) && tag.contains(KEY_TEAM)) {
+            // Запасным цветом после перезагрузки становится последний
+            // посчитанный: цвет самой команды FTB заново взять неоткуда, пока
+            // она не в сети, а прежний ближе к правде, чем нейтральный.
             owner = new TeamOwner(tag.getString(KEY_TEAM), tag.getUUID(KEY_OWNER),
                     tag.getInt(KEY_COLOR));
         } else {
