@@ -2,6 +2,7 @@ package com.kirbornu.gimpanum.core;
 
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.destruction.DestructionArbiter;
+import com.kirbornu.gimpanum.item.SealItem;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import com.kirbornu.gimpanum.sublevel.SubLevelSupport;
 import net.minecraft.core.BlockPos;
@@ -224,18 +225,20 @@ public class CoreBlockEntity extends BlockEntity {
 
     private void spawnItem(ServerLevel serverLevel, Vec3 worldPos, SpawnSettings spawn) {
         Optional<ResourceLocation> customItem = spawn.item();
-        if (customItem.isEmpty()) {
-            SealDrops.spawnSeal(serverLevel, worldPos, config.sealContents());
-            return;
-        }
+        ItemStack prototype;
 
-        Item item = BuiltInRegistries.ITEM.getOptional(customItem.get()).orElse(null);
-        if (item == null) {
-            Gimpanum.LOGGER.warn("Ядро '{}': предмет {} не найден, выдача пропущена",
-                    config.name(), customItem.get());
-            return;
+        if (customItem.isEmpty()) {
+            prototype = SealItem.create(config.sealContents());
+        } else {
+            Item item = BuiltInRegistries.ITEM.getOptional(customItem.get()).orElse(null);
+            if (item == null) {
+                Gimpanum.LOGGER.warn("Ядро '{}': предмет {} не найден, выдача пропущена",
+                        config.name(), customItem.get());
+                return;
+            }
+            prototype = new ItemStack(item);
         }
-        SealDrops.spawn(serverLevel, worldPos, new ItemStack(item));
+        SealDrops.spawnBatch(serverLevel, worldPos, prototype, spawn.count());
     }
 
     /**

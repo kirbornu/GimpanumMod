@@ -61,7 +61,7 @@
     "gimpanum.core.autofragile": "Drop invulnerability on arming: %s",
     "gimpanum.command.autofragile_set": "Drop invulnerability on arming: %s. Cores: %s",
     "item.gimpanum.seal.price": "Price: %s",
-    "gimpanum.core.spawn": "Spawning: %s, every %ss, item %s",
+    "gimpanum.core.spawn": "Spawning: %s, every %ss, item %s, %s at a time",
     "gimpanum.core.spawn_seal": "Seal",
     "gimpanum.command.price_set": "Seal price: %s. Cores: %s",
     "gimpanum.command.spawn_enabled_set": "Periodic spawning: %s. Cores: %s",
@@ -73,5 +73,6 @@
     "gimpanum.command.default_name_set": "Prefix for new Core names: %s",
     "gimpanum.core.death_commands": "Run commands on destruction: %s",
     "gimpanum.command.death_commands_set": "Commands on destruction: %s. Cores: %s",
-    "item.gimpanum.crystal_bead": "Crystal Bead"
+    "item.gimpanum.crystal_bead": "Crystal Bead",
+    "gimpanum.command.spawn_count_set": "Spawning %s at a time. Cores: %s"
 }

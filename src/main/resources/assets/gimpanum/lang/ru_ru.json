@@ -61,7 +61,7 @@
     "gimpanum.core.autofragile": "Автоснятие неразрушимости: %s",
     "gimpanum.command.autofragile_set": "Автоснятие неразрушимости: %s. Ядер: %s",
     "item.gimpanum.seal.price": "Цена: %s",
-    "gimpanum.core.spawn": "Выдача: %s, каждые %s с, предмет %s",
+    "gimpanum.core.spawn": "Выдача: %s, каждые %s с, предмет %s, по %s шт.",
     "gimpanum.core.spawn_seal": "Печать",
     "gimpanum.command.price_set": "Цена Печати: %s. Ядер: %s",
     "gimpanum.command.spawn_enabled_set": "Периодическая выдача: %s. Ядер: %s",
@@ -73,5 +73,6 @@
     "gimpanum.command.default_name_set": "Приставка для имён новых Ядер: %s",
     "gimpanum.core.death_commands": "Выполнять команды при гибели: %s",
     "gimpanum.command.death_commands_set": "Команды при гибели: %s. Ядер: %s",
-    "item.gimpanum.crystal_bead": "Хрусталик"
+    "item.gimpanum.crystal_bead": "Хрусталик",
+    "gimpanum.command.spawn_count_set": "Выдавать по %s шт. Ядер: %s"
 }

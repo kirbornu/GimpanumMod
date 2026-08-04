@@ -32,6 +32,15 @@ import java.util.function.Supplier;
 
 public final class GimpanumContent {
 
+    /**
+     * Наибольшая стопка, которую выдерживает игра.
+     *
+     * <p>Не наше решение: {@code ItemStack.CODEC} в 1.21.1 принимает количество
+     * только в диапазоне {@code 1..99}, и через него сохраняется каждый предмет
+     * в мире. Больше — предмет не переживёт сохранение.
+     */
+    public static final int MAX_VANILLA_STACK = 99;
+
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(Gimpanum.MOD_ID);
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Gimpanum.MOD_ID);
     public static final DeferredRegister<CreativeModeTab> TABS =
@@ -154,10 +163,15 @@ public final class GimpanumContent {
      * <p>{@code fireResistant} — единственная поблажка, та же, что у Печати:
      * накопленное не должно сгорать в лаве. Срок жизни выброшенного Хрусталика
      * ванильный, в отличие от Печати.
+     *
+     * <p>Стопка в 99 — не выбор, а потолок игры: {@code ItemStack.CODEC}
+     * принимает количество только в диапазоне {@code 1..99}, и через этот кодек
+     * сохраняется каждый предмет в каждом сундуке. Стопка больше не пережила бы
+     * сохранение мира.
      */
     public static final DeferredItem<Item> CRYSTAL_BEAD = ITEMS.registerSimpleItem(
             "crystal_bead",
-            new Item.Properties().fireResistant()
+            new Item.Properties().fireResistant().stacksTo(MAX_VANILLA_STACK)
     );
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register(
