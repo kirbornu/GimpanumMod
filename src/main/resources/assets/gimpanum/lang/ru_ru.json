@@ -87,5 +87,7 @@
     "gimpanum.command.converter_input_set": "Принимает: %s, квота %s шт.",
     "gimpanum.command.converter_output_set": "Выдаёт: %s, %s шт. за квоту",
     "gimpanum.command.converter_label_set": "Подпись конвертера: %s",
-    "gimpanum.command.converter_reset": "Копилка конвертера обнулена"
+    "gimpanum.command.converter_reset": "Копилка конвертера обнулена",
+    "block.gimpanum.cosmic_sand": "Космический песок",
+    "biome.gimpanum.nebula_sands": "Пески туманности"
 }

@@ -144,6 +144,26 @@ public final class GimpanumContent {
                             CAPTURE_POINT.get()).build(null));
 
     /**
+     * Космический песок — из него состоит почти весь Гимпанум.
+     *
+     * <p>Обычный {@code Block}, а не {@code FallingBlock}: он намеренно не
+     * осыпается. Иначе пещеры-лабиринты под пустыней обрушились бы сами на
+     * себя при первой же генерации.
+     *
+     * <p>Никакой руды в измерении нет, и ценность у песка одна — промывка в
+     * Create; рецепт лежит в {@code data/gimpanum/recipe/splashing}.
+     */
+    public static final DeferredBlock<Block> COSMIC_SAND = BLOCKS.registerSimpleBlock(
+            "cosmic_sand",
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.SAND)
+                    .sound(SoundType.SAND)
+                    .strength(0.5F)
+    );
+
+    public static final DeferredItem<?> COSMIC_SAND_ITEM = ITEMS.registerSimpleBlockItem(COSMIC_SAND);
+
+    /**
      * Фонос-конвертер — обменник, на котором держится экономика карты.
      *
      * <p>Прочность и сопротивление те же, что у Контрольной точки, и по тем же
@@ -212,6 +232,7 @@ public final class GimpanumContent {
                         output.accept(CORE_ITEM.get());
                         output.accept(CAPTURE_POINT_ITEM.get());
                         output.accept(PHONOS_CONVERTER_ITEM.get());
+                        output.accept(COSMIC_SAND_ITEM.get());
                         output.accept(SEAL.get());
                         output.accept(CRYSTAL_BEAD.get());
                         output.accept(PROBE_ITEM.get());
