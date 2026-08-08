@@ -3,6 +3,8 @@ package com.kirbornu.gimpanum.registry;
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.capture.CapturePointBlock;
 import com.kirbornu.gimpanum.capture.CapturePointBlockEntity;
+import com.kirbornu.gimpanum.converter.ConverterBlock;
+import com.kirbornu.gimpanum.converter.ConverterBlockEntity;
 import com.kirbornu.gimpanum.core.CoreBlock;
 import com.kirbornu.gimpanum.core.CoreBlockEntity;
 import com.kirbornu.gimpanum.core.CoreBlockItem;
@@ -141,6 +143,33 @@ public final class GimpanumContent {
                     () -> BlockEntityType.Builder.of(CapturePointBlockEntity::new,
                             CAPTURE_POINT.get()).build(null));
 
+    /**
+     * Фонос-конвертер — обменник, на котором держится экономика карты.
+     *
+     * <p>Прочность и сопротивление те же, что у Контрольной точки, и по тем же
+     * причинам: {@code -1} отсеивает блок из сборки конструкций и делает его
+     * неломаемым, а 3 600 000 останавливает снаряды Create Big Cannons. Обменник
+     * обязан пережить бой, который идёт вокруг него.
+     */
+    public static final DeferredBlock<ConverterBlock> PHONOS_CONVERTER = BLOCKS.registerBlock(
+            "phonos_converter",
+            ConverterBlock::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_PURPLE)
+                    .sound(SoundType.NETHERITE_BLOCK)
+                    .strength(-1.0F, 3_600_000.0F)
+                    .lightLevel(state -> 8)
+                    .noLootTable()
+    );
+
+    public static final DeferredItem<?> PHONOS_CONVERTER_ITEM =
+            ITEMS.registerSimpleBlockItem(PHONOS_CONVERTER);
+
+    public static final Supplier<BlockEntityType<ConverterBlockEntity>> PHONOS_CONVERTER_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("phonos_converter",
+                    () -> BlockEntityType.Builder.of(ConverterBlockEntity::new,
+                            PHONOS_CONVERTER.get()).build(null));
+
     /** Привязки, записанные в Печать. */
     public static final Supplier<DataComponentType<SealContents>> SEAL_CONTENTS =
             DATA_COMPONENTS.register("seal_contents",
@@ -182,6 +211,7 @@ public final class GimpanumContent {
                     .displayItems((params, output) -> {
                         output.accept(CORE_ITEM.get());
                         output.accept(CAPTURE_POINT_ITEM.get());
+                        output.accept(PHONOS_CONVERTER_ITEM.get());
                         output.accept(SEAL.get());
                         output.accept(CRYSTAL_BEAD.get());
                         output.accept(PROBE_ITEM.get());

@@ -7,7 +7,6 @@ import com.kirbornu.gimpanum.core.CoreConfig;
 import com.kirbornu.gimpanum.core.CoreIndex;
 import com.kirbornu.gimpanum.core.SpawnSettings;
 import com.kirbornu.gimpanum.integration.FtbTeamsSupport;
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -119,12 +118,15 @@ public final class CoreCommand {
         };
     }
 
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher,
+    /**
+     * Навешивает ветки Ядра на общий корень {@code /gimpanum}.
+     *
+     * <p>Корень строит и регистрирует {@link GimpanumCommands}: веток у мода
+     * теперь несколько, и собирать дерево внутри одной из них значило бы, что
+     * она знает про все остальные.
+     */
+    public static void register(LiteralArgumentBuilder<CommandSourceStack> root,
                                 CommandBuildContext buildContext) {
-        LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("gimpanum")
-                // Уровень 2 — тот же порог, что и на открытие настройки ПКМ.
-                .requires(source -> source.hasPermission(CoreBlock.REQUIRED_PERMISSION_LEVEL));
-
         root.then(Commands.literal("list").executes(CoreCommand::list));
 
         // Приставка для имён новых Ядер: общая на весь сервер, не для отдельного Ядра.
@@ -139,8 +141,6 @@ public final class CoreCommand {
         root.then(Commands.literal("at").then(subcommands(
                 Commands.argument("pos", BlockPosArgument.blockPos()),
                 CoreCommand::byPosition, buildContext)));
-
-        dispatcher.register(root);
     }
 
     /**
