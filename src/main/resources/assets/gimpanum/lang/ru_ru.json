@@ -81,12 +81,11 @@
     "gimpanum.converter.takes": "Принимает: %s, квота %s шт.",
     "gimpanum.converter.gives": "Выдаёт: %s, %s шт. за квоту",
     "gimpanum.converter.progress": "Набрано %s из %s — осталось %s",
-    "gimpanum.converter.completed": "%s: квота выполнена, выдано %s × %s",
     "gimpanum.converter.unknown_item": "неизвестный предмет",
     "gimpanum.command.not_a_converter": "В указанной позиции нет Фонос-конвертера",
     "gimpanum.command.no_converters": "Конвертеров нет",
     "gimpanum.command.converter_input_set": "Принимает: %s, квота %s шт.",
-    "gimpanum.command.converter_output_set": "Выдаёт: %s × %s за квоту",
+    "gimpanum.command.converter_output_set": "Выдаёт: %s, %s шт. за квоту",
     "gimpanum.command.converter_label_set": "Подпись конвертера: %s",
     "gimpanum.command.converter_reset": "Копилка конвертера обнулена"
 }

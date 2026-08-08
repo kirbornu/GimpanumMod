@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.converter;
 
+import com.kirbornu.gimpanum.network.GimpanumNetwork;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
@@ -87,6 +88,7 @@ public class ConverterBlock extends Block implements EntityBlock {
                             BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock()) && !level.isClientSide && level.getServer() != null) {
             ConverterIndex.remove(level.getServer(), level.dimension(), pos);
+            GimpanumNetwork.broadcastMarkers(level.getServer());
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
     }

@@ -14,10 +14,9 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
+import net.minecraft.commands.arguments.item.ItemArgument;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,11 +45,11 @@ public final class ConverterCommand {
                         .then(Commands.literal("show")
                                 .executes(ConverterCommand::show))
                         .then(Commands.literal("input")
-                                .then(Commands.argument("item", net.minecraft.commands.arguments.item.ItemArgument.item(buildContext))
+                                .then(Commands.argument("item", ItemArgument.item(buildContext))
                                         .then(Commands.argument("quota", IntegerArgumentType.integer(1))
                                                 .executes(ConverterCommand::setInput))))
                         .then(Commands.literal("output")
-                                .then(Commands.argument("item", net.minecraft.commands.arguments.item.ItemArgument.item(buildContext))
+                                .then(Commands.argument("item", ItemArgument.item(buildContext))
                                         .then(Commands.argument("count",
                                                         IntegerArgumentType.integer(1, ConverterConfig.MAX_OUTPUT_COUNT))
                                                 .executes(ConverterCommand::setOutput))))
@@ -96,25 +95,25 @@ public final class ConverterCommand {
 
     private static int setInput(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ConverterBlockEntity converter = resolve(context);
-        Item item = net.minecraft.commands.arguments.item.ItemArgument.getItem(context, "item").getItem();
+        // createItemStack собирает предмет вместе с компонентами из скобок, так
+        // что образцом приёма может быть именная валюта, а не просто вид предмета.
+        ItemStack sample = ItemArgument.getItem(context, "item").createItemStack(1, false);
         int quota = IntegerArgumentType.getInteger(context, "quota");
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
 
-        converter.setConfig(converter.config().withInput(Optional.of(id), quota));
+        converter.setConfig(converter.config().withInput(Optional.of(sample), quota));
         context.getSource().sendSuccess(() -> Component.translatable(
-                "gimpanum.command.converter_input_set", item.getDescription(), quota), true);
+                "gimpanum.command.converter_input_set", sample.getHoverName(), quota), true);
         return 1;
     }
 
     private static int setOutput(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ConverterBlockEntity converter = resolve(context);
-        Item item = net.minecraft.commands.arguments.item.ItemArgument.getItem(context, "item").getItem();
+        ItemStack sample = ItemArgument.getItem(context, "item").createItemStack(1, false);
         int count = IntegerArgumentType.getInteger(context, "count");
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
 
-        converter.setConfig(converter.config().withOutput(Optional.of(id), count));
+        converter.setConfig(converter.config().withOutput(Optional.of(sample), count));
         context.getSource().sendSuccess(() -> Component.translatable(
-                "gimpanum.command.converter_output_set", count, item.getDescription()), true);
+                "gimpanum.command.converter_output_set", sample.getHoverName(), count), true);
         return 1;
     }
 

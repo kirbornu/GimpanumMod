@@ -73,6 +73,10 @@ def ftbJars = files(
         "other_mods_in_modpack/architectury-${architectury_version}-neoforge.jar"
 ).filter { it.exists() }
 
+// Xaero's Minimap — метки конвертеров на карте. Публичного API у мода нет,
+// поэтому мост ходит по внутренним классам и обязан переживать их исчезновение.
+def xaeroJar = file("other_mods_in_modpack/xaerominimap-neoforge-${minecraft_version}-${xaero_minimap_version}.jar")
+
 // Open Parties and Claims — единственный клеймовый мод сборки с публичным API.
 // Нужен только для компиляции моста; без него Контрольная точка работает, но
 // чанк не клеймит.
@@ -96,6 +100,12 @@ dependencies {
         compileOnly files(opacJar)
     } else {
         logger.lifecycle("Open Parties and Claims jar not found at ${opacJar} — building without claim support.")
+    }
+
+    if (xaeroJar.exists()) {
+        compileOnly files(xaeroJar)
+    } else {
+        logger.lifecycle("Xaero's Minimap jar not found at ${xaeroJar} — building without map markers.")
     }
 }
 
