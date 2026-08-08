@@ -1,6 +1,7 @@
 package com.kirbornu.gimpanum.converter;
 
 import com.kirbornu.gimpanum.Gimpanum;
+import com.kirbornu.gimpanum.network.GimpanumNetwork;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -56,8 +57,13 @@ public class ConverterBlockEntity extends BlockEntity {
     }
 
     public void setConfig(ConverterConfig config) {
+        boolean labelChanged = !this.config.label().equals(config.label());
         this.config = config;
         setChanged();
+        // Подпись видна на карте, поэтому её правка обязана дойти до игроков.
+        if (labelChanged && level != null && level.getServer() != null) {
+            GimpanumNetwork.broadcastMarkers(level.getServer());
+        }
     }
 
     /** Обнуляет копилку, не трогая условия обмена. */
@@ -71,6 +77,7 @@ public class ConverterBlockEntity extends BlockEntity {
         super.onLoad();
         if (level instanceof ServerLevel serverLevel) {
             ConverterIndex.put(serverLevel.getServer(), level.dimension(), worldPosition);
+            GimpanumNetwork.broadcastMarkers(serverLevel.getServer());
         }
     }
 
