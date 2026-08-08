@@ -1,0 +1,21 @@
+{
+    "neoforge:conditions": [
+        {
+            "type": "neoforge:mod_loaded",
+            "modid": "create"
+        }
+    ],
+    "type": "create:splashing",
+    "ingredients": [
+        {
+            "item": "gimpanum:cosmic_sand"
+        }
+    ],
+    "results": [
+        { "chance": 0.1, "id": "minecraft:iron_nugget" },
+        { "chance": 0.1, "id": "minecraft:gold_nugget" },
+        { "chance": 0.1, "id": "create:copper_nugget" },
+        { "chance": 0.1, "id": "create:zinc_nugget" },
+        { "chance": 0.1, "id": "create:brass_nugget" }
+    ]
+}

@@ -87,5 +87,7 @@
     "gimpanum.command.converter_input_set": "Takes: %s, quota %s",
     "gimpanum.command.converter_output_set": "Gives: %s, %s per quota",
     "gimpanum.command.converter_label_set": "Converter label: %s",
-    "gimpanum.command.converter_reset": "Converter progress reset"
+    "gimpanum.command.converter_reset": "Converter progress reset",
+    "block.gimpanum.cosmic_sand": "Cosmic Sand",
+    "biome.gimpanum.nebula_sands": "Nebula Sands"
 }

@@ -1,0 +1,11 @@
+{
+    "type": "gimpanum:gimpanum",
+    "generator": {
+        "type": "minecraft:noise",
+        "settings": "gimpanum:nebula_sands",
+        "biome_source": {
+            "type": "minecraft:fixed",
+            "biome": "gimpanum:nebula_sands"
+        }
+    }
+}
