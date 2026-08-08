@@ -5,15 +5,12 @@ import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -38,9 +35,6 @@ public class ConverterBlockEntity extends BlockEntity {
      * живут с похожим интервалом.
      */
     private static final int ABSORB_INTERVAL_TICKS = 5;
-
-    /** Кого известить о выполненной квоте: тех, кто стоит рядом и это видит. */
-    private static final double ANNOUNCE_RADIUS = 16.0;
 
     private ConverterConfig config = ConverterConfig.EMPTY;
 
@@ -123,15 +117,10 @@ public class ConverterBlockEntity extends BlockEntity {
      * копилки.
      */
     private int absorbNearbyItems(ServerLevel serverLevel) {
-        Item wanted = resolve(config.input());
-        if (wanted == null) {
-            return 0;
-        }
-
         AABB area = new AABB(worldPosition).inflate(0.5, 0.0, 0.5)
                 .expandTowards(0.0, 1.0, 0.0);
         List<ItemEntity> nearby = serverLevel.getEntitiesOfClass(ItemEntity.class, area,
-                entity -> entity.isAlive() && entity.getItem().is(wanted));
+                entity -> entity.isAlive() && config.matchesInput(entity.getItem()));
 
         int taken = 0;
         for (ItemEntity entity : nearby) {
@@ -147,10 +136,6 @@ public class ConverterBlockEntity extends BlockEntity {
      * <p>Принесённое сверх квоты не пропадает: остаток переходит к следующей.
      */
     private void payOut(ServerLevel serverLevel) {
-        Item reward = resolve(config.output());
-        if (reward == null) {
-            return;
-        }
         int quota = config.effectiveQuota();
         int completed = progress / quota;
         if (completed <= 0) {
@@ -159,8 +144,7 @@ public class ConverterBlockEntity extends BlockEntity {
         progress -= completed * quota;
         setChanged();
 
-        drop(serverLevel, reward, completed * config.outputCount());
-        announce(serverLevel, reward, completed);
+        drop(serverLevel, completed * config.outputCount());
     }
 
     /**
@@ -170,26 +154,17 @@ public class ConverterBlockEntity extends BlockEntity {
      * мира, поэтому крупная выдача выпадает несколькими сущностями — так же, как
      * это делает ваниль.
      */
-    private void drop(ServerLevel serverLevel, Item reward, int total) {
-        ItemStack prototype = new ItemStack(reward);
+    private void drop(ServerLevel serverLevel, int total) {
+        ItemStack prototype = config.outputStack(1);
+        if (prototype.isEmpty()) {
+            return;
+        }
         int remaining = total;
         int perStack = Math.max(1, prototype.getMaxStackSize());
         while (remaining > 0) {
             int size = Math.min(remaining, perStack);
             Block.popResource(serverLevel, worldPosition.above(), prototype.copyWithCount(size));
             remaining -= size;
-        }
-    }
-
-    /** Извещает тех, кто рядом: обмен состоялся у них на глазах. */
-    private void announce(ServerLevel serverLevel, Item reward, int completed) {
-        Component message = Component.translatable("gimpanum.converter.completed",
-                        label(), completed * config.outputCount(), reward.getDescription())
-                .withStyle(ChatFormatting.GOLD);
-        for (Player player : serverLevel.players()) {
-            if (player.distanceToSqr(worldPosition.getCenter()) <= ANNOUNCE_RADIUS * ANNOUNCE_RADIUS) {
-                player.sendSystemMessage(message);
-            }
         }
     }
 
@@ -232,15 +207,10 @@ public class ConverterBlockEntity extends BlockEntity {
                 .translatable("block.gimpanum.phonos_converter").getString());
     }
 
-    private Component describeItem(Optional<ResourceLocation> id) {
-        Item item = resolve(id);
-        return item == null
-                ? Component.translatable("gimpanum.converter.unknown_item")
-                : item.getDescription();
-    }
-
-    private static Item resolve(Optional<ResourceLocation> id) {
-        return id.flatMap(BuiltInRegistries.ITEM::getOptional).orElse(null);
+    /** Показывает предмет так, как игрок увидит его в руке — с именем и цветом. */
+    private Component describeItem(Optional<ItemStack> stack) {
+        return stack.map(ItemStack::getHoverName)
+                .orElseGet(() -> Component.translatable("gimpanum.converter.unknown_item"));
     }
 
     // --- Хранение ------------------------------------------------------------
