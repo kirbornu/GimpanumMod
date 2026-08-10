@@ -1,8 +1,18 @@
 {
-    "type": "minecraft:forest_rock",
+    "type": "minecraft:ore",
     "config": {
-        "state": {
-            "Name": "minecraft:stone"
-        }
+        "size": 42,
+        "discard_chance_on_air_exposure": 0.0,
+        "targets": [
+            {
+                "target": {
+                    "predicate_type": "minecraft:block_match",
+                    "block": "gimpanum:cosmic_sand"
+                },
+                "state": {
+                    "Name": "minecraft:stone"
+                }
+            }
+        ]
     }
 }
