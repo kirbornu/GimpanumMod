@@ -1,12 +1,13 @@
 {
     "neoforge:conditions": [
         { "type": "neoforge:mod_loaded", "modid": "create" },
-        { "type": "neoforge:not", "value": { "type": "neoforge:mod_loaded", "modid": "cgs" } }
+        { "type": "neoforge:mod_loaded", "modid": "cgs" }
     ],
     "type": "create:crushing",
     "ingredients": [ { "item": "gimpanum:scorching_nebula_gas" } ],
     "results": [
-        { "chance": 0.1, "id": "minecraft:blaze_powder" }
+        { "chance": 0.1, "id": "minecraft:blaze_powder" },
+        { "chance": 0.15, "id": "cgs:sulfur" }
     ],
     "processingTime": 250
 }
