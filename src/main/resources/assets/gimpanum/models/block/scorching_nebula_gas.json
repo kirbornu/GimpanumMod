@@ -1,0 +1,8 @@
+{
+    "_comment": "render_type задаётся прямо в модели: без него полупрозрачная текстура рисуется как непрозрачная.",
+    "parent": "minecraft:block/cube_all",
+    "render_type": "minecraft:translucent",
+    "textures": {
+        "all": "gimpanum:block/scorching_nebula_gas"
+    }
+}

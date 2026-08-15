@@ -1,6 +1,7 @@
 {
     "replace": false,
     "values": [
-        "gimpanum:cosmic_sand"
+        "gimpanum:cosmic_sand",
+        "gimpanum:cosmic_ash"
     ]
 }

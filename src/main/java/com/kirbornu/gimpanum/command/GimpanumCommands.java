@@ -29,6 +29,7 @@ public final class GimpanumCommands {
 
         CoreCommand.register(root, event.getBuildContext());
         ConverterCommand.register(root, event.getBuildContext());
+        PortalCommand.register(root);
 
         event.getDispatcher().register(root);
     }
