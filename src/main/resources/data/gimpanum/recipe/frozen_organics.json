@@ -1,0 +1,12 @@
+{
+    "type": "gimpanum:thawing",
+    "category": "misc",
+    "ingredient": {
+        "item": "gimpanum:frozen_organics"
+    },
+    "result": {
+        "id": "minecraft:wheat_seeds"
+    },
+    "experience": 0.7,
+    "cookingtime": 200
+}
