@@ -89,5 +89,11 @@
     "gimpanum.command.converter_label_set": "Подпись конвертера: %s",
     "gimpanum.command.converter_reset": "Копилка конвертера обнулена",
     "block.gimpanum.cosmic_sand": "Космический песок",
-    "biome.gimpanum.nebula_sands": "Пески туманности"
+    "biome.gimpanum.nebula_sands": "Пески туманности",
+    "block.gimpanum.cosmic_ash": "Космический пепел",
+    "block.gimpanum.scorching_nebula_gas": "Раскалённый небула-газ",
+    "block.gimpanum.nebula_gate": "Небула-врата",
+    "block.gimpanum.nebula_portal": "Портал туманности",
+    "gimpanum.command.portal_placed": "Портальная арка поставлена в %s",
+    "gimpanum.command.portal_no_template": "Шаблон портала не найден"
 }

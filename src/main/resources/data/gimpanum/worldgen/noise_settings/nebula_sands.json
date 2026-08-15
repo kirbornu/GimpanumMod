@@ -41,6 +41,25 @@
                 }
             },
             {
+                "type": "minecraft:condition",
+                "if_true": {
+                    "type": "minecraft:vertical_gradient",
+                    "random_name": "gimpanum:ash_layer",
+                    "true_at_and_below": {
+                        "above_bottom": 5
+                    },
+                    "false_at_and_above": {
+                        "above_bottom": 9
+                    }
+                },
+                "then_run": {
+                    "type": "minecraft:block",
+                    "result_state": {
+                        "Name": "gimpanum:cosmic_ash"
+                    }
+                }
+            },
+            {
                 "type": "minecraft:block",
                 "result_state": {
                     "Name": "gimpanum:cosmic_sand"

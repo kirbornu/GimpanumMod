@@ -1,17 +1,15 @@
 {
     "type": "minecraft:jigsaw",
-    "biomes": [
-        "gimpanum:nebula_sands"
-    ],
+    "biomes": "#gimpanum:has_nebula_portal",
     "step": "surface_structures",
     "spawn_overrides": {},
-    "start_pool": "gimpanum:nebula_crag",
+    "start_pool": "gimpanum:nebula_portal",
     "size": 1,
     "start_height": {
         "absolute": 0
     },
     "project_start_to_heightmap": "WORLD_SURFACE_WG",
-    "max_distance_from_center": 32,
+    "max_distance_from_center": 24,
     "use_expansion_hack": false,
     "terrain_adaptation": "beard_thin"
 }

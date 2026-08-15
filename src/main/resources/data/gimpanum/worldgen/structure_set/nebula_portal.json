@@ -1,14 +1,14 @@
 {
     "structures": [
         {
-            "structure": "gimpanum:nebula_crag",
+            "structure": "gimpanum:nebula_portal",
             "weight": 1
         }
     ],
     "placement": {
         "type": "minecraft:random_spread",
-        "spacing": 8,
-        "separation": 2,
-        "salt": 1472583
+        "spacing": 125,
+        "separation": 60,
+        "salt": 60984271
     }
 }

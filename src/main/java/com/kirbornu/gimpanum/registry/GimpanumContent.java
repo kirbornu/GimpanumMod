@@ -10,6 +10,9 @@ import com.kirbornu.gimpanum.core.CoreBlockEntity;
 import com.kirbornu.gimpanum.core.CoreBlockItem;
 import com.kirbornu.gimpanum.core.CoreConfig;
 import com.kirbornu.gimpanum.debug.ProbeBlock;
+import com.kirbornu.gimpanum.dimension.NebulaPortalBlock;
+import com.kirbornu.gimpanum.dimension.NebulaPortalBlockEntity;
+import com.kirbornu.gimpanum.dimension.ScorchingGasBlock;
 import com.kirbornu.gimpanum.debug.ProbeBlockEntity;
 import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
@@ -164,6 +167,74 @@ public final class GimpanumContent {
     public static final DeferredItem<?> COSMIC_SAND_ITEM = ITEMS.registerSimpleBlockItem(COSMIC_SAND);
 
     /**
+     * Космический пепел — то, во что переходит песок у самого дна мира.
+     *
+     * <p>Как и песок, не осыпается. Промывка даёт не металлы, а обломок
+     * незерита, и только с половиной процента — ради него и стоит лезть на дно.
+     */
+    public static final DeferredBlock<Block> COSMIC_ASH = BLOCKS.registerSimpleBlock(
+            "cosmic_ash",
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BLACK)
+                    .sound(SoundType.SAND)
+                    .strength(0.6F)
+    );
+
+    public static final DeferredItem<?> COSMIC_ASH_ITEM = ITEMS.registerSimpleBlockItem(COSMIC_ASH);
+
+    /**
+     * Раскалённый небула-газ — редкие вкрапления по всей толще песка.
+     *
+     * <p>Светится и жжёт наступившего. {@code noOcclusion} нужен из-за
+     * полупрозрачной текстуры: без него соседние грани пропадут.
+     */
+    public static final DeferredBlock<ScorchingGasBlock> SCORCHING_NEBULA_GAS = BLOCKS.registerBlock(
+            "scorching_nebula_gas",
+            ScorchingGasBlock::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_RED)
+                    .sound(SoundType.GLASS)
+                    .strength(0.4F)
+                    .lightLevel(state -> 11)
+                    .noOcclusion()
+    );
+
+    public static final DeferredItem<?> SCORCHING_NEBULA_GAS_ITEM =
+            ITEMS.registerSimpleBlockItem(SCORCHING_NEBULA_GAS);
+
+    /**
+     * Рама портальной арки. Неразрушима и без предмета: порталы нельзя ни
+     * построить, ни снести — они только находятся.
+     */
+    public static final DeferredBlock<Block> NEBULA_GATE = BLOCKS.registerSimpleBlock(
+            "nebula_gate",
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_PURPLE)
+                    .sound(SoundType.NETHERITE_BLOCK)
+                    .strength(-1.0F, 3_600_000.0F)
+                    .lightLevel(state -> 6)
+                    .noLootTable()
+    );
+
+    /** Плоскость перехода внутри арки. */
+    public static final DeferredBlock<NebulaPortalBlock> NEBULA_PORTAL = BLOCKS.registerBlock(
+            "nebula_portal",
+            NebulaPortalBlock::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_MAGENTA)
+                    .sound(SoundType.GLASS)
+                    .strength(-1.0F, 3_600_000.0F)
+                    .lightLevel(state -> 13)
+                    .noOcclusion()
+                    .noLootTable()
+    );
+
+    public static final Supplier<BlockEntityType<NebulaPortalBlockEntity>> NEBULA_PORTAL_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("nebula_portal",
+                    () -> BlockEntityType.Builder.of(NebulaPortalBlockEntity::new,
+                            NEBULA_PORTAL.get()).build(null));
+
+    /**
      * Фонос-конвертер — обменник, на котором держится экономика карты.
      *
      * <p>Прочность и сопротивление те же, что у Контрольной точки, и по тем же
@@ -233,6 +304,8 @@ public final class GimpanumContent {
                         output.accept(CAPTURE_POINT_ITEM.get());
                         output.accept(PHONOS_CONVERTER_ITEM.get());
                         output.accept(COSMIC_SAND_ITEM.get());
+                        output.accept(COSMIC_ASH_ITEM.get());
+                        output.accept(SCORCHING_NEBULA_GAS_ITEM.get());
                         output.accept(SEAL.get());
                         output.accept(CRYSTAL_BEAD.get());
                         output.accept(PROBE_ITEM.get());
