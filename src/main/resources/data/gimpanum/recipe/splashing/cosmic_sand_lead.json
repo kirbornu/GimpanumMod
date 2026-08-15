@@ -5,11 +5,8 @@
             "modid": "create"
         },
         {
-            "type": "neoforge:not",
-            "value": {
-                "type": "neoforge:mod_loaded",
-                "modid": "cgs"
-            }
+            "type": "neoforge:mod_loaded",
+            "modid": "cgs"
         }
     ],
     "type": "create:splashing",
@@ -23,6 +20,7 @@
         { "chance": 0.1, "id": "minecraft:gold_nugget" },
         { "chance": 0.1, "id": "create:copper_nugget" },
         { "chance": 0.1, "id": "create:zinc_nugget" },
-        { "chance": 0.1, "id": "create:brass_nugget" }
+        { "chance": 0.1, "id": "create:brass_nugget" },
+        { "chance": 0.1, "id": "cgs:lead_nugget" }
     ]
 }

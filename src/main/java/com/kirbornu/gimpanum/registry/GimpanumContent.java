@@ -16,12 +16,15 @@ import com.kirbornu.gimpanum.dimension.ScorchingGasBlock;
 import com.kirbornu.gimpanum.debug.ProbeBlockEntity;
 import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
+import com.kirbornu.gimpanum.recipe.ThawingRecipe;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.Item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.SimpleCookingSerializer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -54,6 +57,8 @@ public final class GimpanumContent {
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Gimpanum.MOD_ID);
     public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS =
             DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, Gimpanum.MOD_ID);
+    public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS =
+            DeferredRegister.create(Registries.RECIPE_SERIALIZER, Gimpanum.MOD_ID);
 
     /**
      * Диагностический блок-зонд. Не часть задуманной механики — служит только
@@ -203,6 +208,35 @@ public final class GimpanumContent {
             ITEMS.registerSimpleBlockItem(SCORCHING_NEBULA_GAS);
 
     /**
+     * Замороженная органика — руда в обломках астероидов.
+     *
+     * <p>Металла в ней нет: это занесённая из чужой системы жизнь, вмёрзшая в
+     * камень. В печи она оттаивает случайным растением — см. {@link ThawingRecipe}.
+     */
+    public static final DeferredBlock<Block> FROZEN_ORGANICS = BLOCKS.registerSimpleBlock(
+            "frozen_organics",
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_LIGHT_BLUE)
+                    .sound(SoundType.STONE)
+                    .strength(3.0F, 3.0F)
+                    .requiresCorrectToolForDrops()
+    );
+
+    public static final DeferredItem<?> FROZEN_ORGANICS_ITEM = ITEMS.registerSimpleBlockItem(FROZEN_ORGANICS);
+
+    /**
+     * Сериализатор переплавки с непредсказуемым выходом.
+     *
+     * <p>200 тиков — то же время, что у ванильной печи по умолчанию; в самом
+     * рецепте оно всё равно задано явно.
+     */
+    public static final DeferredHolder<RecipeSerializer<?>, SimpleCookingSerializer<ThawingRecipe>> THAWING =
+            RECIPE_SERIALIZERS.register(
+                    "thawing",
+                    () -> new SimpleCookingSerializer<>(ThawingRecipe::new, 200)
+            );
+
+    /**
      * Рама портальной арки. Неразрушима и без предмета: порталы нельзя ни
      * построить, ни снести — они только находятся.
      */
@@ -306,6 +340,7 @@ public final class GimpanumContent {
                         output.accept(COSMIC_SAND_ITEM.get());
                         output.accept(COSMIC_ASH_ITEM.get());
                         output.accept(SCORCHING_NEBULA_GAS_ITEM.get());
+                        output.accept(FROZEN_ORGANICS_ITEM.get());
                         output.accept(SEAL.get());
                         output.accept(CRYSTAL_BEAD.get());
                         output.accept(PROBE_ITEM.get());
@@ -322,6 +357,7 @@ public final class GimpanumContent {
         TABS.register(modBus);
         BLOCK_ENTITIES.register(modBus);
         DATA_COMPONENTS.register(modBus);
+        RECIPE_SERIALIZERS.register(modBus);
     }
 
     /** Удобный доступ без {@code .get()} на каждом вызове. */
