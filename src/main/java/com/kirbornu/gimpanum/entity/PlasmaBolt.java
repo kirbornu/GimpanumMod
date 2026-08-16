@@ -16,9 +16,10 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.SmallFireball;
+
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -33,9 +34,16 @@ import net.minecraft.world.phys.Vec3;
  */
 public class PlasmaBolt extends Monster implements RangedAttackMob {
 
-    private static final int MIN_ALTITUDE = 10;
-    private static final int MAX_ALTITUDE = 26;
-    private static final double LIFT = 0.04;
+    /**
+     * Ниже сотни он не опускается.
+     *
+     * <p>Высота абсолютная, а не «над землёй»: барханы Гимпанума кончаются
+     * около сотого блока, и молния должна висеть над ними, а не следовать за
+     * рельефом в низину.
+     */
+    private static final int FLOOR = 100;
+    private static final int CEILING = 122;
+    private static final double LIFT = 0.05;
 
     public PlasmaBolt(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -46,9 +54,12 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 18.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.08)
-                .add(Attributes.FLYING_SPEED, 0.12)
+                .add(Attributes.MAX_HEALTH, 60.0)
+                .add(Attributes.ATTACK_DAMAGE, 16.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.145)
+                // 0.97 — полблока в секунду, вымерено: летающие мобы ходят
+                // по FLYING_SPEED, а не по MOVEMENT_SPEED
+                .add(Attributes.FLYING_SPEED, 0.97)
                 .add(Attributes.FOLLOW_RANGE, 64.0);
     }
 
@@ -63,7 +74,8 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.9, 50, 30.0F));
+        // Раз в три-четыре секунды, с расстояния, на котором ответить нечем.
+        this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.9, 60, 80, 30.0F));
         this.goalSelector.addGoal(5, new WaterAvoidingRandomFlyingGoal(this, 0.7));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 40.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
@@ -79,11 +91,9 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
         if (this.level().isClientSide) {
             return;
         }
-        int ground = this.level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, this.getBlockX(), this.getBlockZ());
-        double altitude = this.getY() - ground;
-        if (altitude < MIN_ALTITUDE) {
+        if (this.getY() < FLOOR) {
             this.setDeltaMovement(this.getDeltaMovement().add(0.0, LIFT, 0.0));
-        } else if (altitude > MAX_ALTITUDE) {
+        } else if (this.getY() > CEILING) {
             this.setDeltaMovement(this.getDeltaMovement().add(0.0, -LIFT, 0.0));
         }
     }
@@ -91,13 +101,28 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
         Vec3 from = this.getEyePosition();
-        SmallFireball bolt = new SmallFireball(this.level(), this,
+        PlasmaProjectile bolt = new PlasmaProjectile(this.level(), this,
                 new Vec3(target.getX() - from.x,
                         target.getY(0.5) - from.y,
                         target.getZ() - from.z).normalize());
         bolt.setPos(from.x, from.y, from.z);
         this.level().addFreshEntity(bolt);
-        this.playSound(net.minecraft.sounds.SoundEvents.BLAZE_SHOOT, 1.5F, 1.6F);
+        this.playSound(GimpanumSounds.BOLT_SHOOT.get(), 2.0F, 1.0F);
+    }
+
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return GimpanumSounds.BOLT_AMBIENT.get();
+    }
+
+    @Override
+    protected SoundEvent getHurtSound(DamageSource source) {
+        return GimpanumSounds.BOLT_HURT.get();
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return GimpanumSounds.BOLT_DEATH.get();
     }
 
     @Override

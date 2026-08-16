@@ -119,5 +119,22 @@
     "item.gimpanum.dune_walker_spawn_egg": "Яйцо призыва: Ходок бархан",
     "item.gimpanum.space_devourer_spawn_egg": "Яйцо призыва: Поглотитель космоса",
     "item.gimpanum.plasma_bolt_spawn_egg": "Яйцо призыва: Плазменная молния",
-    "gimpanum.claim.forbidden": "В Гимпануме клеймы не держатся"
+    "gimpanum.claim.forbidden": "В Гимпануме клеймы не держатся",
+    "subtitles.gimpanum.space_devourer.ambient": "Поглотитель космоса ворочается",
+    "subtitles.gimpanum.space_devourer.hurt": "Поглотителю космоса больно",
+    "subtitles.gimpanum.space_devourer.death": "Поглотитель космоса умирает",
+    "subtitles.gimpanum.space_devourer.step": "Шаги Поглотителя космоса",
+    "subtitles.gimpanum.space_devourer.roar": "Рёв Поглотителя космоса",
+    "subtitles.gimpanum.dune_walker.ambient": "Ходок бархан стонет",
+    "subtitles.gimpanum.dune_walker.hurt": "Ходоку бархану больно",
+    "subtitles.gimpanum.dune_walker.death": "Ходок бархан умирает",
+    "subtitles.gimpanum.dune_walker.step": "Шаги Ходока бархана",
+    "subtitles.gimpanum.comet_wraith.scream": "Визг Призрака кометы",
+    "subtitles.gimpanum.comet_wraith.hurt": "Призраку кометы больно",
+    "subtitles.gimpanum.comet_wraith.death": "Призрак кометы развеивается",
+    "subtitles.gimpanum.plasma_bolt.ambient": "Гул Плазменной молнии",
+    "subtitles.gimpanum.plasma_bolt.hurt": "Плазменной молнии больно",
+    "subtitles.gimpanum.plasma_bolt.death": "Плазменная молния гаснет",
+    "subtitles.gimpanum.plasma_bolt.shoot": "Выстрел Плазменной молнии",
+    "entity.gimpanum.plasma_projectile": "Плазменный разряд"
 }

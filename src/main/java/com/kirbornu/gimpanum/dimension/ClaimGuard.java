@@ -62,7 +62,10 @@ public final class ClaimGuard {
                     UUID owner = ClaimsSupport.ownerAt(level, pos);
                     if (owner != null && !CoreFakePlayer.UUID_VALUE.equals(owner)) {
                         ClaimsSupport.unclaim(level, pos);
-                        stripped = true;
+                        // Сообщаем, только если заявка действительно снялась:
+                        // иначе при отказе клеймового мода игрок получал бы
+                        // одно и то же сообщение каждые две секунды навсегда.
+                        stripped |= ClaimsSupport.ownerAt(level, pos) == null;
                     }
                 }
             }

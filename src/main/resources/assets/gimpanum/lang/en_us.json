@@ -119,5 +119,22 @@
     "item.gimpanum.dune_walker_spawn_egg": "Dune Walker Spawn Egg",
     "item.gimpanum.space_devourer_spawn_egg": "Space Devourer Spawn Egg",
     "item.gimpanum.plasma_bolt_spawn_egg": "Plasma Bolt Spawn Egg",
-    "gimpanum.claim.forbidden": "Claims do not hold in Gimpanum"
+    "gimpanum.claim.forbidden": "Claims do not hold in Gimpanum",
+    "subtitles.gimpanum.space_devourer.ambient": "Space Devourer stirs",
+    "subtitles.gimpanum.space_devourer.hurt": "Space Devourer hurts",
+    "subtitles.gimpanum.space_devourer.death": "Space Devourer dies",
+    "subtitles.gimpanum.space_devourer.step": "Space Devourer steps",
+    "subtitles.gimpanum.space_devourer.roar": "Space Devourer roars",
+    "subtitles.gimpanum.dune_walker.ambient": "Dune Walker groans",
+    "subtitles.gimpanum.dune_walker.hurt": "Dune Walker hurts",
+    "subtitles.gimpanum.dune_walker.death": "Dune Walker dies",
+    "subtitles.gimpanum.dune_walker.step": "Dune Walker steps",
+    "subtitles.gimpanum.comet_wraith.scream": "Comet Wraith screams",
+    "subtitles.gimpanum.comet_wraith.hurt": "Comet Wraith hurts",
+    "subtitles.gimpanum.comet_wraith.death": "Comet Wraith dies",
+    "subtitles.gimpanum.plasma_bolt.ambient": "Plasma Bolt hums",
+    "subtitles.gimpanum.plasma_bolt.hurt": "Plasma Bolt hurts",
+    "subtitles.gimpanum.plasma_bolt.death": "Plasma Bolt dies",
+    "subtitles.gimpanum.plasma_bolt.shoot": "Plasma Bolt fires",
+    "entity.gimpanum.plasma_projectile": "Plasma Discharge"
 }

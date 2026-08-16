@@ -39,7 +39,8 @@ public class ThawingRecipe extends SmeltingRecipe {
     /** Что может оказаться внутри. Пустой тег — вернётся результат из рецепта. */
     public static final TagKey<Item> RESULTS = TagKey.create(Registries.ITEM, Gimpanum.id("thawed_organics"));
 
-    private static final RandomSource RANDOM = RandomSource.create();
+    /** По потоку: {@code assemble} зовут и сервер, и просмотрщики рецептов на клиенте. */
+    private static final ThreadLocal<RandomSource> RANDOM = ThreadLocal.withInitial(RandomSource::create);
 
     public ThawingRecipe(String group, CookingBookCategory category, Ingredient ingredient,
                          ItemStack result, float experience, int cookingTime) {
@@ -49,7 +50,7 @@ public class ThawingRecipe extends SmeltingRecipe {
     @Override
     public ItemStack assemble(SingleRecipeInput input, HolderLookup.Provider registries) {
         Optional<HolderSet.Named<Item>> pool = registries.lookupOrThrow(Registries.ITEM).get(RESULTS);
-        return pool.flatMap(set -> set.getRandomElement(RANDOM))
+        return pool.flatMap(set -> set.getRandomElement(RANDOM.get()))
                 .<ItemStack>map(ItemStack::new)
                 .orElseGet(() -> super.assemble(input, registries));
     }

@@ -19,10 +19,11 @@ import net.minecraft.resources.ResourceLocation;
 public class SpaceDevourerRenderer extends MobRenderer<SpaceDevourer, SpiderModel<SpaceDevourer>> {
 
     private static final ResourceLocation TEXTURE = Gimpanum.id("textures/entity/space_devourer.png");
-    private static final float SCALE = 1.5F;
+    /** Паучья модель 1.4 в ширину — до четырёх блоков это ровно 2.9. */
+    private static final float SCALE = 2.9F;
 
     public SpaceDevourerRenderer(EntityRendererProvider.Context context) {
-        super(context, new SpiderModel<>(context.bakeLayer(ModelLayers.SPIDER)), 1.1F);
+        super(context, new SpiderModel<>(context.bakeLayer(ModelLayers.SPIDER)), 2.0F);
     }
 
     @Override

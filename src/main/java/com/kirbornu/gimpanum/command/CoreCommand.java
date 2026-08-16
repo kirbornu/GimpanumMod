@@ -189,7 +189,13 @@ public final class CoreCommand {
                                 .executes(context -> clearTeams(context, resolver))))
                 // Список команд один на гибель Ядра и на периодическую выдачу;
                 // on_death задаёт, срабатывает ли он посмертно.
+                //
+                // Правка списка требует четвёртого уровня, а не второго, как
+                // всё остальное: команды Ядра выполняются с правами четвёртого
+                // уровня, и без этой оговорки любой, кому доверили настраивать
+                // Ядра, мог бы через них выдать себе всё что угодно.
                 .then(Commands.literal("command")
+                        .requires(source -> source.hasPermission(4))
                         .then(Commands.literal("add")
                                 .then(Commands.argument("command", StringArgumentType.greedyString())
                                         .executes(context -> addCommand(context, resolver))))

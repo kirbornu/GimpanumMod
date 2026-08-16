@@ -1,0 +1,149 @@
+{
+    "entity.space_devourer.ambient": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.space_devourer.ambient",
+        "sounds": [
+            "gimpanum:space_devourer/ambient1",
+            "gimpanum:space_devourer/ambient2",
+            "gimpanum:space_devourer/ambient3",
+            "gimpanum:space_devourer/ambient4",
+            "gimpanum:space_devourer/ambient5",
+            "gimpanum:space_devourer/ambient6"
+        ]
+    },
+    "entity.space_devourer.hurt": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.space_devourer.hurt",
+        "sounds": [
+            "gimpanum:space_devourer/hurt1",
+            "gimpanum:space_devourer/hurt2",
+            "gimpanum:space_devourer/hurt3",
+            "gimpanum:space_devourer/hurt4"
+        ]
+    },
+    "entity.space_devourer.death": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.space_devourer.death",
+        "sounds": [
+            "gimpanum:space_devourer/death1",
+            "gimpanum:space_devourer/death2"
+        ]
+    },
+    "entity.space_devourer.step": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.space_devourer.step",
+        "sounds": [
+            "gimpanum:space_devourer/step1",
+            "gimpanum:space_devourer/step2",
+            "gimpanum:space_devourer/step3",
+            "gimpanum:space_devourer/step4"
+        ]
+    },
+    "entity.space_devourer.roar": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.space_devourer.roar",
+        "sounds": [
+            "gimpanum:space_devourer/roar1",
+            "gimpanum:space_devourer/roar2",
+            "gimpanum:space_devourer/roar3",
+            "gimpanum:space_devourer/roar4",
+            "gimpanum:space_devourer/roar5"
+        ]
+    },
+    "entity.dune_walker.ambient": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.dune_walker.ambient",
+        "sounds": [
+            "gimpanum:dune_walker/ambient1",
+            "gimpanum:dune_walker/ambient2",
+            "gimpanum:dune_walker/ambient3"
+        ]
+    },
+    "entity.dune_walker.hurt": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.dune_walker.hurt",
+        "sounds": [
+            "gimpanum:dune_walker/hurt1",
+            "gimpanum:dune_walker/hurt2"
+        ]
+    },
+    "entity.dune_walker.death": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.dune_walker.death",
+        "sounds": [
+            "gimpanum:dune_walker/death1",
+            "gimpanum:dune_walker/death2"
+        ]
+    },
+    "entity.dune_walker.step": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.dune_walker.step",
+        "sounds": [
+            "gimpanum:dune_walker/step1",
+            "gimpanum:dune_walker/step2",
+            "gimpanum:dune_walker/step3",
+            "gimpanum:dune_walker/step4",
+            "gimpanum:dune_walker/step5"
+        ]
+    },
+    "entity.comet_wraith.scream": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.comet_wraith.scream",
+        "sounds": [
+            "gimpanum:comet_wraith/scream1",
+            "gimpanum:comet_wraith/scream2",
+            "gimpanum:comet_wraith/scream3",
+            "gimpanum:comet_wraith/scream4",
+            "gimpanum:comet_wraith/scream5"
+        ]
+    },
+    "entity.comet_wraith.hurt": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.comet_wraith.hurt",
+        "sounds": [
+            "gimpanum:comet_wraith/hurt1",
+            "gimpanum:comet_wraith/hurt2"
+        ]
+    },
+    "entity.comet_wraith.death": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.comet_wraith.death",
+        "sounds": [
+            "gimpanum:comet_wraith/death1"
+        ]
+    },
+    "entity.plasma_bolt.ambient": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.plasma_bolt.ambient",
+        "sounds": [
+            "gimpanum:plasma_bolt/ambient1",
+            "gimpanum:plasma_bolt/ambient2",
+            "gimpanum:plasma_bolt/ambient3",
+            "gimpanum:plasma_bolt/ambient4"
+        ]
+    },
+    "entity.plasma_bolt.hurt": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.plasma_bolt.hurt",
+        "sounds": [
+            "gimpanum:plasma_bolt/hurt1",
+            "gimpanum:plasma_bolt/hurt2",
+            "gimpanum:plasma_bolt/hurt3",
+            "gimpanum:plasma_bolt/hurt4"
+        ]
+    },
+    "entity.plasma_bolt.death": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.plasma_bolt.death",
+        "sounds": [
+            "gimpanum:plasma_bolt/death1"
+        ]
+    },
+    "entity.plasma_bolt.shoot": {
+        "category": "hostile",
+        "subtitle": "subtitles.gimpanum.plasma_bolt.shoot",
+        "sounds": [
+            "gimpanum:plasma_bolt/shoot1"
+        ]
+    }
+}

@@ -1,6 +1,12 @@
 package com.kirbornu.gimpanum.entity;
 
 import com.kirbornu.gimpanum.entity.goal.PhaseChaseGoal;
+import com.kirbornu.gimpanum.entity.goal.SinkToDepthsGoal;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -27,6 +33,20 @@ public class CometWraith extends Allay {
     /** Радиус, в котором призрак замечает игрока — сквозь что угодно. */
     public static final double DETECTION = 60.0;
 
+    /** Раз в 1.2 секунды. */
+    private static final int ATTACK_INTERVAL = 24;
+
+    /** Куда он возвращается, оставшись без жертвы: к самому дну лабиринта. */
+    private static final int HOME_DEPTH = 12;
+
+    /**
+     * Номер цели, о которой он уже объявил.
+     *
+     * <p>Именно номер, а не ссылка: ссылка удержала бы в памяти вышедшего из
+     * игры игрока до тех пор, пока моб не сменит цель.
+     */
+    private int lastAnnounced = -1;
+
     public CometWraith(EntityType<? extends Allay> type, Level level) {
         super(type, level);
         this.moveControl = new FlyingMoveControl(this, 20, true);
@@ -37,16 +57,20 @@ public class CometWraith extends Allay {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Allay.createAttributes()
-                .add(Attributes.MAX_HEALTH, 16.0)
-                .add(Attributes.ATTACK_DAMAGE, 4.0)
-                .add(Attributes.FLYING_SPEED, 0.6)
+                .add(Attributes.MAX_HEALTH, 12.0)
+                .add(Attributes.ATTACK_DAMAGE, 12.0)
+                // FLYING_SPEED здесь — единственная настройка погони: она
+                // ведётся вручную, без навигации. 0.98 — двенадцать блоков
+                // в секунду, вымерено.
+                .add(Attributes.FLYING_SPEED, 0.98)
                 .add(Attributes.MOVEMENT_SPEED, 0.3)
                 .add(Attributes.FOLLOW_RANGE, DETECTION);
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new PhaseChaseGoal(this));
+        this.goalSelector.addGoal(1, new PhaseChaseGoal(this, ATTACK_INTERVAL));
+        this.goalSelector.addGoal(5, new SinkToDepthsGoal(this, HOME_DEPTH, 0.06));
         // mustSee = false — в этом весь смысл: порода ему не помеха.
         this.targetSelector.addGoal(0, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, false));
@@ -55,6 +79,40 @@ public class CometWraith extends Allay {
     /** Мозг Аллая не нужен: он про танцы и подношения, а не про охоту. */
     @Override
     protected void customServerAiStep() {
+    }
+
+    /**
+     * Визг в тот миг, когда он кого-то заметил, и тишина всё остальное время.
+     *
+     * <p>Это единственное предупреждение, которое игрок получит: услышал —
+     * значит он уже летит, и стены его не задержат.
+     */
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        LivingEntity target = this.getTarget();
+        int id = target == null ? -1 : target.getId();
+        if (!this.level().isClientSide && target != null && id != lastAnnounced) {
+            this.playSound(GimpanumSounds.WRAITH_SCREAM.get(), 4.0F, 1.0F);
+        }
+        lastAnnounced = id;
+    }
+
+    /** Беззвучен: ambient-звука нет вовсе. */
+    @Override
+    @Nullable
+    protected SoundEvent getAmbientSound() {
+        return null;
+    }
+
+    @Override
+    protected SoundEvent getHurtSound(DamageSource source) {
+        return GimpanumSounds.WRAITH_HURT.get();
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return GimpanumSounds.WRAITH_DEATH.get();
     }
 
     @Override
