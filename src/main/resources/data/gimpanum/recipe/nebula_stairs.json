@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "category": "building",
+    "pattern": [
+        "#  ",
+        "## ",
+        "###"
+    ],
+    "key": {
+        "#": {
+            "item": "gimpanum:nebula_planks"
+        }
+    },
+    "result": {
+        "id": "gimpanum:nebula_stairs",
+        "count": 4
+    },
+    "group": "wooden_stairs"
+}

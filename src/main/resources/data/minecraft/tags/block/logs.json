@@ -1,6 +1,9 @@
 {
     "replace": false,
     "values": [
-        "gimpanum:nebula_log"
+        "gimpanum:nebula_log",
+        "gimpanum:nebula_wood",
+        "gimpanum:stripped_nebula_log",
+        "gimpanum:stripped_nebula_wood"
     ]
 }

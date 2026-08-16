@@ -2,9 +2,12 @@ package com.kirbornu.gimpanum.dimension;
 
 import com.kirbornu.gimpanum.Gimpanum;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -23,6 +26,15 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 @EventBusSubscriber(modid = Gimpanum.MOD_ID)
 public final class VacuumEvents {
 
+    /**
+     * Кому вакуум нипочём.
+     *
+     * <p>Своим обитателям Гимпанума дышать нечем по определению — они здесь и
+     * зародились. Тег, а не список в коде: сборка может добавить туда своих.
+     */
+    public static final TagKey<EntityType<?>> VACUUM_PROOF =
+            TagKey.create(Registries.ENTITY_TYPE, Gimpanum.id("vacuum_proof"));
+
     private VacuumEvents() {
     }
 
@@ -33,7 +45,9 @@ public final class VacuumEvents {
             return;
         }
         // Уже задыхается по своим причинам (голова в воде) — не вмешиваемся.
-        if (!event.canBreathe() || entity.getType().is(EntityTypeTags.CAN_BREATHE_UNDER_WATER)) {
+        if (!event.canBreathe()
+                || entity.getType().is(EntityTypeTags.CAN_BREATHE_UNDER_WATER)
+                || entity.getType().is(VACUUM_PROOF)) {
             return;
         }
         if (entity instanceof Player player && (player.isCreative() || player.isSpectator())) {

@@ -1,0 +1,21 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "category": "building",
+    "pattern": [
+        "#S#",
+        "#S#"
+    ],
+    "key": {
+        "#": {
+            "item": "gimpanum:nebula_planks"
+        },
+        "S": {
+            "item": "minecraft:stick"
+        }
+    },
+    "result": {
+        "id": "gimpanum:nebula_fence",
+        "count": 3
+    },
+    "group": "wooden_fence"
+}

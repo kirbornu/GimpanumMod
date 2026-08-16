@@ -1,0 +1,18 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "category": "building",
+    "pattern": [
+        "##",
+        "##"
+    ],
+    "key": {
+        "#": {
+            "item": "gimpanum:nebula_log"
+        }
+    },
+    "result": {
+        "id": "gimpanum:nebula_wood",
+        "count": 3
+    },
+    "group": "bark"
+}

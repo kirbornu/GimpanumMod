@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/door_top_left_open",
+  "textures": {
+    "bottom": "gimpanum:block/nebula_door_bottom",
+    "top": "gimpanum:block/nebula_door_top"
+  }
+}
