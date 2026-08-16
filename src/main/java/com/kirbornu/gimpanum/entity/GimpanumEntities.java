@@ -58,19 +58,28 @@ public final class GimpanumEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<SpaceDevourer>> SPACE_DEVOURER =
             ENTITIES.register("space_devourer", () -> EntityType.Builder
                     .of(SpaceDevourer::new, MobCategory.MONSTER)
-                    .sized(2.1F, 1.35F)
-                    .eyeHeight(0.9F)
+                    .sized(4.0F, 3.0F)
+                    .eyeHeight(2.0F)
                     .clientTrackingRange(8)
                     .build("space_devourer"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<PlasmaBolt>> PLASMA_BOLT =
             ENTITIES.register("plasma_bolt", () -> EntityType.Builder
                     .of(PlasmaBolt::new, MobCategory.MONSTER)
-                    .sized(0.6F, 1.99F)
-                    .eyeHeight(1.74F)
-                    .clientTrackingRange(12)
+                    .sized(1.2F, 4.0F)
+                    .eyeHeight(3.5F)
+                    .clientTrackingRange(16)
                     .fireImmune()
                     .build("plasma_bolt"));
+
+    /** Разряд Плазменной молнии — отдельная сущность ради удара молнии при попадании. */
+    public static final DeferredHolder<EntityType<?>, EntityType<PlasmaProjectile>> PLASMA_PROJECTILE =
+            ENTITIES.register("plasma_projectile", () -> EntityType.Builder
+                    .<PlasmaProjectile>of(PlasmaProjectile::new, MobCategory.MISC)
+                    .sized(0.3125F, 0.3125F)
+                    .clientTrackingRange(4)
+                    .updateInterval(10)
+                    .build("plasma_projectile"));
 
     public static final DeferredItem<Item> COMET_WRAITH_EGG = egg("comet_wraith", COMET_WRAITH, 0x8FD8E6, 0xEAFBFF);
     public static final DeferredItem<Item> DUNE_WALKER_EGG = egg("dune_walker", DUNE_WALKER, 0x8B877D, 0xCFCABE);

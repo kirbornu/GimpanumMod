@@ -1,6 +1,7 @@
 package com.kirbornu.gimpanum;
 
 import com.kirbornu.gimpanum.entity.GimpanumEntities;
+import com.kirbornu.gimpanum.entity.GimpanumSounds;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
@@ -18,6 +19,7 @@ public class Gimpanum {
     public Gimpanum(IEventBus modBus, ModContainer container) {
         GimpanumContent.register(modBus);
         GimpanumEntities.register(modBus);
+        GimpanumSounds.register(modBus);
     }
 
     public static ResourceLocation id(String path) {

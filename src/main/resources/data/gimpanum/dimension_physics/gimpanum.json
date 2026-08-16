@@ -1,0 +1,6 @@
+{
+    "dimension": "gimpanum:gimpanum",
+    "priority": 100,
+    "base_pressure": 0.0,
+    "ignore_chunks": false
+}

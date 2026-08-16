@@ -20,9 +20,14 @@ import java.util.EnumSet;
  * {@value #STALL} тиков не приблизился к жертве, он начинает есть то, что
  * стоит на пути. Иначе поглотитель грыз бы стены, имея открытую дверь рядом.
  *
- * <p>Время зависит от прочности блока — песок уходит за полторы секунды,
- * обсидиан за минуту. Блоки с отрицательной прочностью (коренная порода,
- * Ядро, врата) не трогаются вовсе: это не «крепко», это «нельзя».
+ * <p>Грызёт не по блоку, а сразу шаром радиусом {@value #BITE}: поглотитель
+ * четыре блока в ширину, и однин выеденный кубик ему бесполезен. Время
+ * считается по самому крепкому блоку в шаре — иначе обсидиановую стену можно
+ * было бы обмануть, спрятав за ней песок.
+ *
+ * <p>Песок уходит за полторы секунды, обсидиан за минуту. Блоки с
+ * отрицательной прочностью (коренная порода, Ядро, врата) не трогаются
+ * вовсе: это не «крепко», это «нельзя».
  */
 public class DevourBlocksGoal extends Goal {
 
@@ -30,6 +35,9 @@ public class DevourBlocksGoal extends Goal {
     private static final double GIVE_UP = 3.0;
     private static final double PROGRESS = 1.5;
     private static final int RANGE = 3;
+
+    /** Радиус выедаемой полости. */
+    private static final int BITE = 3;
     private static final int BASE_TICKS = 20;
     private static final double TICKS_PER_HARDNESS = 20.0;
 
@@ -38,6 +46,7 @@ public class DevourBlocksGoal extends Goal {
     @Nullable
     private BlockPos chewing;
     private int progress;
+    private int needed;
     private int stalled;
     private double closest = Double.MAX_VALUE;
 
@@ -86,21 +95,22 @@ public class DevourBlocksGoal extends Goal {
             clearProgress();
             return;
         }
-        if (!pos.equals(chewing)) {
-            clearProgress();
-            chewing = pos;
-            progress = 0;
-        }
-
         Level level = mob.level();
         BlockState state = level.getBlockState(pos);
-        float hardness = state.getDestroySpeed(level, pos);
-        if (hardness < 0.0F) {
+        if (state.getDestroySpeed(level, pos) < 0.0F) {
             clearProgress();
             return;
         }
 
-        int needed = (int) (BASE_TICKS + hardness * TICKS_PER_HARDNESS);
+        if (!pos.equals(chewing)) {
+            clearProgress();
+            chewing = pos;
+            progress = 0;
+            // Обход шара — 343 клетки; считаем его один раз на укус, а не
+            // каждый тик, иначе двадцать поглотителей заметно нагружают сервер.
+            needed = (int) (BASE_TICKS + hardestAround(level, pos) * TICKS_PER_HARDNESS);
+        }
+
         progress++;
         if (progress % 8 == 0) {
             level.playSound(null, pos, state.getSoundType(level, pos, mob).getHitSound(), SoundSource.HOSTILE, 0.6F, 0.6F);
@@ -108,11 +118,39 @@ public class DevourBlocksGoal extends Goal {
         level.destroyBlockProgress(mob.getId(), pos, Math.min(9, progress * 10 / Math.max(needed, 1)));
 
         if (progress >= needed) {
-            // Без выпадения: поглотитель не добывает, он поглощает.
-            level.destroyBlock(pos, false);
+            bite(level, pos);
             clearProgress();
             closest = Double.MAX_VALUE;
             stalled = 0;
+        }
+    }
+
+    /** Прочность самого крепкого блока в шаре — по нему и считается время. */
+    private float hardestAround(Level level, BlockPos centre) {
+        float hardest = 0.0F;
+        for (BlockPos pos : BlockPos.betweenClosed(centre.offset(-BITE, -BITE, -BITE), centre.offset(BITE, BITE, BITE))) {
+            if (centre.distSqr(pos) > (double) BITE * BITE) {
+                continue;
+            }
+            BlockState state = level.getBlockState(pos);
+            float hardness = state.getDestroySpeed(level, pos);
+            if (!state.isAir() && hardness > hardest) {
+                hardest = hardness;
+            }
+        }
+        return hardest;
+    }
+
+    /** Выедает шар. Неразрушимое остаётся стоять — вокруг него и обгрызает. */
+    private void bite(Level level, BlockPos centre) {
+        for (BlockPos pos : BlockPos.betweenClosed(centre.offset(-BITE, -BITE, -BITE), centre.offset(BITE, BITE, BITE))) {
+            if (centre.distSqr(pos) > (double) BITE * BITE) {
+                continue;
+            }
+            if (edible(level, pos)) {
+                // Без выпадения: поглотитель не добывает, он поглощает.
+                level.destroyBlock(pos.immutable(), false);
+            }
         }
     }
 
@@ -154,6 +192,7 @@ public class DevourBlocksGoal extends Goal {
             chewing = null;
         }
         progress = 0;
+        needed = 0;
     }
 
     private void reset() {

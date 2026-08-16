@@ -20,5 +20,7 @@ public final class GimpanumRenderers {
         event.registerEntityRenderer(GimpanumEntities.DUNE_WALKER.get(), DuneWalkerRenderer::new);
         event.registerEntityRenderer(GimpanumEntities.SPACE_DEVOURER.get(), SpaceDevourerRenderer::new);
         event.registerEntityRenderer(GimpanumEntities.PLASMA_BOLT.get(), PlasmaBoltRenderer::new);
+        event.registerEntityRenderer(GimpanumEntities.PLASMA_PROJECTILE.get(),
+                context -> new net.minecraft.client.renderer.entity.ThrownItemRenderer<>(context, 1.5F, true));
     }
 }
