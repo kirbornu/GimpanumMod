@@ -136,5 +136,6 @@
     "subtitles.gimpanum.plasma_bolt.hurt": "Plasma Bolt hurts",
     "subtitles.gimpanum.plasma_bolt.death": "Plasma Bolt dies",
     "subtitles.gimpanum.plasma_bolt.shoot": "Plasma Bolt fires",
-    "entity.gimpanum.plasma_projectile": "Plasma Discharge"
+    "entity.gimpanum.plasma_projectile": "Plasma Discharge",
+    "gimpanum.command.offers_reloaded": "Converter offers reloaded: %s. File: %s"
 }

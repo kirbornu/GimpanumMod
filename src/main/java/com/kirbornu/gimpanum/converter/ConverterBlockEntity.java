@@ -29,6 +29,15 @@ public class ConverterBlockEntity extends BlockEntity {
     private static final String KEY_PROGRESS = "GimpanumConverterProgress";
 
     /**
+     * Метка «выбрать обмен при первой загрузке».
+     *
+     * <p>Стоит в NBT конвертера внутри шаблона структуры. Так найденный в мире
+     * конвертер получает случайное предложение, а поставленный игроком —
+     * по-прежнему пустой, и разбираться, откуда взялся блок, не нужно.
+     */
+    private static final String KEY_ROLL = "GimpanumRollOffer";
+
+    /**
      * Как часто конвертер осматривается в поисках брошенного.
      *
      * <p>Четверть секунды: глазу неотличимо от мгновенного, а осмотр области
@@ -38,6 +47,7 @@ public class ConverterBlockEntity extends BlockEntity {
     private static final int ABSORB_INTERVAL_TICKS = 5;
 
     private ConverterConfig config = ConverterConfig.EMPTY;
+    private boolean rollPending;
 
     /** Сколько принятого набрано к текущей квоте. */
     private int progress;
@@ -76,6 +86,12 @@ public class ConverterBlockEntity extends BlockEntity {
     public void onLoad() {
         super.onLoad();
         if (level instanceof ServerLevel serverLevel) {
+            if (rollPending) {
+                rollPending = false;
+                ConverterOffers.roll(serverLevel.getRandom())
+                        .ifPresent(offer -> config = offer.toConfig());
+                setChanged();
+            }
             ConverterIndex.put(serverLevel.getServer(), level.dimension(), worldPosition);
             GimpanumNetwork.broadcastMarkers(serverLevel.getServer());
         }
@@ -231,6 +247,7 @@ public class ConverterBlockEntity extends BlockEntity {
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         progress = tag.getInt(KEY_PROGRESS);
+        rollPending = tag.getBoolean(KEY_ROLL);
         if (tag.contains(KEY_CONFIG)) {
             config = ConverterConfig.CODEC
                     .parse(NbtOps.INSTANCE, tag.get(KEY_CONFIG))
@@ -245,6 +262,9 @@ public class ConverterBlockEntity extends BlockEntity {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putInt(KEY_PROGRESS, progress);
+        if (rollPending) {
+            tag.putBoolean(KEY_ROLL, true);
+        }
         ConverterConfig.CODEC.encodeStart(NbtOps.INSTANCE, config)
                 .resultOrPartial(error -> Gimpanum.LOGGER.error(
                         "Не удалось сохранить настройку конвертера в {}: {}",

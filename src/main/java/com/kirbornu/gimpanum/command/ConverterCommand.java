@@ -41,6 +41,9 @@ public final class ConverterCommand {
                                 CommandBuildContext buildContext) {
         root.then(Commands.literal("converter")
                 .then(Commands.literal("list").executes(ConverterCommand::list))
+                // Перечитать config/gimpanum/converter_offers.json без перезапуска.
+                .then(Commands.literal("offers")
+                        .then(Commands.literal("reload").executes(ConverterCommand::reloadOffers)))
                 .then(Commands.argument("pos", BlockPosArgument.blockPos())
                         .then(Commands.literal("show")
                                 .executes(ConverterCommand::show))
@@ -139,4 +142,15 @@ public final class ConverterCommand {
                 () -> Component.translatable("gimpanum.command.converter_reset"), true);
         return 1;
     }
+
+    /** Перечитывает файл предложений. На уже стоящие конвертеры не влияет. */
+    private static int reloadOffers(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        com.kirbornu.gimpanum.converter.ConverterOffers.load(source.getServer());
+        int count = com.kirbornu.gimpanum.converter.ConverterOffers.count();
+        source.sendSuccess(() -> Component.translatable("gimpanum.command.offers_reloaded",
+                count, com.kirbornu.gimpanum.converter.ConverterOffers.path().toString()), true);
+        return count;
+    }
 }
+

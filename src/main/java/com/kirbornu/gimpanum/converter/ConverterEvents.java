@@ -4,6 +4,7 @@ import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.network.GimpanumNetwork;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
@@ -26,4 +27,11 @@ public final class ConverterEvents {
             GimpanumNetwork.sendMarkers(player);
         }
     }
+
+    /** Предложения читаются на старте сервера: до него реестры ещё не готовы. */
+    @SubscribeEvent
+    public static void onServerStarted(ServerStartedEvent event) {
+        ConverterOffers.load(event.getServer());
+    }
 }
+
