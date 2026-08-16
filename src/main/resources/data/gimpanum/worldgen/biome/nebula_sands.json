@@ -28,7 +28,7 @@
             },
             {
                 "type": "gimpanum:comet_wraith",
-                "weight": 26,
+                "weight": 16,
                 "minCount": 1,
                 "maxCount": 1
             },
@@ -40,7 +40,7 @@
             },
             {
                 "type": "gimpanum:space_devourer",
-                "weight": 5,
+                "weight": 25,
                 "minCount": 1,
                 "maxCount": 1
             }
