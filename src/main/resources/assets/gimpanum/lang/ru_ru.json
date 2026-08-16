@@ -73,7 +73,6 @@
     "gimpanum.command.default_name_set": "Приставка для имён новых Ядер: %s",
     "gimpanum.core.death_commands": "Выполнять команды при гибели: %s",
     "gimpanum.command.death_commands_set": "Команды при гибели: %s. Ядер: %s",
-    "item.gimpanum.crystal_bead": "Хрусталик",
     "gimpanum.command.spawn_count_set": "Выдавать по %s шт. Ядер: %s",
     "block.gimpanum.phonos_converter": "Фонос-конвертер",
     "gimpanum.converter.header": "=== %s ===",
@@ -142,5 +141,18 @@
     "block.gimpanum.nebula_wall_sign": "Настенная небула-табличка",
     "gimpanum.fire.nothing_to_burn": "Здесь нечему гореть",
     "item.gimpanum.crystal_shard": "Осколок хрусталя",
-    "block.gimpanum.nebula_fruit": "Небула-плод"
+    "block.gimpanum.nebula_fruit": "Небула-плод",
+    "item.gimpanum.darkness_crystal": "Кристалл тьмы",
+    "item.gimpanum.fire_bar": "Плитка огня",
+    "item.gimpanum.jade_nut": "Нефритовая гайка",
+    "item.gimpanum.plant_ancestor": "Предок растения",
+    "item.gimpanum.sparkle_string": "Искрящаяся нить",
+    "item.gimpanum.stone_rod": "Стержень камня",
+    "item.gimpanum.tenderness_stone": "Камень нежности",
+    "item.gimpanum.transparent_ball": "Прозрачный шарик",
+    "item.gimpanum.druid_gift": "Дар друидов",
+    "item.gimpanum.purple_queen_talisman": "Талисман лиловой королевы",
+    "item.gimpanum.purple_queen_talisman.done": "Всё из последнего трупа — у вас",
+    "item.gimpanum.purple_queen_talisman.empty": "Возвращать нечего: последнего трупа нет или он пуст",
+    "item.gimpanum.purple_queen_talisman.unavailable": "Талисману не за что зацепиться: мода Corpse нет"
 }
