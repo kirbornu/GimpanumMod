@@ -56,7 +56,7 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 60.0)
-                .add(Attributes.ATTACK_DAMAGE, 16.0)
+                .add(Attributes.ATTACK_DAMAGE, 32.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.145)
                 // 0.485 — четверть блока в секунду. Летающие мобы ходят по
                 // FLYING_SPEED, а не по MOVEMENT_SPEED; связь линейная, вымерено.

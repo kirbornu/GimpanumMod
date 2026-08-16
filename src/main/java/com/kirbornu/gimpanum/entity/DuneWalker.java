@@ -65,7 +65,7 @@ public class DuneWalker extends Zombie {
     public static AttributeSupplier.Builder createAttributes() {
         return Zombie.createAttributes()
                 .add(Attributes.MAX_HEALTH, 25.0)
-                .add(Attributes.ATTACK_DAMAGE, 6.0)
+                .add(Attributes.ATTACK_DAMAGE, 12.0)
                 .add(Attributes.ARMOR, 2.0)
                 // 0.17 — блок в секунду, вымерено (вчетверо медленнее зомби)
                 .add(Attributes.MOVEMENT_SPEED, 0.17)

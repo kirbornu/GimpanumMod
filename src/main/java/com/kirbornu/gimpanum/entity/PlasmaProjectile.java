@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
 public class PlasmaProjectile extends Fireball {
 
     /** Урон от самой молнии — столько же, сколько у настоящей. */
-    private static final float LIGHTNING_DAMAGE = 5.0F;
+    private static final float LIGHTNING_DAMAGE = 10.0F;
 
     public PlasmaProjectile(EntityType<? extends PlasmaProjectile> type, Level level) {
         super(type, level);
