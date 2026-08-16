@@ -38,8 +38,9 @@ public class DevourBlocksGoal extends Goal {
 
     /** Радиус выедаемой полости. */
     private static final int BITE = 3;
-    private static final int BASE_TICKS = 20;
-    private static final double TICKS_PER_HARDNESS = 20.0;
+    // Полуторакратно быстрее прежнего: 20 и 20 были слишком щадящими.
+    private static final int BASE_TICKS = 13;
+    private static final double TICKS_PER_HARDNESS = 13.0;
 
     private final Mob mob;
 
@@ -176,9 +177,17 @@ public class DevourBlocksGoal extends Goal {
                 }
             }
         }
-        // Цель выше или ниже — значит мешает потолок или пол.
-        BlockPos vertical = target.getY() > mob.getY() + 1.0 ? feet.above(2) : feet.below();
-        return edible(level, vertical) ? vertical : null;
+        // Вертикаль трогаем, только если цель и правда выше или ниже. Иначе
+        // поглотитель на ровном месте начинал копать яму прямо под собой.
+        if (target.getY() > mob.getY() + 2.0) {
+            BlockPos above = feet.above(2);
+            return edible(level, above) ? above : null;
+        }
+        if (target.getY() < mob.getY() - 2.0) {
+            BlockPos below = feet.below();
+            return edible(level, below) ? below : null;
+        }
+        return null;
     }
 
     private boolean edible(Level level, BlockPos pos) {

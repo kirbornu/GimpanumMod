@@ -2,7 +2,7 @@ package com.kirbornu.gimpanum.entity;
 
 import com.kirbornu.gimpanum.entity.goal.AvoidLightGoal;
 import com.kirbornu.gimpanum.entity.goal.DevourBlocksGoal;
-import com.kirbornu.gimpanum.entity.goal.PacedMeleeAttackGoal;
+import com.kirbornu.gimpanum.entity.goal.StalkAndStrikeGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -66,9 +66,9 @@ public class SpaceDevourer extends Monster {
                 .add(Attributes.ATTACK_DAMAGE, 20.0)
                 .add(Attributes.ARMOR, 4.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.5)
-                // 0.38 — это шесть блоков в секунду, вымерено на прямом отрезке;
+                // 0.40 — семь блоков в секунду, вымерено на прямом отрезке;
                 // связь атрибута со скоростью нелинейная, по формуле не угадать
-                .add(Attributes.MOVEMENT_SPEED, 0.38)
+                .add(Attributes.MOVEMENT_SPEED, 0.40)
                 .add(Attributes.FOLLOW_RANGE, 40.0);
     }
 
@@ -76,7 +76,7 @@ public class SpaceDevourer extends Monster {
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new AvoidLightGoal(this, 1.3));
-        this.goalSelector.addGoal(3, new PacedMeleeAttackGoal(this, 1.0, ATTACK_INTERVAL));
+        this.goalSelector.addGoal(3, new StalkAndStrikeGoal(this, 1.0, ATTACK_INTERVAL));
         this.goalSelector.addGoal(4, new DevourBlocksGoal(this));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.6));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 12.0F));

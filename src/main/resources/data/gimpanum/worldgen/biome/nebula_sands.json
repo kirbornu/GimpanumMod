@@ -28,7 +28,7 @@
             },
             {
                 "type": "gimpanum:comet_wraith",
-                "weight": 105,
+                "weight": 26,
                 "minCount": 1,
                 "maxCount": 1
             },

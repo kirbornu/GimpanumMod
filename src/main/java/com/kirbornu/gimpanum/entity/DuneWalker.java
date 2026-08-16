@@ -134,9 +134,16 @@ public class DuneWalker extends Zombie {
         return result;
     }
 
+    /**
+     * Голос подаёт только в погоне.
+     *
+     * <p>Ходоков много, и если бы каждый стонал просто так, пустыня звучала бы
+     * как сплошной гул. А так стон означает ровно одно: тебя заметили.
+     */
     @Override
+    @Nullable
     protected SoundEvent getAmbientSound() {
-        return GimpanumSounds.WALKER_AMBIENT.get();
+        return this.getTarget() == null ? null : GimpanumSounds.WALKER_AMBIENT.get();
     }
 
     @Override

@@ -32,6 +32,14 @@ import net.neoforged.neoforge.registries.DeferredRegister;
  * требует темноты, а у Гимпанума в типе измерения стоит порог освещения 0 при
  * вечном полудне — с ним на поверхности не появился бы никто. Поэтому свет в
  * условиях не участвует вовсе, вместо него — высота и порода под ногами.
+ *
+ * <p>Важная особенность игры, из-за которой пришлось править условия: точка
+ * для попытки появления берётся на случайной высоте от дна мира до
+ * <i>поверхности</i>. Выше поверхности игра не пробует никогда. Поэтому
+ * Плазменная молния не может требовать высоты в сотню блоков — такой точки ей
+ * просто не предложат; она появляется чуть выше барханов и поднимается сама.
+ * По той же причине Ходок не может требовать именно поверхности: попасть в
+ * один-единственный слой из сотни возможных — примерно никогда.
  */
 @EventBusSubscriber(modid = Gimpanum.MOD_ID)
 public final class GimpanumEntities {
@@ -42,8 +50,9 @@ public final class GimpanumEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<CometWraith>> COMET_WRAITH =
             ENTITIES.register("comet_wraith", () -> EntityType.Builder
                     .of(CometWraith::new, MobCategory.MONSTER)
-                    .sized(0.7F, 0.8F)
-                    .clientTrackingRange(10)
+                    .sized(1.4F, 1.6F)
+                    .eyeHeight(1.2F)
+                    .clientTrackingRange(12)
                     .fireImmune()
                     .build("comet_wraith"));
 
@@ -120,11 +129,17 @@ public final class GimpanumEntities {
 
         event.register(PLASMA_BOLT.get(), SpawnPlacementTypes.NO_RESTRICTIONS,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                (type, level, spawnType, pos, random) -> inAir(level, pos) && pos.getY() >= 104,
+                (type, level, spawnType, pos, random) -> inAir(level, pos) && pos.getY() >= 88,
                 RegisterSpawnPlacementsEvent.Operation.REPLACE);
     }
 
-    /** Поверхность пустыни: под ногами космический песок, над головой пусто. */
+    /**
+     * Космический песок под ногами и пустота над головой.
+     *
+     * <p>Не только поверхность: песком сложены и стены лабиринта, так что
+     * ходоки заводятся и внизу. Это намеренно — требовать именно поверхности
+     * значило бы не появляться почти никогда, см. пояснение у класса.
+     */
     private static boolean onSand(LevelAccessor level, BlockPos pos) {
         return level.getBlockState(pos.below()).is(GimpanumContent.COSMIC_SAND.get())
                 && inAir(level, pos);

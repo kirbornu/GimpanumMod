@@ -137,5 +137,8 @@
     "subtitles.gimpanum.plasma_bolt.death": "Плазменная молния гаснет",
     "subtitles.gimpanum.plasma_bolt.shoot": "Выстрел Плазменной молнии",
     "entity.gimpanum.plasma_projectile": "Плазменный разряд",
-    "gimpanum.command.offers_reloaded": "Предложений конвертеров перечитано: %s. Файл: %s"
+    "gimpanum.command.offers_reloaded": "Предложений конвертеров перечитано: %s. Файл: %s",
+    "block.gimpanum.nebula_sign": "Небула-табличка",
+    "block.gimpanum.nebula_wall_sign": "Настенная небула-табличка",
+    "gimpanum.fire.nothing_to_burn": "Здесь нечему гореть"
 }

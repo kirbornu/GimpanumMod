@@ -1,7 +1,11 @@
 {
     "structures": [
         {
-            "structure": "gimpanum:phonos_vault",
+            "structure": "gimpanum:phonos_vault_surface",
+            "weight": 1
+        },
+        {
+            "structure": "gimpanum:phonos_vault_cave",
             "weight": 1
         }
     ],

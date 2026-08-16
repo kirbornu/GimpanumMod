@@ -25,6 +25,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SignItem;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SimpleCookingSerializer;
 import net.minecraft.world.level.block.Block;
@@ -38,6 +39,9 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
+import net.minecraft.world.level.block.SignBlock;
+import net.minecraft.world.level.block.StandingSignBlock;
+import net.minecraft.world.level.block.WallSignBlock;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -351,6 +355,40 @@ public final class GimpanumContent {
     public static final DeferredItem<NebulaWoodItem> NEBULA_PRESSURE_PLATE_ITEM =
             woodItem("nebula_pressure_plate", NEBULA_PRESSURE_PLATE);
 
+    /**
+     * Свой тип древесины — только ради табличек.
+     *
+     * <p>Табличка рисуется отдельной моделью с собственной текстурой, и
+     * связывает блок с текстурой именно {@code WoodType}. Всему остальному
+     * набору он не нужен, поэтому и заведён так поздно.
+     */
+    public static final WoodType NEBULA_WOOD_TYPE =
+            WoodType.register(new WoodType(Gimpanum.MOD_ID + ":nebula", SET));
+
+    public static final DeferredBlock<StandingSignBlock> NEBULA_SIGN = BLOCKS.registerBlock(
+            "nebula_sign",
+            properties -> new StandingSignBlock(NEBULA_WOOD_TYPE, properties),
+            signProperties());
+
+    public static final DeferredBlock<WallSignBlock> NEBULA_WALL_SIGN = BLOCKS.registerBlock(
+            "nebula_wall_sign",
+            properties -> new WallSignBlock(NEBULA_WOOD_TYPE, properties),
+            signProperties());
+
+    /** Предмет один на оба блока: игра сама решает, ставить стоячую или настенную. */
+    public static final DeferredItem<SignItem> NEBULA_SIGN_ITEM = ITEMS.registerItem(
+            "nebula_sign",
+            properties -> new SignItem(properties.stacksTo(16),
+                    NEBULA_SIGN.get(), NEBULA_WALL_SIGN.get()));
+
+    private static BlockBehaviour.Properties signProperties() {
+        return BlockBehaviour.Properties.of()
+                .mapColor(MapColor.COLOR_PURPLE)
+                .sound(SoundType.WOOD)
+                .noCollission()
+                .strength(1.0F);
+    }
+
     private static BlockBehaviour.Properties woodProperties() {
         return BlockBehaviour.Properties.of()
                 .mapColor(MapColor.COLOR_PURPLE)
@@ -503,6 +541,7 @@ public final class GimpanumContent {
                         output.accept(NEBULA_TRAPDOOR_ITEM.get());
                         output.accept(NEBULA_BUTTON_ITEM.get());
                         output.accept(NEBULA_PRESSURE_PLATE_ITEM.get());
+                        output.accept(NEBULA_SIGN_ITEM.get());
                         output.accept(SEAL.get());
                         output.accept(CRYSTAL_BEAD.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.COMET_WRAITH_EGG.get());
