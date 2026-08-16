@@ -58,7 +58,7 @@ public class CometWraith extends Allay {
     public static AttributeSupplier.Builder createAttributes() {
         return Allay.createAttributes()
                 .add(Attributes.MAX_HEALTH, 12.0)
-                .add(Attributes.ATTACK_DAMAGE, 12.0)
+                .add(Attributes.ATTACK_DAMAGE, 24.0)
                 // FLYING_SPEED здесь — единственная настройка погони: она
                 // ведётся вручную, без навигации. 0.98 — двенадцать блоков
                 // в секунду, вымерено.

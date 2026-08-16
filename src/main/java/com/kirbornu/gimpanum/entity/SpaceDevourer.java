@@ -64,7 +64,7 @@ public class SpaceDevourer extends Monster {
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 100.0)
-                .add(Attributes.ATTACK_DAMAGE, 20.0)
+                .add(Attributes.ATTACK_DAMAGE, 40.0)
                 .add(Attributes.ARMOR, 4.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.5)
                 // 0.40 — семь блоков в секунду, вымерено на прямом отрезке;
