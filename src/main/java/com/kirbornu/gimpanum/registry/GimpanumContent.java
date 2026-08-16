@@ -515,6 +515,14 @@ public final class GimpanumContent {
             new Item.Properties().fireResistant().stacksTo(MAX_VANILLA_STACK)
     );
 
+    /**
+     * Осколок хрусталя — то, что остаётся от некрофагов.
+     *
+     * <p>Обыкновенный предмет без свойств: вся его ценность в том, во что его
+     * можно обменять, а это задаётся настройкой конвертеров, а не кодом.
+     */
+    public static final DeferredItem<Item> CRYSTAL_SHARD = ITEMS.registerSimpleItem("crystal_shard");
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register(
             "main",
             () -> CreativeModeTab.builder()
@@ -544,6 +552,7 @@ public final class GimpanumContent {
                         output.accept(NEBULA_SIGN_ITEM.get());
                         output.accept(SEAL.get());
                         output.accept(CRYSTAL_BEAD.get());
+                        output.accept(CRYSTAL_SHARD.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.COMET_WRAITH_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.DUNE_WALKER_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.SPACE_DEVOURER_EGG.get());

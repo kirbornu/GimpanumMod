@@ -1,0 +1,36 @@
+{
+    "neoforge:conditions": [
+        {
+            "type": "neoforge:mod_loaded",
+            "modid": "create"
+        }
+    ],
+    "type": "create:mixing",
+    "heat_requirement": "superheated",
+    "ingredients": [
+        {
+            "item": "minecraft:echo_shard"
+        },
+        {
+            "item": "minecraft:potato"
+        },
+        {
+            "item": "minecraft:potato"
+        },
+        {
+            "item": "minecraft:potato"
+        },
+        {
+            "item": "minecraft:potato"
+        }
+    ],
+    "results": [
+        {
+            "id": "gimpanum:crystal_shard"
+        },
+        {
+            "id": "minecraft:poisonous_potato",
+            "count": 4
+        }
+    ]
+}

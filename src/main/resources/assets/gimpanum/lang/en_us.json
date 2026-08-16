@@ -140,5 +140,6 @@
     "gimpanum.command.offers_reloaded": "Converter offers reloaded: %s. File: %s",
     "block.gimpanum.nebula_sign": "Nebula Sign",
     "block.gimpanum.nebula_wall_sign": "Nebula Wall Sign",
-    "gimpanum.fire.nothing_to_burn": "Nothing burns here"
+    "gimpanum.fire.nothing_to_burn": "Nothing burns here",
+    "item.gimpanum.crystal_shard": "Crystal Shard"
 }

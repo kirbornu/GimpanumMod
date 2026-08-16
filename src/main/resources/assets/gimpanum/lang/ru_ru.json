@@ -140,5 +140,6 @@
     "gimpanum.command.offers_reloaded": "Предложений конвертеров перечитано: %s. Файл: %s",
     "block.gimpanum.nebula_sign": "Небула-табличка",
     "block.gimpanum.nebula_wall_sign": "Настенная небула-табличка",
-    "gimpanum.fire.nothing_to_burn": "Здесь нечему гореть"
+    "gimpanum.fire.nothing_to_burn": "Здесь нечему гореть",
+    "item.gimpanum.crystal_shard": "Осколок хрусталя"
 }
