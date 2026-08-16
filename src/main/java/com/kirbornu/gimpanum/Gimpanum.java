@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum;
 
+import com.kirbornu.gimpanum.cannons.BigCannons;
 import com.kirbornu.gimpanum.entity.GimpanumEntities;
 import com.kirbornu.gimpanum.entity.GimpanumSounds;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
@@ -7,6 +8,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import org.slf4j.Logger;
 
@@ -20,6 +22,12 @@ public class Gimpanum {
         GimpanumContent.register(modBus);
         GimpanumEntities.register(modBus);
         GimpanumSounds.register(modBus);
+        // Спрашиваем здесь, а не в самом BigCannons: тот ссылается на классы
+        // Create Big Cannons, и любое обращение к нему без этого мода валит
+        // запуск ещё до ответа. Вызов внутри ветки класс не грузит.
+        if (ModList.get() != null && ModList.get().isLoaded(BigCannons.CBC)) {
+            BigCannons.register(modBus);
+        }
     }
 
     public static ResourceLocation id(String path) {

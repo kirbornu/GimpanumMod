@@ -154,5 +154,7 @@
     "item.gimpanum.purple_queen_talisman": "Талисман лиловой королевы",
     "item.gimpanum.purple_queen_talisman.done": "Всё из последнего трупа — у вас",
     "item.gimpanum.purple_queen_talisman.empty": "Возвращать нечего: последнего трупа нет или он пуст",
-    "item.gimpanum.purple_queen_talisman.unavailable": "Талисману не за что зацепиться: мода Corpse нет"
+    "item.gimpanum.purple_queen_talisman.unavailable": "Талисману не за что зацепиться: мода Corpse нет",
+    "block.gimpanum.furious_shell": "Яростный снаряд",
+    "entity.gimpanum.furious_shell": "Яростный снаряд"
 }

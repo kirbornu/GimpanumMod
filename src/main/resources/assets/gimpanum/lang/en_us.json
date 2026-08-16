@@ -154,5 +154,7 @@
     "item.gimpanum.purple_queen_talisman": "Purple Queen's Talisman",
     "item.gimpanum.purple_queen_talisman.done": "Everything from your last corpse is yours again",
     "item.gimpanum.purple_queen_talisman.empty": "Nothing to reclaim: no last corpse, or it is empty",
-    "item.gimpanum.purple_queen_talisman.unavailable": "The talisman finds no hold: the Corpse mod is missing"
+    "item.gimpanum.purple_queen_talisman.unavailable": "The talisman finds no hold: the Corpse mod is missing",
+    "block.gimpanum.furious_shell": "Furious Shell",
+    "entity.gimpanum.furious_shell": "Furious Shell"
 }
