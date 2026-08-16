@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "category": "building",
+    "pattern": [
+        "###"
+    ],
+    "key": {
+        "#": {
+            "item": "gimpanum:nebula_planks"
+        }
+    },
+    "result": {
+        "id": "gimpanum:nebula_slab",
+        "count": 6
+    },
+    "group": "wooden_slab"
+}

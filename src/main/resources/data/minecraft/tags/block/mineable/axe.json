@@ -2,6 +2,17 @@
     "replace": false,
     "values": [
         "gimpanum:nebula_log",
-        "gimpanum:nebula_planks"
+        "gimpanum:nebula_wood",
+        "gimpanum:stripped_nebula_log",
+        "gimpanum:stripped_nebula_wood",
+        "gimpanum:nebula_planks",
+        "gimpanum:nebula_stairs",
+        "gimpanum:nebula_slab",
+        "gimpanum:nebula_fence",
+        "gimpanum:nebula_fence_gate",
+        "gimpanum:nebula_door",
+        "gimpanum:nebula_trapdoor",
+        "gimpanum:nebula_button",
+        "gimpanum:nebula_pressure_plate"
     ]
 }

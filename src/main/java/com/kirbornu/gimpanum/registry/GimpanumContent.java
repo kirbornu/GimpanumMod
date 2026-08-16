@@ -28,7 +28,17 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SimpleCookingSerializer;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FenceBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.PressurePlateBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.state.properties.BlockSetType;
+import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -265,6 +275,100 @@ public final class GimpanumContent {
             properties -> new NebulaWoodItem(NEBULA_PLANKS.get(), properties)
     );
 
+    /**
+     * Полный строительный набор из небула-древесины.
+     *
+     * <p>Тип блоков и древесины берём дубовые: они отвечают только за звуки
+     * двери, калитки и кнопки, а свой пришлось бы регистрировать до всего
+     * остального, ради одного лишь скрипа.
+     *
+     * <p>Все предметы набора — {@link NebulaWoodItem}: топливом не должна быть
+     * ни одна часть, иначе печь топили бы ступеньками.
+     */
+    private static final BlockSetType SET = BlockSetType.OAK;
+    private static final WoodType WOOD = WoodType.OAK;
+
+    public static final DeferredBlock<RotatedPillarBlock> NEBULA_WOOD = BLOCKS.registerBlock(
+            "nebula_wood", RotatedPillarBlock::new, woodProperties());
+    public static final DeferredItem<NebulaWoodItem> NEBULA_WOOD_ITEM = woodItem("nebula_wood", NEBULA_WOOD);
+
+    public static final DeferredBlock<RotatedPillarBlock> STRIPPED_NEBULA_LOG = BLOCKS.registerBlock(
+            "stripped_nebula_log", RotatedPillarBlock::new, woodProperties());
+    public static final DeferredItem<NebulaWoodItem> STRIPPED_NEBULA_LOG_ITEM =
+            woodItem("stripped_nebula_log", STRIPPED_NEBULA_LOG);
+
+    public static final DeferredBlock<RotatedPillarBlock> STRIPPED_NEBULA_WOOD = BLOCKS.registerBlock(
+            "stripped_nebula_wood", RotatedPillarBlock::new, woodProperties());
+    public static final DeferredItem<NebulaWoodItem> STRIPPED_NEBULA_WOOD_ITEM =
+            woodItem("stripped_nebula_wood", STRIPPED_NEBULA_WOOD);
+
+    public static final DeferredBlock<StairBlock> NEBULA_STAIRS = BLOCKS.registerBlock(
+            "nebula_stairs",
+            properties -> new StairBlock(NEBULA_PLANKS.get().defaultBlockState(), properties),
+            plankProperties());
+    public static final DeferredItem<NebulaWoodItem> NEBULA_STAIRS_ITEM = woodItem("nebula_stairs", NEBULA_STAIRS);
+
+    public static final DeferredBlock<SlabBlock> NEBULA_SLAB = BLOCKS.registerBlock(
+            "nebula_slab", SlabBlock::new, plankProperties());
+    public static final DeferredItem<NebulaWoodItem> NEBULA_SLAB_ITEM = woodItem("nebula_slab", NEBULA_SLAB);
+
+    public static final DeferredBlock<FenceBlock> NEBULA_FENCE = BLOCKS.registerBlock(
+            "nebula_fence", FenceBlock::new, plankProperties());
+    public static final DeferredItem<NebulaWoodItem> NEBULA_FENCE_ITEM = woodItem("nebula_fence", NEBULA_FENCE);
+
+    public static final DeferredBlock<FenceGateBlock> NEBULA_FENCE_GATE = BLOCKS.registerBlock(
+            "nebula_fence_gate",
+            properties -> new FenceGateBlock(WOOD, properties),
+            plankProperties());
+    public static final DeferredItem<NebulaWoodItem> NEBULA_FENCE_GATE_ITEM =
+            woodItem("nebula_fence_gate", NEBULA_FENCE_GATE);
+
+    public static final DeferredBlock<DoorBlock> NEBULA_DOOR = BLOCKS.registerBlock(
+            "nebula_door",
+            properties -> new DoorBlock(SET, properties),
+            plankProperties().noOcclusion());
+    public static final DeferredItem<NebulaWoodItem> NEBULA_DOOR_ITEM = woodItem("nebula_door", NEBULA_DOOR);
+
+    public static final DeferredBlock<TrapDoorBlock> NEBULA_TRAPDOOR = BLOCKS.registerBlock(
+            "nebula_trapdoor",
+            properties -> new TrapDoorBlock(SET, properties),
+            plankProperties().noOcclusion());
+    public static final DeferredItem<NebulaWoodItem> NEBULA_TRAPDOOR_ITEM =
+            woodItem("nebula_trapdoor", NEBULA_TRAPDOOR);
+
+    public static final DeferredBlock<ButtonBlock> NEBULA_BUTTON = BLOCKS.registerBlock(
+            "nebula_button",
+            properties -> new ButtonBlock(SET, 30, properties),
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_PURPLE)
+                    .sound(SoundType.WOOD).noCollission().strength(0.5F));
+    public static final DeferredItem<NebulaWoodItem> NEBULA_BUTTON_ITEM = woodItem("nebula_button", NEBULA_BUTTON);
+
+    public static final DeferredBlock<PressurePlateBlock> NEBULA_PRESSURE_PLATE = BLOCKS.registerBlock(
+            "nebula_pressure_plate",
+            properties -> new PressurePlateBlock(SET, properties),
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_PURPLE)
+                    .sound(SoundType.WOOD).noCollission().strength(0.5F));
+    public static final DeferredItem<NebulaWoodItem> NEBULA_PRESSURE_PLATE_ITEM =
+            woodItem("nebula_pressure_plate", NEBULA_PRESSURE_PLATE);
+
+    private static BlockBehaviour.Properties woodProperties() {
+        return BlockBehaviour.Properties.of()
+                .mapColor(MapColor.COLOR_PURPLE)
+                .sound(SoundType.WOOD)
+                .strength(2.0F);
+    }
+
+    private static BlockBehaviour.Properties plankProperties() {
+        return BlockBehaviour.Properties.of()
+                .mapColor(MapColor.COLOR_PURPLE)
+                .sound(SoundType.WOOD)
+                .strength(2.0F, 3.0F);
+    }
+
+    private static DeferredItem<NebulaWoodItem> woodItem(String name, Supplier<? extends Block> block) {
+        return ITEMS.registerItem(name, properties -> new NebulaWoodItem(block.get(), properties));
+    }
+
     /** Фича, растящая эту самую поросль на полу пещер. */
     public static final DeferredHolder<Feature<?>, NebulaTreeFeature> NEBULA_TREE =
             FEATURES.register("nebula_tree", () -> new NebulaTreeFeature(NoneFeatureConfiguration.CODEC));
@@ -387,9 +491,24 @@ public final class GimpanumContent {
                         output.accept(SCORCHING_NEBULA_GAS_ITEM.get());
                         output.accept(FROZEN_ORGANICS_ITEM.get());
                         output.accept(NEBULA_LOG_ITEM.get());
+                        output.accept(NEBULA_WOOD_ITEM.get());
+                        output.accept(STRIPPED_NEBULA_LOG_ITEM.get());
+                        output.accept(STRIPPED_NEBULA_WOOD_ITEM.get());
                         output.accept(NEBULA_PLANKS_ITEM.get());
+                        output.accept(NEBULA_STAIRS_ITEM.get());
+                        output.accept(NEBULA_SLAB_ITEM.get());
+                        output.accept(NEBULA_FENCE_ITEM.get());
+                        output.accept(NEBULA_FENCE_GATE_ITEM.get());
+                        output.accept(NEBULA_DOOR_ITEM.get());
+                        output.accept(NEBULA_TRAPDOOR_ITEM.get());
+                        output.accept(NEBULA_BUTTON_ITEM.get());
+                        output.accept(NEBULA_PRESSURE_PLATE_ITEM.get());
                         output.accept(SEAL.get());
                         output.accept(CRYSTAL_BEAD.get());
+                        output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.COMET_WRAITH_EGG.get());
+                        output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.DUNE_WALKER_EGG.get());
+                        output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.SPACE_DEVOURER_EGG.get());
+                        output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.PLASMA_BOLT_EGG.get());
                         output.accept(PROBE_ITEM.get());
                     })
                     .build()

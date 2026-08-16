@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "gimpanum:block/stripped_nebula_wood",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "gimpanum:block/stripped_nebula_wood"
+    },
+    "axis=z": {
+      "model": "gimpanum:block/stripped_nebula_wood",
+      "x": 90
+    }
+  }
+}

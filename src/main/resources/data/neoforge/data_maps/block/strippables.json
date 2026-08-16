@@ -1,0 +1,10 @@
+{
+    "values": {
+        "gimpanum:nebula_log": {
+            "stripped_block": "gimpanum:stripped_nebula_log"
+        },
+        "gimpanum:nebula_wood": {
+            "stripped_block": "gimpanum:stripped_nebula_wood"
+        }
+    }
+}

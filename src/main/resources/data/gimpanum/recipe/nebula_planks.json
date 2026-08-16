@@ -4,7 +4,7 @@
     "group": "planks",
     "ingredients": [
         {
-            "item": "gimpanum:nebula_log"
+            "tag": "gimpanum:nebula_logs"
         }
     ],
     "result": {

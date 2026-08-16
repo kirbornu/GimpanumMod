@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "gimpanum:block/nebula_slab"
+    },
+    "type=double": {
+      "model": "gimpanum:block/nebula_planks"
+    },
+    "type=top": {
+      "model": "gimpanum:block/nebula_slab_top"
+    }
+  }
+}

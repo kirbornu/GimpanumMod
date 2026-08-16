@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "gimpanum:block/stripped_nebula_log_top",
+    "side": "gimpanum:block/stripped_nebula_log"
+  }
+}
