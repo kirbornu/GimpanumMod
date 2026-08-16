@@ -1,0 +1,9 @@
+{
+    "parent": "createbigcannons:block/projectile_block",
+    "textures": {
+        "bottom": "gimpanum:block/projectile/furious_shell_bottom",
+        "particle": "gimpanum:block/projectile/furious_shell_top",
+        "side": "gimpanum:block/projectile/furious_shell",
+        "top": "gimpanum:block/projectile/furious_shell_top"
+    }
+}

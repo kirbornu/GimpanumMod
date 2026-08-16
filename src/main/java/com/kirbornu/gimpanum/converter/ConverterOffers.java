@@ -1,27 +1,27 @@
 package com.kirbornu.gimpanum.converter;
 
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.kirbornu.gimpanum.Gimpanum;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.HolderLookup;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.loading.FMLPaths;
-
-import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Чем торгуют Фонос-конвертеры, найденные в Гимпануме.
@@ -33,7 +33,14 @@ import java.util.Optional;
  * <p>Список предложений живёт в {@code config/gimpanum/converter_offers.json},
  * а не в датапаке мода: это то, что владелец сервера будет править чаще
  * всего, и лезть ради этого внутрь джарки неправильно. Файл создаётся при
- * первом запуске и перечитывается по {@code /gimpanum converter offers reload}.
+ * первом запуске из образца, вшитого в джарку, и перечитывается по
+ * {@code /gimpanum converter offers reload}.
+ *
+ * <p>Разбираем список по одному предложению, а не целиком. Половина образца
+ * ссылается на предметы чужих модов, и без какого-нибудь из них разбор всего
+ * списка целиком провалился бы — из-за одной строки конвертеры перестали бы
+ * торговать вовсе. Непонятное предложение пропускается с записью в журнал,
+ * остальные работают.
  *
  * <p>Вес — относительный: предложение с весом 20 выпадает вдвое чаще, чем с
  * весом 10. Ноль и отрицательные значения выключают предложение.
@@ -66,6 +73,9 @@ public final class ConverterOffers {
 
     private static final String FILE = "converter_offers.json";
 
+    /** Образец, из которого создаётся файл настроек при первом запуске. */
+    private static final String DEFAULTS = "/data/gimpanum/converter/default_offers.json";
+
     private static List<Offer> offers = List.of();
 
     private ConverterOffers() {
@@ -81,15 +91,12 @@ public final class ConverterOffers {
         try {
             if (Files.notExists(file)) {
                 Files.createDirectories(file.getParent());
-                writeDemo(server, file);
+                writeDefaults(file);
                 Gimpanum.LOGGER.info("Создан пример настроек Фонос-конвертеров: {}", file);
             }
             RegistryOps<JsonElement> ops = server.registryAccess().createSerializationContext(JsonOps.INSTANCE);
             try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-                JsonElement json = JsonParser.parseReader(reader);
-                offers = CODEC.parse(ops, json).resultOrPartial(
-                        error -> Gimpanum.LOGGER.error("Настройки Фонос-конвертеров: {}", error))
-                        .orElse(List.of());
+                offers = parse(ops, JsonParser.parseReader(reader));
             }
             Gimpanum.LOGGER.info("Предложений Фонос-конвертеров загружено: {}", offers.size());
         } catch (Exception failure) {
@@ -126,28 +133,36 @@ public final class ConverterOffers {
         return Optional.empty();
     }
 
-    private static void writeDemo(MinecraftServer server, Path file) throws IOException {
-        HolderLookup.Provider registries = server.registryAccess();
-        RegistryOps<JsonElement> ops = registries.createSerializationContext(JsonOps.INSTANCE);
-        List<Offer> demo = List.of(
-                new Offer(20, new ItemStack(net.minecraft.world.item.Items.IRON_INGOT), 64,
-                        new ItemStack(net.minecraft.world.item.Items.DIAMOND), 1, Optional.of("Железо в алмазы")),
-                new Offer(20, new ItemStack(net.minecraft.world.item.Items.COAL), 128,
-                        new ItemStack(net.minecraft.world.item.Items.GOLD_INGOT), 2, Optional.of("Уголь в золото")),
-                new Offer(10, new ItemStack(net.minecraft.world.item.Items.ROTTEN_FLESH), 256,
-                        new ItemStack(net.minecraft.world.item.Items.EMERALD), 1, Optional.of("Плоть в изумруды")),
-                new Offer(10, new ItemStack(net.minecraft.world.item.Items.GUNPOWDER), 96,
-                        new ItemStack(net.minecraft.world.item.Items.TNT), 4, Optional.of("Порох в динамит")),
-                new Offer(5, new ItemStack(net.minecraft.world.item.Items.NETHERITE_SCRAP), 16,
-                        new ItemStack(net.minecraft.world.item.Items.NETHERITE_INGOT), 1, Optional.of("Обломки в незерит")),
-                new Offer(3, new ItemStack(net.minecraft.world.item.Items.DIAMOND), 32,
-                        new ItemStack(net.minecraft.world.item.Items.ENCHANTED_GOLDEN_APPLE), 1,
-                        Optional.of("Алмазы в райское яблоко"))
-        );
-        JsonElement json = CODEC.encodeStart(ops, demo)
-                .getOrThrow(error -> new IOException("не собрался пример: " + error));
-        try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
-            new GsonBuilder().setPrettyPrinting().create().toJson(json, writer);
+    /** Разбор по одному предложению: непонятное — мимо, остальное работает. */
+    private static List<Offer> parse(RegistryOps<JsonElement> ops, JsonElement json) {
+        List<Offer> parsed = new ArrayList<>();
+        if (!(json instanceof JsonObject root) || !(root.get("offers") instanceof JsonArray array)) {
+            Gimpanum.LOGGER.error("Настройки Фонос-конвертеров: нет списка offers");
+            return List.of();
+        }
+        for (JsonElement element : array) {
+            Offer.CODEC.parse(ops, element)
+                    .resultOrPartial(error -> Gimpanum.LOGGER.warn(
+                            "Предложение Фонос-конвертера пропущено ({}): {}", error, element))
+                    .ifPresent(parsed::add);
+        }
+        return List.copyOf(parsed);
+    }
+
+    /**
+     * Кладёт рядом с настройками образец из джарки — целиком, как он есть.
+     *
+     * <p>Копируем текстом, а не собираем кодеком из кода: в образце
+     * перечислены предметы чужих модов, и собрать их в {@link ItemStack} без
+     * этих модов невозможно, а образец нужен полный.
+     */
+    private static void writeDefaults(Path file) throws IOException {
+        try (InputStream source = ConverterOffers.class.getResourceAsStream(DEFAULTS)) {
+            if (source == null) {
+                throw new IOException("в джарке нет образца " + DEFAULTS);
+            }
+            Files.copy(source, file);
         }
     }
+
 }

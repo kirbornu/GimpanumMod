@@ -1,0 +1,40 @@
+{
+    "neoforge:conditions": [
+        {
+            "type": "neoforge:mod_loaded",
+            "modid": "create"
+        }
+    ],
+    "type": "create:compacting",
+    "ingredients": [
+        {
+            "item": "gimpanum:jade_nut"
+        },
+        {
+            "item": "gimpanum:jade_nut"
+        },
+        {
+            "item": "gimpanum:jade_nut"
+        },
+        {
+            "item": "gimpanum:jade_nut"
+        },
+        {
+            "item": "gimpanum:transparent_ball"
+        },
+        {
+            "item": "gimpanum:transparent_ball"
+        },
+        {
+            "item": "gimpanum:transparent_ball"
+        },
+        {
+            "item": "gimpanum:transparent_ball"
+        }
+    ],
+    "results": [
+        {
+            "id": "minecraft:beacon"
+        }
+    ]
+}

@@ -17,9 +17,15 @@ import com.kirbornu.gimpanum.debug.ProbeBlockEntity;
 import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
 import com.kirbornu.gimpanum.item.NebulaWoodItem;
+import com.kirbornu.gimpanum.item.PurpleQueenTalismanItem;
 import com.kirbornu.gimpanum.recipe.ThawingRecipe;
 import com.kirbornu.gimpanum.worldgen.NebulaFruitBlock;
 import com.kirbornu.gimpanum.worldgen.NebulaTreeFeature;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.Item;
@@ -519,30 +525,74 @@ public final class GimpanumContent {
     );
 
     /**
-     * Хрусталик — валюта и ничего кроме. Ни свойств, ни применений: весь смысл в
-     * том, чтобы его копили и обменивали между собой.
-     *
-     * <p>{@code fireResistant} — единственная поблажка, та же, что у Печати:
-     * накопленное не должно сгорать в лаве. Срок жизни выброшенного Хрусталика
-     * ванильный, в отличие от Печати.
-     *
-     * <p>Стопка в 99 — не выбор, а потолок игры: {@code ItemStack.CODEC}
-     * принимает количество только в диапазоне {@code 1..99}, и через этот кодек
-     * сохраняется каждый предмет в каждом сундуке. Стопка больше не пережила бы
-     * сохранение мира.
-     */
-    public static final DeferredItem<Item> CRYSTAL_BEAD = ITEMS.registerSimpleItem(
-            "crystal_bead",
-            new Item.Properties().fireResistant().stacksTo(MAX_VANILLA_STACK)
-    );
-
-    /**
      * Осколок хрусталя — то, что остаётся от некрофагов.
      *
      * <p>Обыкновенный предмет без свойств: вся его ценность в том, во что его
      * можно обменять, а это задаётся настройкой конвертеров, а не кодом.
      */
     public static final DeferredItem<Item> CRYSTAL_SHARD = ITEMS.registerSimpleItem("crystal_shard");
+
+    /**
+     * Восемь диковин, которые Фонос-конвертеры выдают за Осколки хрусталя.
+     *
+     * <p>Ни свойств, ни применений, кроме четырёх рецептов Create: это сырьё и
+     * только сырьё. Смысл у них общий — превратить накопленные осколки в то,
+     * что иначе не достать, и цена у всех восьми одинаковая.
+     */
+    public static final DeferredItem<Item> DARKNESS_CRYSTAL = ITEMS.registerSimpleItem("darkness_crystal");
+    public static final DeferredItem<Item> FIRE_BAR = ITEMS.registerSimpleItem("fire_bar");
+    public static final DeferredItem<Item> JADE_NUT = ITEMS.registerSimpleItem("jade_nut");
+    public static final DeferredItem<Item> PLANT_ANCESTOR = ITEMS.registerSimpleItem("plant_ancestor");
+    public static final DeferredItem<Item> SPARKLE_STRING = ITEMS.registerSimpleItem("sparkle_string");
+    public static final DeferredItem<Item> STONE_ROD = ITEMS.registerSimpleItem("stone_rod");
+    public static final DeferredItem<Item> TENDERNESS_STONE = ITEMS.registerSimpleItem("tenderness_stone");
+    public static final DeferredItem<Item> TRANSPARENT_BALL = ITEMS.registerSimpleItem("transparent_ball");
+
+    /**
+     * Дар друидов — то же зачарованное золотое яблоко, доведённое до предела.
+     *
+     * <p>Ставка на живучесть, а не на убойность: поглощение на тридцать два
+     * сердца поверх восьми добавленных, сопротивление III и регенерация IV.
+     * Съевшего трудно убить и нечем поторопить — он не бьёт сильнее, он просто
+     * не умирает.
+     *
+     * <p>{@code ENCHANTMENT_GLINT_OVERRIDE} даёт блеск без единого зачарования:
+     * так же светится ванильное зачарованное яблоко, и по той же причине —
+     * чтобы обычное от особенного отличалось с одного взгляда.
+     */
+    public static final DeferredItem<Item> DRUID_GIFT = ITEMS.registerSimpleItem(
+            "druid_gift",
+            new Item.Properties()
+                    .rarity(Rarity.EPIC)
+                    .component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true)
+                    .food(new FoodProperties.Builder()
+                            .nutrition(4)
+                            .saturationModifier(1.2F)
+                            .alwaysEdible()
+                            .effect(() -> new MobEffectInstance(MobEffects.REGENERATION, 900, 3), 1.0F)
+                            .effect(() -> new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 9600, 2), 1.0F)
+                            .effect(() -> new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 12000, 0), 1.0F)
+                            .effect(() -> new MobEffectInstance(MobEffects.ABSORPTION, 9600, 7), 1.0F)
+                            .effect(() -> new MobEffectInstance(MobEffects.HEALTH_BOOST, 9600, 3), 1.0F)
+                            .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 12000, 0), 1.0F)
+                            .build())
+    );
+
+    /**
+     * Талисман лиловой королевы — возвращает всё из последнего трупа владельца.
+     *
+     * <p>Работает через мод Corpse и только с ним; поведение — в
+     * {@link PurpleQueenTalismanItem}, разговор с чужим модом — в
+     * {@link com.kirbornu.gimpanum.integration.CorpseBridge}.
+     *
+     * <p>{@code fireResistant} по той же причине, что у Печати: страховку от
+     * смерти обидно потерять, свалившись в лаву вместе с ней.
+     */
+    public static final DeferredItem<PurpleQueenTalismanItem> PURPLE_QUEEN_TALISMAN = ITEMS.registerItem(
+            "purple_queen_talisman",
+            PurpleQueenTalismanItem::new,
+            new Item.Properties().rarity(Rarity.EPIC).stacksTo(16).fireResistant()
+    );
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register(
             "main",
@@ -572,8 +622,17 @@ public final class GimpanumContent {
                         output.accept(NEBULA_PRESSURE_PLATE_ITEM.get());
                         output.accept(NEBULA_SIGN_ITEM.get());
                         output.accept(SEAL.get());
-                        output.accept(CRYSTAL_BEAD.get());
                         output.accept(CRYSTAL_SHARD.get());
+                        output.accept(DARKNESS_CRYSTAL.get());
+                        output.accept(FIRE_BAR.get());
+                        output.accept(JADE_NUT.get());
+                        output.accept(PLANT_ANCESTOR.get());
+                        output.accept(SPARKLE_STRING.get());
+                        output.accept(STONE_ROD.get());
+                        output.accept(TENDERNESS_STONE.get());
+                        output.accept(TRANSPARENT_BALL.get());
+                        output.accept(DRUID_GIFT.get());
+                        output.accept(PURPLE_QUEEN_TALISMAN.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.COMET_WRAITH_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.DUNE_WALKER_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.SPACE_DEVOURER_EGG.get());

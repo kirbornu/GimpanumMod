@@ -1,0 +1,40 @@
+{
+    "neoforge:conditions": [
+        {
+            "type": "neoforge:mod_loaded",
+            "modid": "create"
+        }
+    ],
+    "type": "create:mixing",
+    "ingredients": [
+        {
+            "item": "gimpanum:sparkle_string"
+        },
+        {
+            "item": "gimpanum:sparkle_string"
+        },
+        {
+            "item": "gimpanum:sparkle_string"
+        },
+        {
+            "item": "gimpanum:sparkle_string"
+        },
+        {
+            "item": "gimpanum:darkness_crystal"
+        },
+        {
+            "item": "gimpanum:darkness_crystal"
+        },
+        {
+            "item": "gimpanum:darkness_crystal"
+        },
+        {
+            "item": "gimpanum:darkness_crystal"
+        }
+    ],
+    "results": [
+        {
+            "id": "minecraft:totem_of_undying"
+        }
+    ]
+}
