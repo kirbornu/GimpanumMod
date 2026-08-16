@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "gimpanum:block/nebula_fruit" },
+        "facing=west": { "model": "gimpanum:block/nebula_fruit", "y": 90 },
+        "facing=north": { "model": "gimpanum:block/nebula_fruit", "y": 180 },
+        "facing=east": { "model": "gimpanum:block/nebula_fruit", "y": 270 }
+    }
+}

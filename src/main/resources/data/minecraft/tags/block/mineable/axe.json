@@ -15,6 +15,7 @@
         "gimpanum:nebula_button",
         "gimpanum:nebula_pressure_plate",
         "gimpanum:nebula_sign",
-        "gimpanum:nebula_wall_sign"
+        "gimpanum:nebula_wall_sign",
+        "gimpanum:nebula_fruit"
     ]
 }

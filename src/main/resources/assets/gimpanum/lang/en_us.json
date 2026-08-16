@@ -141,5 +141,6 @@
     "block.gimpanum.nebula_sign": "Nebula Sign",
     "block.gimpanum.nebula_wall_sign": "Nebula Wall Sign",
     "gimpanum.fire.nothing_to_burn": "Nothing burns here",
-    "item.gimpanum.crystal_shard": "Crystal Shard"
+    "item.gimpanum.crystal_shard": "Crystal Shard",
+    "block.gimpanum.nebula_fruit": "Nebula Fruit"
 }

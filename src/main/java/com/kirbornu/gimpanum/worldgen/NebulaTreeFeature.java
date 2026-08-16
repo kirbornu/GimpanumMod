@@ -1,11 +1,14 @@
 package com.kirbornu.gimpanum.worldgen;
 
 import com.mojang.serialization.Codec;
+import java.util.ArrayList;
+import java.util.List;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -24,6 +27,11 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  * половины, у основания расползаются короткие корни. Ось каждого бревна
  * ставится по направлению шага, поэтому изгибы читаются как изгибы, а не как
  * лесенка из вертикальных чурбаков.
+ *
+ * <p>Изредка на стволе висит небула-плод — не больше одного на дерево и в
+ * среднем на каждом третьем. Ради этого ствол и ветви запоминают, куда легли
+ * брёвна: искать их потом заново по округе значило бы наткнуться на соседнее
+ * дерево.
  */
 public class NebulaTreeFeature extends Feature<NoneFeatureConfiguration> {
 
@@ -32,6 +40,12 @@ public class NebulaTreeFeature extends Feature<NoneFeatureConfiguration> {
 
     /** Меньше этого просвета над полом дерево не ставим — получится обрубок. */
     private static final int MIN_HEADROOM = 5;
+
+    /** Плод вырастает на одном дереве из стольких. */
+    private static final int FRUIT_RARITY = 3;
+
+    /** Сколько раз ткнуться в случайное бревно в поисках свободного бока. */
+    private static final int FRUIT_ATTEMPTS = 12;
 
     public NebulaTreeFeature(Codec<NoneFeatureConfiguration> codec) {
         super(codec);
@@ -48,9 +62,11 @@ public class NebulaTreeFeature extends Feature<NoneFeatureConfiguration> {
         }
 
         int height = 4 + random.nextInt(5);
-        BlockPos top = trunk(level, random, base, height);
-        branches(level, random, base, top);
+        List<BlockPos> logs = new ArrayList<>();
+        BlockPos top = trunk(level, random, base, height, logs);
+        branches(level, random, base, top, logs);
         roots(level, random, base);
+        fruit(level, random, base, logs);
         return true;
     }
 
@@ -77,12 +93,12 @@ public class NebulaTreeFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     /** Ствол: вверх, изредка со сдвигом вбок. Возвращает верхушку. */
-    private BlockPos trunk(WorldGenLevel level, RandomSource random, BlockPos base, int height) {
+    private BlockPos trunk(WorldGenLevel level, RandomSource random, BlockPos base, int height, List<BlockPos> logs) {
         BlockPos cursor = base;
         for (int i = 0; i < height; i++) {
             boolean sideways = i > 0 && i < height - 1 && random.nextInt(4) == 0;
             Direction step = sideways ? Direction.Plane.HORIZONTAL.getRandomDirection(random) : Direction.UP;
-            if (!log(level, cursor, step.getAxis())) {
+            if (!log(level, cursor, step.getAxis(), logs)) {
                 return cursor;
             }
             BlockPos next = cursor.relative(step);
@@ -91,12 +107,12 @@ public class NebulaTreeFeature extends Feature<NoneFeatureConfiguration> {
             }
             cursor = next;
         }
-        log(level, cursor, Direction.Axis.Y);
+        log(level, cursor, Direction.Axis.Y, logs);
         return cursor;
     }
 
     /** Ветви из верхней половины ствола: шаг вбок, шаг вверх, и так до упора. */
-    private void branches(WorldGenLevel level, RandomSource random, BlockPos base, BlockPos top) {
+    private void branches(WorldGenLevel level, RandomSource random, BlockPos base, BlockPos top, List<BlockPos> logs) {
         int count = 2 + random.nextInt(3);
         int span = Math.max(1, top.getY() - base.getY() - 1);
         for (int i = 0; i < count; i++) {
@@ -111,7 +127,7 @@ public class NebulaTreeFeature extends Feature<NoneFeatureConfiguration> {
                     break;
                 }
                 cursor = next;
-                log(level, cursor, move.getAxis());
+                log(level, cursor, move.getAxis(), logs);
             }
         }
     }
@@ -132,6 +148,40 @@ public class NebulaTreeFeature extends Feature<NoneFeatureConfiguration> {
                 log(level, down, Direction.Axis.Y);
             }
         }
+    }
+
+    /**
+     * Плод на боку одного из брёвен — если этому дереву выпало его носить.
+     *
+     * <p>Основание пропускаем: плод у самого пола читался бы как мусор под
+     * ногами, а не как то, за чем сюда пришли.
+     */
+    private void fruit(WorldGenLevel level, RandomSource random, BlockPos base, List<BlockPos> logs) {
+        if (logs.isEmpty() || random.nextInt(FRUIT_RARITY) != 0) {
+            return;
+        }
+        for (int attempt = 0; attempt < FRUIT_ATTEMPTS; attempt++) {
+            BlockPos host = logs.get(random.nextInt(logs.size()));
+            if (host.getY() <= base.getY()) {
+                continue;
+            }
+            Direction out = Direction.Plane.HORIZONTAL.getRandomDirection(random);
+            BlockPos pos = host.relative(out);
+            if (!level.isEmptyBlock(pos)) {
+                continue;
+            }
+            setBlock(level, pos, GimpanumContent.NEBULA_FRUIT.get().defaultBlockState()
+                    .setValue(HorizontalDirectionalBlock.FACING, out.getOpposite()));
+            return;
+        }
+    }
+
+    private boolean log(WorldGenLevel level, BlockPos pos, Direction.Axis axis, List<BlockPos> logs) {
+        if (!log(level, pos, axis)) {
+            return false;
+        }
+        logs.add(pos);
+        return true;
     }
 
     private boolean log(WorldGenLevel level, BlockPos pos, Direction.Axis axis) {
