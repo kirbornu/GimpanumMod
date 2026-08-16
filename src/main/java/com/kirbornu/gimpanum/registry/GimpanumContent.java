@@ -16,7 +16,9 @@ import com.kirbornu.gimpanum.dimension.ScorchingGasBlock;
 import com.kirbornu.gimpanum.debug.ProbeBlockEntity;
 import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
+import com.kirbornu.gimpanum.item.NebulaWoodItem;
 import com.kirbornu.gimpanum.recipe.ThawingRecipe;
+import com.kirbornu.gimpanum.worldgen.NebulaTreeFeature;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.Item;
@@ -26,9 +28,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SimpleCookingSerializer;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.levelgen.feature.Feature;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -59,6 +64,8 @@ public final class GimpanumContent {
             DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, Gimpanum.MOD_ID);
     public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS =
             DeferredRegister.create(Registries.RECIPE_SERIALIZER, Gimpanum.MOD_ID);
+    public static final DeferredRegister<Feature<?>> FEATURES =
+            DeferredRegister.create(Registries.FEATURE, Gimpanum.MOD_ID);
 
     /**
      * Диагностический блок-зонд. Не часть задуманной механики — служит только
@@ -225,6 +232,44 @@ public final class GimpanumContent {
     public static final DeferredItem<?> FROZEN_ORGANICS_ITEM = ITEMS.registerSimpleBlockItem(FROZEN_ORGANICS);
 
     /**
+     * Небула-бревно — ствол пещерной поросли Гимпанума.
+     *
+     * <p>Ведёт себя как обычное бревно во всём, кроме огня: в мире без воздуха
+     * гореть нечему, поэтому топливность снята в {@link NebulaWoodItem}.
+     */
+    public static final DeferredBlock<RotatedPillarBlock> NEBULA_LOG = BLOCKS.registerBlock(
+            "nebula_log",
+            RotatedPillarBlock::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_PURPLE)
+                    .sound(SoundType.WOOD)
+                    .strength(2.0F)
+    );
+
+    public static final DeferredItem<NebulaWoodItem> NEBULA_LOG_ITEM = ITEMS.registerItem(
+            "nebula_log",
+            properties -> new NebulaWoodItem(NEBULA_LOG.get(), properties)
+    );
+
+    /** Небула-доски. Лежат в ванильном теге досок, но не горят. */
+    public static final DeferredBlock<Block> NEBULA_PLANKS = BLOCKS.registerSimpleBlock(
+            "nebula_planks",
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_PURPLE)
+                    .sound(SoundType.WOOD)
+                    .strength(2.0F, 3.0F)
+    );
+
+    public static final DeferredItem<NebulaWoodItem> NEBULA_PLANKS_ITEM = ITEMS.registerItem(
+            "nebula_planks",
+            properties -> new NebulaWoodItem(NEBULA_PLANKS.get(), properties)
+    );
+
+    /** Фича, растящая эту самую поросль на полу пещер. */
+    public static final DeferredHolder<Feature<?>, NebulaTreeFeature> NEBULA_TREE =
+            FEATURES.register("nebula_tree", () -> new NebulaTreeFeature(NoneFeatureConfiguration.CODEC));
+
+    /**
      * Сериализатор переплавки с непредсказуемым выходом.
      *
      * <p>200 тиков — то же время, что у ванильной печи по умолчанию; в самом
@@ -341,6 +386,8 @@ public final class GimpanumContent {
                         output.accept(COSMIC_ASH_ITEM.get());
                         output.accept(SCORCHING_NEBULA_GAS_ITEM.get());
                         output.accept(FROZEN_ORGANICS_ITEM.get());
+                        output.accept(NEBULA_LOG_ITEM.get());
+                        output.accept(NEBULA_PLANKS_ITEM.get());
                         output.accept(SEAL.get());
                         output.accept(CRYSTAL_BEAD.get());
                         output.accept(PROBE_ITEM.get());
@@ -358,6 +405,7 @@ public final class GimpanumContent {
         BLOCK_ENTITIES.register(modBus);
         DATA_COMPONENTS.register(modBus);
         RECIPE_SERIALIZERS.register(modBus);
+        FEATURES.register(modBus);
     }
 
     /** Удобный доступ без {@code .get()} на каждом вызове. */

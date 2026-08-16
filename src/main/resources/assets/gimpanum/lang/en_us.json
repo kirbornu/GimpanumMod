@@ -97,5 +97,7 @@
     "gimpanum.command.portal_placed": "Portal arch placed at %s",
     "gimpanum.command.portal_no_template": "Portal template not found",
     "block.gimpanum.frozen_organics": "Frozen Organics",
-    "gimpanum.vacuum.warning": "There is no air here"
+    "gimpanum.vacuum.warning": "There is no air here",
+    "block.gimpanum.nebula_log": "Nebula Log",
+    "block.gimpanum.nebula_planks": "Nebula Planks"
 }
