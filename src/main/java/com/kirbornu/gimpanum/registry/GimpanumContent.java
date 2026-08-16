@@ -18,6 +18,7 @@ import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
 import com.kirbornu.gimpanum.item.NebulaWoodItem;
 import com.kirbornu.gimpanum.recipe.ThawingRecipe;
+import com.kirbornu.gimpanum.worldgen.NebulaFruitBlock;
 import com.kirbornu.gimpanum.worldgen.NebulaTreeFeature;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
@@ -44,6 +45,7 @@ import net.minecraft.world.level.block.StandingSignBlock;
 import net.minecraft.world.level.block.WallSignBlock;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -263,6 +265,25 @@ public final class GimpanumContent {
     public static final DeferredItem<NebulaWoodItem> NEBULA_LOG_ITEM = ITEMS.registerItem(
             "nebula_log",
             properties -> new NebulaWoodItem(NEBULA_LOG.get(), properties)
+    );
+
+    /**
+     * Небула-плод — то, ради чего к поросли и ходят.
+     *
+     * <p>Предмета у него нет: плод не ставят, а снимают, и остаётся от него
+     * Осколок хрусталя. Поэтому и в творческой вкладке его не найти —
+     * единственный способ добыть плод в том, чтобы найти дерево, на котором он
+     * вырос.
+     */
+    public static final DeferredBlock<NebulaFruitBlock> NEBULA_FRUIT = BLOCKS.registerBlock(
+            "nebula_fruit",
+            NebulaFruitBlock::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_LIGHT_BLUE)
+                    .sound(SoundType.WOOD)
+                    .strength(0.2F)
+                    .noOcclusion()
+                    .pushReaction(PushReaction.DESTROY)
     );
 
     /** Небула-доски. Лежат в ванильном теге досок, но не горят. */
