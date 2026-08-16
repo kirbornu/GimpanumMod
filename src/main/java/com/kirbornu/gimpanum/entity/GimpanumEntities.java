@@ -33,6 +33,14 @@ import net.neoforged.neoforge.registries.DeferredRegister;
  * вечном полудне — с ним на поверхности не появился бы никто. Поэтому свет в
  * условиях не участвует вовсе, вместо него — высота и порода под ногами.
  *
+ * <p>Одного этого, впрочем, мало. Свет спрашивают дважды: кроме условий здесь,
+ * ещё и сам моб, уже созданный, — {@code Monster.getWalkTargetValue} тем хуже
+ * оценивает место, чем там светлее. При {@code ambient_light: 1.0} эта оценка
+ * отрицательна во всём измерении, и все трое из ветки Монстра отсеивались на
+ * последнем шаге. Отсюда и странность, по которой в Гимпануме появлялся один
+ * лишь Призрак: он растёт из Всполоха, а не из Монстра, и про свет не
+ * спрашивает. Мерку переопределяет каждый из троих у себя.
+ *
  * <p>Важная особенность игры, из-за которой пришлось править условия: точка
  * для попытки появления берётся на случайной высоте от дна мира до
  * <i>поверхности</i>. Выше поверхности игра не пробует никогда. Поэтому
@@ -119,7 +127,7 @@ public final class GimpanumEntities {
 
         event.register(SPACE_DEVOURER.get(), SpawnPlacementTypes.ON_GROUND,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                (type, level, spawnType, pos, random) -> inCaves(level, pos, 60),
+                (type, level, spawnType, pos, random) -> onFloor(level, pos),
                 RegisterSpawnPlacementsEvent.Operation.REPLACE);
 
         event.register(COMET_WRAITH.get(), SpawnPlacementTypes.NO_RESTRICTIONS,
@@ -129,7 +137,7 @@ public final class GimpanumEntities {
 
         event.register(PLASMA_BOLT.get(), SpawnPlacementTypes.NO_RESTRICTIONS,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                (type, level, spawnType, pos, random) -> inAir(level, pos) && pos.getY() >= 88,
+                (type, level, spawnType, pos, random) -> aboveDunes(level, pos),
                 RegisterSpawnPlacementsEvent.Operation.REPLACE);
     }
 
@@ -145,10 +153,31 @@ public final class GimpanumEntities {
                 && inAir(level, pos);
     }
 
-    /** Пол лабиринта: любая твердь ниже заданной высоты. */
-    private static boolean inCaves(LevelAccessor level, BlockPos pos, int ceiling) {
-        return pos.getY() < ceiling
-                && level.getBlockState(pos.below()).isSolidRender(level, pos.below())
+    /**
+     * Небо над барханами: пустота не ниже поверхности.
+     *
+     * <p>Сравниваем с картой высот, а не с числом. Числу здесь взяться неоткуда:
+     * точку для попытки берут не выше поверхности плюс один блок, так что порог
+     * «сотня блоков» просто никогда не выпадает, а всё, что ниже поверхности, —
+     * это уже лабиринт, где Молнии делать нечего. Карта высот отделяет одно от
+     * другого сама.
+     */
+    private static boolean aboveDunes(LevelAccessor level, BlockPos pos) {
+        return inAir(level, pos)
+                && pos.getY() >= level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ());
+    }
+
+    /**
+     * Любая твердь под ногами, где угодно.
+     *
+     * <p>Поглотителю раньше полагался только лабиринт, но он ростом четыре
+     * блока на три: в узком ходу такая туша просто не помещается, и после того,
+     * как лабиринт ужали, появляться ему стало негде совсем. Теперь ему годится
+     * и открытый бархан — с него он всё равно прогрызётся вниз, на то он и
+     * Поглотитель.
+     */
+    private static boolean onFloor(LevelAccessor level, BlockPos pos) {
+        return level.getBlockState(pos.below()).isSolidRender(level, pos.below())
                 && inAir(level, pos);
     }
 

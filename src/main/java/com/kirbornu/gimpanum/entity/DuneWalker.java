@@ -19,6 +19,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -165,4 +166,20 @@ public class DuneWalker extends Zombie {
     protected void playStepSound(BlockPos pos, BlockState state) {
         this.playSound(this.getStepSound(), 0.15F, 1.0F);
     }
+
+    /**
+     * Свет ничего не решает.
+     *
+     * <p>{@link net.minecraft.world.entity.monster.Monster} оценивает точку
+     * появления по освещённости, и чем светлее — тем хуже. В Гимпануме вечный
+     * полдень и {@code ambient_light: 1.0}, то есть предельно светло везде:
+     * по этой мерке всё измерение непригодно, и ни один моб из ветки Монстра
+     * не появился бы нигде и никогда. Мерку убираем — по той же причине, по
+     * какой свет не участвует и в условиях появления.
+     */
+    @Override
+    public float getWalkTargetValue(BlockPos pos, LevelReader level) {
+        return 0.0F;
+    }
+
 }
