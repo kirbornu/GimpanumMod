@@ -38,7 +38,9 @@
         ],
         [],
         [],
-        [],
+        [
+            "gimpanum:nebula_tree"
+        ],
         []
     ]
 }

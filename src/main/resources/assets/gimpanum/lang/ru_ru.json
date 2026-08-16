@@ -97,5 +97,7 @@
     "gimpanum.command.portal_placed": "Портальная арка поставлена в %s",
     "gimpanum.command.portal_no_template": "Шаблон портала не найден",
     "block.gimpanum.frozen_organics": "Замороженная органика",
-    "gimpanum.vacuum.warning": "Здесь нечем дышать"
+    "gimpanum.vacuum.warning": "Здесь нечем дышать",
+    "block.gimpanum.nebula_log": "Небула-бревно",
+    "block.gimpanum.nebula_planks": "Небула-доски"
 }
