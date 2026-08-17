@@ -40,7 +40,7 @@
             },
             {
                 "type": "gimpanum:space_devourer",
-                "weight": 300,
+                "weight": 150,
                 "minCount": 1,
                 "maxCount": 1
             }
