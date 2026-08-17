@@ -39,6 +39,18 @@ public class PlasmaProjectile extends Fireball {
         this.setItem(new ItemStack(Items.PRISMARINE_CRYSTALS));
     }
 
+    /**
+     * Своих не задевает — вовсе, а не «без урона».
+     *
+     * <p>Разряд пролетает сквозь некрофагов насквозь. Иначе Молния, стреляя
+     * поверх голов, снимала бы половину Ходоков собственным залпом, и стая
+     * выкашивала бы себя сама.
+     */
+    @Override
+    protected boolean canHitEntity(Entity candidate) {
+        return super.canHitEntity(candidate) && !candidate.getType().is(NecrophageEvents.NECROPHAGE);
+    }
+
     @Override
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
@@ -81,7 +93,9 @@ public class PlasmaProjectile extends Fireball {
             server.addFreshEntity(bolt);
         }
         for (Entity victim : server.getEntities(this, new AABB(where, where).inflate(2.5))) {
-            if (victim instanceof LivingEntity) {
+            // По площади — тоже мимо своих: разряд бьёт по всему в радиусе,
+            // а рядом с целью чаще всего стоят как раз некрофаги.
+            if (victim instanceof LivingEntity && !victim.getType().is(NecrophageEvents.NECROPHAGE)) {
                 victim.hurt(this.damageSources().lightningBolt(), LIGHTNING_DAMAGE);
             }
         }

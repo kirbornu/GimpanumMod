@@ -111,6 +111,10 @@ public final class NebulaPortal {
 
         List<BlockPos> plane = plane(target, destination.get());
         BlockPos spot = footing(target, plane);
+        // Не разговорчивость, а следы: когда выход окажется не там, где ждали,
+        // без этих трёх чисел причину искать нечем.
+        Gimpanum.LOGGER.debug("Портал: выход {}, подножие плоскости {}, площадка {}",
+                destination.get(), anchor(plane), spot);
         entity.setPortalCooldown();
         entity.teleportTo(target, spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5,
                 Set.of(), facingAway(plane, spot), entity.getXRot());
@@ -228,7 +232,7 @@ public final class NebulaPortal {
      * вплотную всё же лучше, чем повиснуть над аркой.
      */
     private static BlockPos footing(ServerLevel target, List<BlockPos> plane) {
-        BlockPos centre = plane.get(0);
+        BlockPos centre = anchor(plane);
         for (int gap = MIN_GAP; gap >= 1; gap--) {
             // Сперва перебираем всё на одном уровне и лишь потом спускаемся:
             // выйти в трёх шагах от арки лучше, чем в двух, но восемью
@@ -255,6 +259,32 @@ public final class NebulaPortal {
         }
         // Не нашлось вовсе — ставим над аркой: упасть лучше, чем застрять в плоскости.
         return centre.above(3);
+    }
+
+    /**
+     * Подножие плоскости — её нижний ряд, середина.
+     *
+     * <p>Отмерять от какой попало клетки нельзя: список приходит от обхода, а
+     * тот начинается с той клетки, которую первой выдал чанк, — легко с самой
+     * верхней. От верхней «ноль по высоте» — это крыша арки, и пришедший
+     * оказывался на ней. От подножия ноль — это пол перед аркой.
+     */
+    private static BlockPos anchor(List<BlockPos> plane) {
+        int floor = Integer.MAX_VALUE;
+        for (BlockPos cell : plane) {
+            floor = Math.min(floor, cell.getY());
+        }
+        long x = 0;
+        long z = 0;
+        int count = 0;
+        for (BlockPos cell : plane) {
+            if (cell.getY() == floor) {
+                x += cell.getX();
+                z += cell.getZ();
+                count++;
+            }
+        }
+        return new BlockPos((int) (x / count), floor, (int) (z / count));
     }
 
     /** Расстояние по клеткам до ближайшей клетки плоскости. */
