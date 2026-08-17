@@ -3,11 +3,13 @@ package com.kirbornu.gimpanum.dimension;
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
@@ -20,6 +22,10 @@ import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -59,7 +65,20 @@ public final class NebulaPortal {
     private static final int REGION_RANGE = 24;
 
     /** Радиус поиска площадки у выхода. */
-    private static final int FOOTING_RADIUS = 6;
+    private static final int FOOTING_RADIUS = 8;
+
+    /**
+     * Насколько далеко от плоскости перехода ставить пришедшего.
+     *
+     * <p>Три блока, а не один. Раньше площадка искалась с ближайшего кольца, и
+     * вышедший оказывался вплотную к плоскости, внутри самой арки: шаг в любую
+     * сторону — и он снова в портале. Три блока выносят его на лестницу, за
+     * пределы арки.
+     */
+    private static final int MIN_GAP = 3;
+
+    /** Сколько клеток плоскости обходить, собирая её целиком: в арке их полсотни. */
+    private static final int PLANE_LIMIT = 128;
 
     private NebulaPortal() {
     }
@@ -90,10 +109,11 @@ public final class NebulaPortal {
             return;
         }
 
-        BlockPos spot = footing(target, destination.get());
+        List<BlockPos> plane = plane(target, destination.get());
+        BlockPos spot = footing(target, plane);
         entity.setPortalCooldown();
         entity.teleportTo(target, spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5,
-                Set.of(), entity.getYRot(), entity.getXRot());
+                Set.of(), facingAway(plane, spot), entity.getXRot());
     }
 
     /** Случайный выход: сперва по сетке размещения, затем — среди посещённых. */
@@ -168,32 +188,105 @@ public final class NebulaPortal {
     }
 
     /**
-     * Куда поставить пришедшего: ближайшая твёрдая площадка рядом с аркой.
+     * Вся плоскость перехода, а не одна её клетка.
      *
-     * <p>Ищем, а не отсчитываем от плоскости на глазок: арку разворачивает
-     * мироген, и постоянного смещения «на три блока в сторону» не существует.
-     * Поиск идёт снизу вверх и от ближнего к дальнему, поэтому первой находится
-     * верхняя ступень лестницы — она к арке ближе всего.
+     * <p>Клетку нам дают какую придётся — какая первой попалась в списке
+     * блок-сущностей чанка, хоть самую верхнюю. Отмерять от неё три блока
+     * бессмысленно: три блока вниз от верхнего края плоскости — это по-прежнему
+     * плоскость. Поэтому обходим её целиком и меряем расстояние до ближайшей
+     * клетки.
      */
-    private static BlockPos footing(ServerLevel target, BlockPos portal) {
-        for (int radius = 1; radius <= FOOTING_RADIUS; radius++) {
+    private static List<BlockPos> plane(ServerLevel target, BlockPos start) {
+        List<BlockPos> found = new ArrayList<>();
+        Set<BlockPos> seen = new HashSet<>();
+        Deque<BlockPos> queue = new ArrayDeque<>();
+        queue.add(start.immutable());
+        seen.add(start.immutable());
+        while (!queue.isEmpty() && found.size() < PLANE_LIMIT) {
+            BlockPos pos = queue.poll();
+            if (!target.getBlockState(pos).is(GimpanumContent.NEBULA_PORTAL.get())) {
+                continue;
+            }
+            found.add(pos);
+            for (Direction side : Direction.values()) {
+                BlockPos next = pos.relative(side);
+                if (seen.add(next)) {
+                    queue.add(next);
+                }
+            }
+        }
+        return found.isEmpty() ? List.of(start.immutable()) : found;
+    }
+
+    /**
+     * Куда поставить пришедшего: твёрдая площадка поодаль от арки.
+     *
+     * <p>Ищем, а не отсчитываем на глазок: арку разворачивает мироген, и
+     * постоянного смещения «на три блока в сторону» не существует. Зато есть
+     * требование — не ближе {@value #MIN_GAP} блоков к любой клетке плоскости.
+     * Если такого места не нашлось, требование ослабляем по шагу: оказаться
+     * вплотную всё же лучше, чем повиснуть над аркой.
+     */
+    private static BlockPos footing(ServerLevel target, List<BlockPos> plane) {
+        BlockPos centre = plane.get(0);
+        for (int gap = MIN_GAP; gap >= 1; gap--) {
+            // Сперва перебираем всё на одном уровне и лишь потом спускаемся:
+            // выйти в трёх шагах от арки лучше, чем в двух, но восемью
+            // блоками ниже — по такой площадке ещё карабкаться обратно.
             for (int dy = 0; dy >= -FOOTING_RADIUS; dy--) {
-                for (int dx = -radius; dx <= radius; dx++) {
-                    for (int dz = -radius; dz <= radius; dz++) {
-                        if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) {
-                            continue;
-                        }
-                        BlockPos candidate = portal.offset(dx, dy, dz);
-                        if (standable(target, candidate)
-                                && target.getWorldBorder().isWithinBounds(candidate)) {
-                            return candidate;
+                for (int radius = gap; radius <= FOOTING_RADIUS; radius++) {
+                    for (int dx = -radius; dx <= radius; dx++) {
+                        for (int dz = -radius; dz <= radius; dz++) {
+                            if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) {
+                                continue;
+                            }
+                            BlockPos candidate = centre.offset(dx, dy, dz);
+                            if (distance(plane, candidate) < gap) {
+                                continue;
+                            }
+                            if (standable(target, candidate)
+                                    && target.getWorldBorder().isWithinBounds(candidate)) {
+                                return candidate;
+                            }
                         }
                     }
                 }
             }
         }
-        // Не нашлось — ставим над аркой: упасть лучше, чем застрять в плоскости.
-        return portal.above(3);
+        // Не нашлось вовсе — ставим над аркой: упасть лучше, чем застрять в плоскости.
+        return centre.above(3);
+    }
+
+    /** Расстояние по клеткам до ближайшей клетки плоскости. */
+    private static int distance(List<BlockPos> plane, BlockPos pos) {
+        int nearest = Integer.MAX_VALUE;
+        for (BlockPos cell : plane) {
+            int d = Math.max(Math.max(Math.abs(cell.getX() - pos.getX()), Math.abs(cell.getY() - pos.getY())),
+                    Math.abs(cell.getZ() - pos.getZ()));
+            nearest = Math.min(nearest, d);
+        }
+        return nearest;
+    }
+
+    /**
+     * Развернуть пришедшего спиной к арке.
+     *
+     * <p>Мелочь, но именно она решает: тот, кто вышел лицом в плоскость,
+     * шагает вперёд не глядя и уезжает обратно.
+     */
+    private static float facingAway(List<BlockPos> plane, BlockPos spot) {
+        double x = 0.0;
+        double z = 0.0;
+        for (BlockPos cell : plane) {
+            x += cell.getX();
+            z += cell.getZ();
+        }
+        double dx = spot.getX() - x / plane.size();
+        double dz = spot.getZ() - z / plane.size();
+        if (dx == 0.0 && dz == 0.0) {
+            return 0.0F;
+        }
+        return (float) (Mth.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
     }
 
     private static boolean standable(ServerLevel target, BlockPos pos) {
