@@ -142,8 +142,7 @@ public final class CorpseBridge {
             return lines;
         }
         try {
-            Object result = getDeaths.invoke(null, player);
-            List<?> deaths = result instanceof List<?> list ? list : List.of();
+            List<?> deaths = deaths(player);
             lines.add("записей о смерти в файлах: " + deaths.size());
             for (Object death : deaths) {
                 lines.add(String.format("  запись: время %d, измерение %s, место %s, предметов %d",
@@ -208,10 +207,16 @@ public final class CorpseBridge {
         return best;
     }
 
+    /** Записи о смертях игрока, как их ведёт сам Corpse. */
+    private static List<?> deaths(ServerPlayer player) throws Exception {
+        Object result = getDeaths.invoke(null, player.serverLevel(), player.getUUID());
+        return result instanceof List<?> list ? list : List.of();
+    }
+
     /** Самая свежая запись о смерти этого игрока. */
     private static Object newest(ServerPlayer player) throws Exception {
-        Object result = getDeaths.invoke(null, player);
-        if (!(result instanceof List<?> deaths) || deaths.isEmpty()) {
+        List<?> deaths = deaths(player);
+        if (deaths.isEmpty()) {
             return null;
         }
         Object newest = null;
@@ -282,7 +287,12 @@ public final class CorpseBridge {
             Class<?> death = Class.forName(DEATH);
             corpseEntity = Class.forName(CORPSE_ENTITY);
 
-            getDeaths = manager.getMethod("getDeaths", ServerPlayer.class);
+            // Берём перегрузку по уровню и UUID, а не по игроку: та, что
+            // принимает игрока, в Corpse 1.1.13 вызывает саму себя и валится
+            // переполнением стека. Мод её и не использует, поэтому никто до
+            // сих пор и не заметил. Папка смертей всё равно одна на весь мир,
+            // а не на измерение, — так что уровень подойдёт любой.
+            getDeaths = manager.getMethod("getDeaths", ServerLevel.class, UUID.class);
             removeDeath = manager.getMethod("removeDeath", ServerLevel.class, death);
             getTimestamp = death.getMethod("getTimestamp");
             getAllItems = death.getMethod("getAllItems");
