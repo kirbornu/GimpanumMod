@@ -34,13 +34,13 @@
             },
             {
                 "type": "gimpanum:plasma_bolt",
-                "weight": 25,
+                "weight": 44,
                 "minCount": 1,
                 "maxCount": 1
             },
             {
                 "type": "gimpanum:space_devourer",
-                "weight": 25,
+                "weight": 300,
                 "minCount": 1,
                 "maxCount": 1
             }

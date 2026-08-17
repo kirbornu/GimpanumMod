@@ -20,6 +20,7 @@ import com.kirbornu.gimpanum.item.NebulaWoodItem;
 import com.kirbornu.gimpanum.item.PurpleQueenTalismanItem;
 import com.kirbornu.gimpanum.recipe.ThawingRecipe;
 import com.kirbornu.gimpanum.worldgen.NebulaFruitBlock;
+import com.kirbornu.gimpanum.worldgen.NebulaGasFeature;
 import com.kirbornu.gimpanum.worldgen.NebulaTreeFeature;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.food.FoodProperties;
@@ -437,6 +438,10 @@ public final class GimpanumContent {
     /** Фича, растящая эту самую поросль на полу пещер. */
     public static final DeferredHolder<Feature<?>, NebulaTreeFeature> NEBULA_TREE =
             FEATURES.register("nebula_tree", () -> new NebulaTreeFeature(NoneFeatureConfiguration.CODEC));
+
+    /** Озёра раскалённого газа: редкие, но огромные. */
+    public static final DeferredHolder<Feature<?>, NebulaGasFeature> NEBULA_GAS =
+            FEATURES.register("nebula_gas", () -> new NebulaGasFeature(NoneFeatureConfiguration.CODEC));
 
     /**
      * Сериализатор переплавки с непредсказуемым выходом.

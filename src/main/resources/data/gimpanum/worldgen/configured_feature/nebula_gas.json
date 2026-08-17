@@ -1,27 +1,4 @@
 {
-    "type": "minecraft:ore",
-    "config": {
-        "size": 30,
-        "discard_chance_on_air_exposure": 0.0,
-        "targets": [
-            {
-                "target": {
-                    "predicate_type": "minecraft:block_match",
-                    "block": "gimpanum:cosmic_sand"
-                },
-                "state": {
-                    "Name": "gimpanum:scorching_nebula_gas"
-                }
-            },
-            {
-                "target": {
-                    "predicate_type": "minecraft:block_match",
-                    "block": "gimpanum:cosmic_ash"
-                },
-                "state": {
-                    "Name": "gimpanum:scorching_nebula_gas"
-                }
-            }
-        ]
-    }
+    "type": "gimpanum:nebula_gas",
+    "config": {}
 }
