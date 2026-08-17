@@ -31,6 +31,7 @@ public final class GimpanumCommands {
         ConverterCommand.register(root, event.getBuildContext());
         PortalCommand.register(root);
         CorpseCommand.register(root);
+        LoreCommand.register(root);
         com.kirbornu.gimpanum.debug.SpawnProbeCommand.register(root);
 
         event.getDispatcher().register(root);

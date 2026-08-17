@@ -48,6 +48,9 @@ public class SpaceDevourer extends Monster {
     /** Раз в две секунды, как и просили: удар редкий, но тяжёлый. */
     private static final int ATTACK_INTERVAL = 40;
 
+    /** Как часто вопить, пока идёт погоня: раз в четыре секунды с разбросом. */
+    private static final int CHASE_CRY = 80;
+
     /**
      * Номер цели, о которой он уже объявил.
      *
@@ -55,6 +58,9 @@ public class SpaceDevourer extends Monster {
      * игры игрока до тех пор, пока моб не сменит цель.
      */
     private int lastAnnounced = -1;
+
+    /** Сколько тиков осталось до следующего вопля в погоне. */
+    private int chaseCry;
 
     public SpaceDevourer(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -70,7 +76,9 @@ public class SpaceDevourer extends Monster {
                 // 0.40 — семь блоков в секунду, вымерено на прямом отрезке;
                 // связь атрибута со скоростью нелинейная, по формуле не угадать
                 .add(Attributes.MOVEMENT_SPEED, 0.40)
-                .add(Attributes.FOLLOW_RANGE, 40.0);
+                // Восемьдесят блоков — и сквозь стены: прятаться от Поглотителя
+                // бессмысленно по замыслу, он всё равно прогрызётся.
+                .add(Attributes.FOLLOW_RANGE, 80.0);
     }
 
     @Override
@@ -83,12 +91,14 @@ public class SpaceDevourer extends Monster {
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 12.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
-        // Замечает по взгляду, но помнит долго: иначе стена, за которой
-        // спрятался игрок, сразу переставала бы иметь смысл.
         this.targetSelector.addGoal(1, (HurtByTargetGoal) new HurtByTargetGoal(this)
                 .setUnseenMemoryTicks(MEMORY));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true)
-                .setUnseenMemoryTicks(MEMORY));
+        // Предпоследний {@code false} — «видеть цель необязательно». Поглотитель
+        // чует жертву сквозь любую толщу, и это не поблажка, а весь его смысл:
+        // стена от него не спасает, она лишь откладывает встречу.
+        this.targetSelector.addGoal(2,
+                new NearestAttackableTargetGoal<>(this, Player.class, 0, false, false, null)
+                        .setUnseenMemoryTicks(MEMORY));
     }
 
     /** Лазает по отвесному, как паук: упёрся — значит полез. */
@@ -97,14 +107,25 @@ public class SpaceDevourer extends Monster {
         return this.horizontalCollision;
     }
 
-    /** Рёв в тот миг, когда он выбрал жертву. */
+    /**
+     * Рёв — при выборе жертвы и потом всю погоню.
+     *
+     * <p>Один раз при захвате мало: Поглотитель идёт за жертвой минутами и
+     * сквозь стены, и всё это время он должен быть слышен. Иначе выходит
+     * тишина, из которой внезапно выламывается стена, — а нужно, чтобы
+     * приближение было слышно заранее и с каждым разом ближе.
+     */
     @Override
     public void aiStep() {
         super.aiStep();
+        if (this.level().isClientSide) {
+            return;
+        }
         LivingEntity target = this.getTarget();
         int id = target == null ? -1 : target.getId();
-        if (!this.level().isClientSide && target != null && id != lastAnnounced) {
+        if (target != null && (id != lastAnnounced || --chaseCry <= 0)) {
             this.playSound(GimpanumSounds.DEVOURER_ROAR.get(), 2.0F, 1.0F);
+            chaseCry = CHASE_CRY + this.random.nextInt(CHASE_CRY / 2);
         }
         lastAnnounced = id;
     }

@@ -156,5 +156,6 @@
     "item.gimpanum.purple_queen_talisman.empty": "Возвращать нечего: последнего трупа нет или он пуст",
     "item.gimpanum.purple_queen_talisman.unavailable": "Талисману не за что зацепиться: мода Corpse нет",
     "block.gimpanum.furious_shell": "Яростный снаряд",
-    "entity.gimpanum.furious_shell": "Яростный снаряд"
+    "entity.gimpanum.furious_shell": "Яростный снаряд",
+    "gimpanum.command.lore_count": "Книг лора: %s (папка %s)"
 }

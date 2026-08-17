@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import com.kirbornu.gimpanum.lore.LoreBooks;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -45,6 +46,9 @@ public class ConverterBlockEntity extends BlockEntity {
      * живут с похожим интервалом.
      */
     private static final int ABSORB_INTERVAL_TICKS = 5;
+
+    /** С какой долей обменов конвертер отдаёт вместе с наградой чужую книгу. */
+    private static final float LORE_CHANCE = 0.02F;
 
     private ConverterConfig config = ConverterConfig.EMPTY;
     private boolean rollPending;
@@ -168,6 +172,16 @@ public class ConverterBlockEntity extends BlockEntity {
         setChanged();
 
         drop(serverLevel, completed * config.outputCount());
+
+        // Изредка вместе с наградой выпадает чужая книга. Конвертеры стоят
+        // там, где кто-то уже побывал, и это единственный способ, которым
+        // лор до сих пор доходил до живых.
+        for (int i = 0; i < completed; i++) {
+            if (serverLevel.random.nextFloat() < LORE_CHANCE) {
+                LoreBooks.roll(serverLevel.random).ifPresent(
+                        book -> Block.popResource(serverLevel, worldPosition.above(), book));
+            }
+        }
     }
 
     /**
