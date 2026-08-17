@@ -7,7 +7,13 @@
             "entries": [
                 {
                     "type": "minecraft:item",
-                    "name": "gimpanum:crystal_shard"
+                    "name": "gimpanum:crystal_shard",
+                    "functions": [
+                        {
+                            "function": "minecraft:set_count",
+                            "count": 10
+                        }
+                    ]
                 }
             ],
             "conditions": [
@@ -29,8 +35,8 @@
                             "function": "minecraft:set_count",
                             "count": {
                                 "type": "minecraft:uniform",
-                                "min": 2,
-                                "max": 3
+                                "min": 20,
+                                "max": 30
                             }
                         }
                     ]
