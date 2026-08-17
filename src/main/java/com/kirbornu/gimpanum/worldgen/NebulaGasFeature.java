@@ -26,9 +26,17 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  */
 public class NebulaGasFeature extends Feature<NoneFeatureConfiguration> {
 
-    /** Наименьший и наибольший радиус по горизонтали. */
+    /**
+     * Наименьший и наибольший радиус по горизонтали.
+     *
+     * <p>Потолок здесь не на глаз: при генерации фича вправе писать лишь в
+     * свой чанк и восемь соседних. Точка отсчёта стоит где угодно внутри
+     * своего чанка, поэтому любой радиус до шестнадцати гарантированно
+     * остаётся в пределах соседа, а больший — уже нет. С семнадцатью игра
+     * ругалась «setBlock in a far chunk» и молча теряла край озера.
+     */
     private static final int MIN_RADIUS = 9;
-    private static final int MAX_RADIUS = 17;
+    private static final int MAX_RADIUS = 14;
 
     /** Насколько озеро приплюснуто: по высоте оно всегда меньше, чем вширь. */
     private static final double FLATTEN = 0.55;
