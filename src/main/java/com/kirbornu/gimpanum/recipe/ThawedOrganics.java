@@ -8,6 +8,9 @@ import com.kirbornu.gimpanum.Gimpanum;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.RandomSource;
@@ -54,6 +57,13 @@ public final class ThawedOrganics {
                 // быть и пригоршней семян, и предметом с компонентами.
                 ItemStack.CODEC.fieldOf("item").forGetter(Find::item)
         ).apply(instance, Find::new));
+
+        /** Список уезжает клиенту: без него просмотрщик рецептов показал бы одну заглушку. */
+        public static final StreamCodec<RegistryFriendlyByteBuf, Find> STREAM_CODEC =
+                StreamCodec.composite(
+                        ByteBufCodecs.VAR_INT, Find::weight,
+                        ItemStack.STREAM_CODEC, Find::item,
+                        Find::new);
     }
 
     private static final String FILE = "thawed_organics.json";
@@ -72,6 +82,11 @@ public final class ThawedOrganics {
 
     public static int count() {
         return finds.size();
+    }
+
+    /** Весь список — для отправки клиенту. */
+    public static List<Find> all() {
+        return finds;
     }
 
     /** Читает файл, создавая его из образца, если файла ещё нет. */

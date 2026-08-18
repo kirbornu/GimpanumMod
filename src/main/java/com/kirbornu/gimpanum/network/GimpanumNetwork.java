@@ -36,6 +36,9 @@ public final class GimpanumNetwork {
                 DashboardHandlers::apply);
         registrar.playToServer(DashboardRefreshPayload.TYPE, DashboardRefreshPayload.STREAM_CODEC,
                 DashboardHandlers::refresh);
+
+        registrar.playToClient(ThawingResultsPayload.TYPE, ThawingResultsPayload.STREAM_CODEC,
+                ThawingResultsHandler::handle);
     }
 
     /**
@@ -81,5 +84,23 @@ public final class GimpanumNetwork {
             markers.add(new ConverterMarkersPayload.Marker(entry.dimension(), entry.pos(), label));
         }
         return markers;
+    }
+
+    /**
+     * Шлёт всем содержимое Замороженной органики.
+     *
+     * <p>Список общий и не секретный: он и так виден каждому, кто переплавил
+     * десяток блоков.
+     */
+    public static void broadcastThawingResults(MinecraftServer server) {
+        if (server != null) {
+            PacketDistributor.sendToAllPlayers(
+                    new ThawingResultsPayload(com.kirbornu.gimpanum.recipe.ThawedOrganics.all()));
+        }
+    }
+
+    public static void sendThawingResults(ServerPlayer player) {
+        PacketDistributor.sendToPlayer(player,
+                new ThawingResultsPayload(com.kirbornu.gimpanum.recipe.ThawedOrganics.all()));
     }
 }

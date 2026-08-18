@@ -41,6 +41,10 @@ public final class ConfigCommand {
                     // поменяться вместе с файлом — метки на карте обязаны это
                     // показать, не дожидаясь перезахода игроков.
                     GimpanumNetwork.broadcastMarkers(source.getServer());
+                    // То же и со списком находок: он показывается в
+                    // просмотрщике рецептов на клиенте, и правка файла обязана
+                    // быть видна сразу, а не после перезахода.
+                    GimpanumNetwork.broadcastThawingResults(source.getServer());
                     source.sendSuccess(
                             () -> Component.translatable("gimpanum.command.config_reloaded"), true);
                     return report(source);

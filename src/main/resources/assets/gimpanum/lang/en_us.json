@@ -222,5 +222,9 @@
     "gimpanum.dashboard.team_added": "Teams bound: %s",
     "gimpanum.dashboard.team_removed": "Teams unbound: %s",
     "gimpanum.command.config_reloaded": "Mod settings reloaded.",
-    "gimpanum.command.offers_count": "Converter offers: %s. File: %s"
+    "gimpanum.command.offers_count": "Converter offers: %s. File: %s",
+    "gimpanum.jei.thawing": "Thawing",
+    "gimpanum.jei.chance": "Chance: %s%%",
+    "gimpanum.jei.variants": "One random of %s",
+    "gimpanum.jei.no_data": "The list has not arrived from the server yet"
 }

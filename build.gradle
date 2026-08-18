@@ -92,6 +92,12 @@ def cbcJars = files(
         "other_mods_in_modpack/ritchiesprojectilelib-${rpl_version}-neoforge.jar"
 ).filter { it.exists() }
 
+// JEI — просмотрщик рецептов. Нужен только затем, чтобы показать все возможные
+// находки Замороженной органики: у неё случайный выход, и обычная запись
+// рецепта врала бы одним предметом. Без JEI мод работает полностью, просто
+// показывать находки негде.
+def jeiJar = file("other_mods_in_modpack/jei-${minecraft_version}-neoforge-${jei_version}.jar")
+
 dependencies {
     if (sableJar.exists()) {
         compileOnly files(sableJar)
@@ -116,6 +122,12 @@ dependencies {
         compileOnly cbcJars
     } else {
         logger.lifecycle("Create Big Cannons jars not found — building without the Furious Shell.")
+    }
+
+    if (jeiJar.exists()) {
+        compileOnly files(jeiJar)
+    } else {
+        logger.lifecycle("JEI jar not found at ${jeiJar} — building without the thawing recipe screen.")
     }
 
     if (xaeroJar.exists()) {

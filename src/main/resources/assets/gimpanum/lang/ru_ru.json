@@ -222,5 +222,9 @@
     "gimpanum.dashboard.team_added": "Экипажей привязано: %s",
     "gimpanum.dashboard.team_removed": "Экипажей отвязано: %s",
     "gimpanum.command.config_reloaded": "Настройки мода перечитаны.",
-    "gimpanum.command.offers_count": "Предложений конвертеров: %s. Файл: %s"
+    "gimpanum.command.offers_count": "Предложений конвертеров: %s. Файл: %s",
+    "gimpanum.jei.thawing": "Оттаивание",
+    "gimpanum.jei.chance": "Шанс: %s%%",
+    "gimpanum.jei.variants": "Случайно одно из %s",
+    "gimpanum.jei.no_data": "Список ещё не получен от сервера"
 }
