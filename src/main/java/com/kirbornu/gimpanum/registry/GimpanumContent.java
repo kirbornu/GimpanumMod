@@ -200,6 +200,28 @@ public final class GimpanumContent {
     public static final DeferredItem<?> FROZEN_ORGANICS_ITEM = ITEMS.registerSimpleBlockItem(FROZEN_ORGANICS);
 
     /**
+     * Монолитный хрусталь — осколки, спрессованные в цельный камень.
+     *
+     * <p>Это хранилище и ничего больше: стак осколков уходит под пресс в чаше и
+     * возвращается оттуда механической пилой без потерь. Выигрыш — одна ячейка
+     * вместо шестидесяти четырёх, а заодно повод держать пресс включённым.
+     *
+     * <p>Ровно стак, а не больше: чаша Create принимает за операцию не более 64
+     * ингредиентов, и обойти этот потолок можно только вторым предметом —
+     * полуфабрикатом, которого в моде нет.
+     */
+    public static final DeferredBlock<Block> MONOLITHIC_CRYSTAL = BLOCKS.registerSimpleBlock(
+            "monolithic_crystal",
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.QUARTZ)
+                    .sound(SoundType.AMETHYST)
+                    .strength(1.5F)
+                    .requiresCorrectToolForDrops()
+    );
+
+    public static final DeferredItem<?> MONOLITHIC_CRYSTAL_ITEM = ITEMS.registerSimpleBlockItem(MONOLITHIC_CRYSTAL);
+
+    /**
      * Небула-бревно — ствол пещерной поросли Гимпанума.
      *
      * <p>Ведёт себя как обычное бревно во всём, кроме огня: в мире без воздуха
@@ -572,6 +594,7 @@ public final class GimpanumContent {
                         output.accept(NEBULA_SIGN_ITEM.get());
                         output.accept(SEAL.get());
                         output.accept(CRYSTAL_SHARD.get());
+                        output.accept(MONOLITHIC_CRYSTAL_ITEM.get());
                         output.accept(DARKNESS_CRYSTAL.get());
                         output.accept(FIRE_BAR.get());
                         output.accept(JADE_NUT.get());
