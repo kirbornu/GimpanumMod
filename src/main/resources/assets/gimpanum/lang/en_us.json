@@ -157,5 +157,6 @@
     "item.gimpanum.purple_queen_talisman.unavailable": "The talisman finds no hold: the Corpse mod is missing",
     "block.gimpanum.furious_shell": "Furious Shell",
     "entity.gimpanum.furious_shell": "Furious Shell",
-    "gimpanum.command.lore_count": "Lore books: %s (folder %s)"
+    "gimpanum.command.lore_count": "Lore books: %s (folder %s)",
+    "gimpanum.command.thawing_count": "Frozen Organics finds: %s. File: %s"
 }
