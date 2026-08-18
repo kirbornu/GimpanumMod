@@ -36,6 +36,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.IntFunction;
 import java.util.function.UnaryOperator;
 
@@ -155,6 +156,13 @@ public final class CoreCommand {
                 .then(Commands.literal("name")
                         .then(Commands.argument("new_name", StringArgumentType.word())
                                 .executes(context -> rename(context, resolver))))
+                // Удаление и подрыв на расстоянии. Ядро может стоять на
+                // корабле в выгруженном чанке за миллионы блоков — дойти до
+                // него ногами и снести киркой иногда попросту невозможно.
+                .then(Commands.literal("delete")
+                        .executes(context -> delete(context, resolver, false)))
+                .then(Commands.literal("detonate")
+                        .executes(context -> delete(context, resolver, true)))
                 .then(Commands.literal("arm")
                         .executes(context -> setArmed(context, resolver, true)))
                 .then(Commands.literal("disarm")
@@ -390,6 +398,33 @@ public final class CoreCommand {
         context.getSource().sendSuccess(
                 () -> Component.translatable("gimpanum.command.renamed", newName), true);
         return 1;
+    }
+
+    /**
+     * Убирает выбранные Ядра из мира.
+     *
+     * <p>Чанк подгружается: смысл команды именно в том, чтобы дотянуться до
+     * Ядра, до которого не дойти. Подрыв отличается от удаления только тем,
+     * что оставляет предохранитель снятым, и потому запускает всё посмертное —
+     * взрыв, команды и Печать.
+     */
+    private static int delete(CommandContext<CommandSourceStack> context, CoreResolver resolver,
+                              boolean detonate) throws CommandSyntaxException {
+        MinecraftServer server = context.getSource().getServer();
+        List<UUID> targets = new ArrayList<>();
+        for (CoreBlockEntity core : resolver.resolve(context, true)) {
+            targets.add(core.coreId());
+        }
+        int removed = 0;
+        for (UUID coreId : targets) {
+            if (CoreIndex.delete(server, coreId, detonate)) {
+                removed++;
+            }
+        }
+        int count = removed;
+        context.getSource().sendSuccess(() -> Component.translatable(
+                detonate ? "gimpanum.command.detonated" : "gimpanum.command.deleted", count), true);
+        return count;
     }
 
     private static int setDefaultName(CommandContext<CommandSourceStack> context) {

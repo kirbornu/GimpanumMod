@@ -149,5 +149,7 @@
     "block.gimpanum.furious_shell": "Яростный снаряд",
     "entity.gimpanum.furious_shell": "Яростный снаряд",
     "gimpanum.command.lore_count": "Книг лора: %s (папка %s)",
+    "gimpanum.command.deleted": "Ядер удалено: %s",
+    "gimpanum.command.detonated": "Ядер подорвано: %s",
     "gimpanum.command.thawing_count": "Находок в Замороженной органике: %s. Файл: %s"
 }
