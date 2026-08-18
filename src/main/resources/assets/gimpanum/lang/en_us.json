@@ -149,5 +149,7 @@
     "block.gimpanum.furious_shell": "Furious Shell",
     "entity.gimpanum.furious_shell": "Furious Shell",
     "gimpanum.command.lore_count": "Lore books: %s (folder %s)",
+    "gimpanum.command.deleted": "Cores deleted: %s",
+    "gimpanum.command.detonated": "Cores detonated: %s",
     "gimpanum.command.thawing_count": "Frozen Organics finds: %s. File: %s"
 }
