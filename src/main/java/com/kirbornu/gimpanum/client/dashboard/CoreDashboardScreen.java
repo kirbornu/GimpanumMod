@@ -151,6 +151,9 @@ public class CoreDashboardScreen extends Screen {
     /** Какие части настройки уходят при переносе на отмеченные Ядра. */
     private int transferMask = ConfigSection.ALL & ~ConfigSection.NAME.bit();
 
+    /** Насколько промотан длинный список внутри вкладки — игроков или команд. */
+    private int pageOffset;
+
     @Nullable
     private CoreAction pendingConfirm;
     private long confirmDeadline;
@@ -211,7 +214,7 @@ public class CoreDashboardScreen extends Screen {
         if (selectedId != null && find(selectedId).isEmpty()) {
             selectedId = null;
         }
-        rebuildWidgets();
+        refresh();
     }
 
     /**
@@ -232,6 +235,22 @@ public class CoreDashboardScreen extends Screen {
             drafts.put(row.id(),
                     ConfigSection.merge(row.config(), pending, ConfigSection.changed(base, pending)));
             baselines.put(row.id(), row.config());
+        }
+    }
+
+    /**
+     * Пересобирает окно, сохраняя прокрутку списка.
+     *
+     * <p>Отметить десяток Ядер — обычное дело, а каждая отметка перестраивает
+     * виджеты; без сохранения прокрутки список отматывался бы в начало на
+     * каждой галочке, и отметить что-нибудь ниже первого экрана было бы
+     * невозможно.
+     */
+    private void refresh() {
+        double scroll = list == null ? 0.0 : list.getScrollAmount();
+        rebuildWidgets();
+        if (list != null) {
+            list.setScrollAmount(scroll);
         }
     }
 
@@ -332,7 +351,8 @@ public class CoreDashboardScreen extends Screen {
             Button button = Button.builder(label, b -> {
                 harvest();
                 tab = which;
-                rebuildWidgets();
+                pageOffset = 0;
+                refresh();
             }).bounds(x + (i - from) * (cell + 2), y, cell, TAB_HEIGHT).build();
             button.active = !active;
             addRenderableWidget(button);
@@ -521,22 +541,57 @@ public class CoreDashboardScreen extends Screen {
             String value = entryBox.getValue().trim();
             if (!value.isEmpty()) {
                 onAdd.accept(value);
-                rebuildWidgets();
+                refresh();
             }
         }).bounds(x + boxWidth + 4, y, 20, TAB_HEIGHT).build());
 
+        addPager(x + boxWidth + 28, y, values.size(), capacity(y, bottom));
+
         int rowY = y + TAB_HEIGHT + 6;
-        for (int i = 0; i < values.size(); i++) {
+        for (int i = pageOffset; i < values.size(); i++) {
             if (rowY + TAB_HEIGHT > bottom) {
                 break;
             }
             int index = i;
             addRenderableWidget(Button.builder(Component.literal("x"), b -> {
                 onRemove.accept(index);
-                rebuildWidgets();
+                refresh();
             }).bounds(x, rowY, 20, TAB_HEIGHT).build());
             rowY += TAB_HEIGHT + 2;
         }
+    }
+
+    /** Сколько строк помещается под шапкой вкладки. */
+    private int capacity(int y, int bottom) {
+        return Math.max(1, (bottom - (y + TAB_HEIGHT + 6)) / (TAB_HEIGHT + 2));
+    }
+
+    /**
+     * Две стрелки прокрутки длинного списка внутри вкладки.
+     *
+     * <p>Без них у Ядра с двумя десятками команд лишние строки просто не
+     * помещались бы в окно — и, что хуже, их нельзя было бы удалить, потому
+     * что крестика рядом с невидимой строкой нет.
+     */
+    private void addPager(int x, int y, int total, int capacity) {
+        if (total <= capacity) {
+            pageOffset = 0;
+            return;
+        }
+        pageOffset = Math.min(pageOffset, total - capacity);
+        Button up = Button.builder(Component.literal("^"), b -> {
+            pageOffset = Math.max(0, pageOffset - capacity);
+            refresh();
+        }).bounds(x, y, 20, TAB_HEIGHT).build();
+        up.active = pageOffset > 0;
+        addRenderableWidget(up);
+
+        Button down = Button.builder(Component.literal("v"), b -> {
+            pageOffset = Math.min(total - capacity, pageOffset + capacity);
+            refresh();
+        }).bounds(x + 22, y, 20, TAB_HEIGHT).build();
+        down.active = pageOffset + capacity < total;
+        addRenderableWidget(down);
     }
 
     private void addCheck(int x, int y, String key, boolean selected, java.util.function.Consumer<Boolean> onChange) {
@@ -647,7 +702,8 @@ public class CoreDashboardScreen extends Screen {
         harvest();
         selectedId = row.id();
         pendingConfirm = null;
-        rebuildWidgets();
+        pageOffset = 0;
+        refresh();
     }
 
     // --- Отправка -------------------------------------------------------------
@@ -686,7 +742,7 @@ public class CoreDashboardScreen extends Screen {
         if (dangerous && (pendingConfirm != action || System.currentTimeMillis() >= confirmDeadline)) {
             pendingConfirm = action;
             confirmDeadline = System.currentTimeMillis() + CONFIRM_WINDOW;
-            rebuildWidgets();
+            refresh();
             return;
         }
         pendingConfirm = null;
@@ -743,7 +799,7 @@ public class CoreDashboardScreen extends Screen {
         if (value) {
             visible().forEach(row -> checked.add(row.id()));
         }
-        rebuildWidgets();
+        refresh();
     }
 
     private void invertChecked() {
@@ -755,7 +811,7 @@ public class CoreDashboardScreen extends Screen {
         }
         checked.clear();
         checked.addAll(next);
-        rebuildWidgets();
+        refresh();
     }
 
     // --- Отрисовка ------------------------------------------------------------
@@ -851,9 +907,23 @@ public class CoreDashboardScreen extends Screen {
 
     private void renderStrings(GuiGraphics graphics, int x, int y, List<String> values) {
         int line = y + TAB_HEIGHT + 6;
-        for (String value : values) {
-            graphics.drawString(font, Component.literal(value), x + 24, line + 5, COLOR_TEXT);
+        int bottom = height - MARGIN - 2 * (TAB_HEIGHT + 4);
+        for (int i = pageOffset; i < values.size(); i++) {
+            if (line + TAB_HEIGHT > bottom) {
+                break;
+            }
+            graphics.drawString(font, font.plainSubstrByWidth(values.get(i), rightWidth() - 28),
+                    x + 24, line + 5, COLOR_TEXT);
             line += TAB_HEIGHT + 2;
+        }
+        if (!values.isEmpty()) {
+            // Счётчик у правого края шапки: слева от него поле ввода, кнопка
+            // добавления и стрелки прокрутки.
+            String counter = (pageOffset + 1) + "-"
+                    + Math.min(values.size(), pageOffset + capacity(y, bottom))
+                    + " / " + values.size();
+            graphics.drawString(font, counter,
+                    x + rightWidth() - font.width(counter), y + 5, COLOR_DIM);
         }
     }
 
@@ -953,7 +1023,7 @@ public class CoreDashboardScreen extends Screen {
                     if (!checked.remove(data.id())) {
                         checked.add(data.id());
                     }
-                    rebuildWidgets();
+                    refresh();
                     return true;
                 }
                 select(data);
