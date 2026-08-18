@@ -33,6 +33,7 @@ public final class GimpanumCommands {
         CorpseCommand.register(root);
         LoreCommand.register(root);
         ThawingCommand.register(root);
+        DashboardCommand.register(root);
 
         event.getDispatcher().register(root);
     }

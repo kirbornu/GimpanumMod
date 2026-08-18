@@ -27,6 +27,15 @@ public final class GimpanumNetwork {
         PayloadRegistrar registrar = event.registrar("1");
         registrar.playToClient(ConverterMarkersPayload.TYPE, ConverterMarkersPayload.STREAM_CODEC,
                 ConverterMarkersHandler::handle);
+
+        registrar.playToClient(DashboardOpenPayload.TYPE, DashboardOpenPayload.STREAM_CODEC,
+                DashboardHandlers::open);
+        registrar.playToServer(DashboardActionPayload.TYPE, DashboardActionPayload.STREAM_CODEC,
+                DashboardHandlers::action);
+        registrar.playToServer(DashboardApplyPayload.TYPE, DashboardApplyPayload.STREAM_CODEC,
+                DashboardHandlers::apply);
+        registrar.playToServer(DashboardRefreshPayload.TYPE, DashboardRefreshPayload.STREAM_CODEC,
+                DashboardHandlers::refresh);
     }
 
     /**
