@@ -9,11 +9,9 @@ import com.kirbornu.gimpanum.core.CoreBlock;
 import com.kirbornu.gimpanum.core.CoreBlockEntity;
 import com.kirbornu.gimpanum.core.CoreBlockItem;
 import com.kirbornu.gimpanum.core.CoreConfig;
-import com.kirbornu.gimpanum.debug.ProbeBlock;
 import com.kirbornu.gimpanum.dimension.NebulaPortalBlock;
 import com.kirbornu.gimpanum.dimension.NebulaPortalBlockEntity;
 import com.kirbornu.gimpanum.dimension.ScorchingGasBlock;
-import com.kirbornu.gimpanum.debug.ProbeBlockEntity;
 import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
 import com.kirbornu.gimpanum.item.NebulaWoodItem;
@@ -89,25 +87,6 @@ public final class GimpanumContent {
             DeferredRegister.create(Registries.RECIPE_SERIALIZER, Gimpanum.MOD_ID);
     public static final DeferredRegister<Feature<?>> FEATURES =
             DeferredRegister.create(Registries.FEATURE, Gimpanum.MOD_ID);
-
-    /**
-     * Диагностический блок-зонд. Не часть задуманной механики — служит только
-     * для выяснения того, как Sable ведёт себя с блоками на конструкциях.
-     */
-    public static final DeferredBlock<ProbeBlock> PROBE = BLOCKS.registerBlock(
-            "probe",
-            ProbeBlock::new,
-            BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.COLOR_LIGHT_BLUE)
-                    .strength(1.0F)
-                    .sound(SoundType.METAL)
-    );
-
-    public static final DeferredItem<?> PROBE_ITEM = ITEMS.registerSimpleBlockItem(PROBE);
-
-    public static final Supplier<BlockEntityType<ProbeBlockEntity>> PROBE_BLOCK_ENTITY =
-            BLOCK_ENTITIES.register("probe",
-                    () -> BlockEntityType.Builder.of(ProbeBlockEntity::new, PROBE.get()).build(null));
 
     /**
      * Ядро. {@code noLootTable} — принципиально: обычный игрок может Ядро
@@ -642,7 +621,6 @@ public final class GimpanumContent {
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.DUNE_WALKER_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.SPACE_DEVOURER_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.PLASMA_BOLT_EGG.get());
-                        output.accept(PROBE_ITEM.get());
                     })
                     .build()
     );
@@ -658,10 +636,5 @@ public final class GimpanumContent {
         DATA_COMPONENTS.register(modBus);
         RECIPE_SERIALIZERS.register(modBus);
         FEATURES.register(modBus);
-    }
-
-    /** Удобный доступ без {@code .get()} на каждом вызове. */
-    public static Block probe() {
-        return PROBE.get();
     }
 }
