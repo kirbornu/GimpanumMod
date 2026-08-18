@@ -30,10 +30,8 @@ public final class GimpanumCommands {
         CoreCommand.register(root, event.getBuildContext());
         ConverterCommand.register(root, event.getBuildContext());
         PortalCommand.register(root);
-        CorpseCommand.register(root);
-        LoreCommand.register(root);
-        ThawingCommand.register(root);
         DashboardCommand.register(root);
+        ConfigCommand.register(root);
 
         event.getDispatcher().register(root);
     }

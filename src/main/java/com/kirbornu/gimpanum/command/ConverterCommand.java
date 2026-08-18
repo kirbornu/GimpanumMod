@@ -3,8 +3,6 @@ package com.kirbornu.gimpanum.command;
 import com.kirbornu.gimpanum.converter.ConverterBlockEntity;
 import com.kirbornu.gimpanum.converter.ConverterConfig;
 import com.kirbornu.gimpanum.converter.ConverterIndex;
-import com.kirbornu.gimpanum.converter.ConverterOffers;
-import com.kirbornu.gimpanum.network.GimpanumNetwork;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -43,9 +41,6 @@ public final class ConverterCommand {
                                 CommandBuildContext buildContext) {
         root.then(Commands.literal("converter")
                 .then(Commands.literal("list").executes(ConverterCommand::list))
-                // Перечитать config/gimpanum/converter_offers.json без перезапуска.
-                .then(Commands.literal("offers")
-                        .then(Commands.literal("reload").executes(ConverterCommand::reloadOffers)))
                 .then(Commands.argument("pos", BlockPosArgument.blockPos())
                         .then(Commands.literal("show")
                                 .executes(ConverterCommand::show))
@@ -144,25 +139,4 @@ public final class ConverterCommand {
                 () -> Component.translatable("gimpanum.command.converter_reset"), true);
         return 1;
     }
-
-    /**
-     * Перечитывает файл предложений.
-     *
-     * <p>Новые условия действуют сразу на все конвертеры, привязанные к
-     * предложению по имени, — в том числе на стоящие в выгруженных чанках.
-     * Не затрагивает конвертеры, настроенные вручную: настройка командой
-     * отвязывает конвертер от файла.
-     */
-    private static int reloadOffers(CommandContext<CommandSourceStack> context) {
-        CommandSourceStack source = context.getSource();
-        ConverterOffers.load(source.getServer());
-        int count = ConverterOffers.count();
-        // Подписи конвертеров идут из предложений, а значит могли поменяться
-        // вместе с файлом — метки на карте обязаны это показать.
-        GimpanumNetwork.broadcastMarkers(source.getServer());
-        source.sendSuccess(() -> Component.translatable("gimpanum.command.offers_reloaded",
-                count, ConverterOffers.path().toString()), true);
-        return count;
-    }
 }
-

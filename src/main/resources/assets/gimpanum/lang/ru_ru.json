@@ -127,7 +127,6 @@
     "subtitles.gimpanum.plasma_bolt.death": "Плазменная молния гаснет",
     "subtitles.gimpanum.plasma_bolt.shoot": "Выстрел Плазменной молнии",
     "entity.gimpanum.plasma_projectile": "Плазменный разряд",
-    "gimpanum.command.offers_reloaded": "Предложений конвертеров перечитано: %s. Файл: %s",
     "block.gimpanum.nebula_sign": "Небула-табличка",
     "block.gimpanum.nebula_wall_sign": "Настенная небула-табличка",
     "gimpanum.fire.nothing_to_burn": "Здесь нечему гореть",
@@ -221,5 +220,7 @@
     "gimpanum.dashboard.unlocked": "Снят замок: %s",
     "gimpanum.dashboard.teleported": "Перенос к Ядру: %s",
     "gimpanum.dashboard.team_added": "Экипажей привязано: %s",
-    "gimpanum.dashboard.team_removed": "Экипажей отвязано: %s"
+    "gimpanum.dashboard.team_removed": "Экипажей отвязано: %s",
+    "gimpanum.command.config_reloaded": "Настройки мода перечитаны.",
+    "gimpanum.command.offers_count": "Предложений конвертеров: %s. Файл: %s"
 }

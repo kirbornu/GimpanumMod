@@ -128,63 +128,6 @@ public final class CorpseBridge {
     }
 
     /**
-     * Что рассказать о трупах этого игрока, ничего не трогая.
-     *
-     * <p>Отдельный разбор, а не общий с {@link #reclaim}: когда Талисман
-     * молчит, нужно знать, на каком именно шаге он замолчал, — а гадать по
-     * одной строке «трупа нет» можно бесконечно.
-     */
-    public static List<String> diagnose(ServerPlayer player) {
-        List<String> lines = new ArrayList<>();
-        lines.add("мод Corpse: " + (ModList.get().isLoaded(MOD_ID) ? "стоит" : "нет"));
-        lines.add("рефлексия: " + (available() ? "сошлась" : "не сошлась"));
-        if (!available()) {
-            return lines;
-        }
-        try {
-            List<?> deaths = deaths(player);
-            lines.add("записей о смерти в файлах: " + deaths.size());
-            for (Object death : deaths) {
-                lines.add(String.format("  запись: время %d, измерение %s, место %s, предметов %d",
-                        (long) getTimestamp.invoke(death),
-                        getDimension.invoke(death),
-                        getBlockPos.invoke(death),
-                        items(death).size()));
-            }
-            Object newest = newest(player);
-            lines.add("самая свежая запись: " + (newest == null ? "нет" : getId.invoke(newest)));
-
-            Entity byRecord = null;
-            if (newest != null) {
-                ServerLevel level = levelOf(player.server, newest);
-                lines.add("измерение записи найдено: " + (level != null));
-                if (level != null) {
-                    byRecord = corpseFor(level, newest);
-                }
-            }
-            lines.add("труп по записи: " + (byRecord == null ? "не найден" : byRecord.getStringUUID()));
-
-            Entity near = corpseNear(player);
-            lines.add("труп в " + (int) NEARBY_RADIUS + " блоках от игрока: "
-                    + (near == null ? "не найден" : near.getStringUUID()));
-            Entity corpse = byRecord != null ? byRecord : near;
-            if (corpse != null) {
-                Object death = getDeath(corpse);
-                lines.add("у сущности трупа есть запись: " + (death != null));
-                if (death != null) {
-                    lines.add("предметов в сущности: " + items(death).size());
-                    lines.add("владелец записи: " + getPlayerUUID.invoke(death)
-                            + ", игрок: " + player.getUUID());
-                }
-            }
-        } catch (Throwable failure) {
-            lines.add("разбор оборвался: " + failure);
-            Gimpanum.LOGGER.error("Талисман: разбор оборвался", failure);
-        }
-        return lines;
-    }
-
-    /**
      * Ближайший к игроку труп, который принадлежит ему же.
      *
      * <p>Запасной путь на случай, когда запись о смерти до нас не дошла.
