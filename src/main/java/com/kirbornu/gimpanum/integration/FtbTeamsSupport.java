@@ -3,7 +3,6 @@ package com.kirbornu.gimpanum.integration;
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.core.BoundTeam;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.ModList;
 
 import java.util.List;
@@ -54,23 +53,6 @@ public final class FtbTeamsSupport {
         }
         try {
             return FtbTeamsBridge.snapshot(server, query);
-        } catch (Throwable t) {
-            fail(t);
-            return Optional.empty();
-        }
-    }
-
-    /**
-     * Команда игрока для закрепления Контрольной точки.
-     *
-     * @return пусто, если FTB Teams нет — тогда точку закреплять не за кем
-     */
-    public static Optional<TeamOwner> ownerOf(ServerPlayer player) {
-        if (!isAvailable()) {
-            return Optional.empty();
-        }
-        try {
-            return FtbTeamsBridge.ownerOf(player);
         } catch (Throwable t) {
             fail(t);
             return Optional.empty();

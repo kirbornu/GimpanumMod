@@ -6,7 +6,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.fml.ModList;
 
-import java.util.OptionalInt;
 import java.util.UUID;
 
 /**
@@ -17,8 +16,9 @@ import java.util.UUID;
  * одного его типа: всё уходит в {@link ClaimsBridge}, который загружается лишь
  * после успешной проверки {@link #isAvailable()}.
  *
- * <p>Без OPAC Контрольная точка работает полностью, только чанк вокруг неё не
- * клеймится.
+ * <p>Нужен ровно одному потребителю — {@link
+ * com.kirbornu.gimpanum.dimension.ClaimGuard}, который снимает чужие заявки в
+ * Гимпануме. Без OPAC мод работает полностью, просто снимать нечего.
  */
 public final class ClaimsSupport {
 
@@ -33,32 +33,15 @@ public final class ClaimsSupport {
     public static boolean isAvailable(MinecraftServer server) {
         if (modLoaded == null) {
             modLoaded = ModList.get().isLoaded(OPAC_MOD_ID);
-            Gimpanum.LOGGER.info("Open Parties and Claims {} — клеймы Контрольных точек {}",
+            Gimpanum.LOGGER.info("Open Parties and Claims {} — снятие клеймов в Гимпануме {}",
                     modLoaded ? "обнаружен" : "не найден",
-                    modLoaded ? "включены" : "отключены");
+                    modLoaded ? "включено" : "отключено");
         }
         if (!modLoaded || bridgeFailed) {
             return false;
         }
         try {
             return ClaimsBridge.isReady(server);
-        } catch (Throwable t) {
-            fail(t);
-            return false;
-        }
-    }
-
-    /**
-     * Отдаёт чанк точки указанному владельцу, вытесняя прежний клейм.
-     *
-     * @return {@code true}, если клейм действительно поставлен
-     */
-    public static boolean claim(ServerLevel level, BlockPos pos, UUID owner) {
-        if (!isAvailable(level.getServer())) {
-            return false;
-        }
-        try {
-            return ClaimsBridge.claim(level, pos, owner);
         } catch (Throwable t) {
             fail(t);
             return false;
@@ -89,40 +72,10 @@ public final class ClaimsSupport {
         }
     }
 
-    /** Цвет клеймов игрока на карте — им же красятся частицы точки. */
-    public static OptionalInt claimColor(MinecraftServer server, UUID owner) {
-        if (!isAvailable(server)) {
-            return OptionalInt.empty();
-        }
-        try {
-            return ClaimsBridge.claimColor(server, owner);
-        } catch (Throwable t) {
-            fail(t);
-            return OptionalInt.empty();
-        }
-    }
-
-    /**
-     * Название и цвет клеймов игрока.
-     *
-     * <p>Годится только для фиктивного игрока: у живого это затёрло бы его
-     * собственные настройки на всей карте.
-     */
-    public static void setAppearance(MinecraftServer server, UUID owner, String name, int color) {
-        if (!isAvailable(server)) {
-            return;
-        }
-        try {
-            ClaimsBridge.setAppearance(server, owner, name, color);
-        } catch (Throwable t) {
-            fail(t);
-        }
-    }
-
     private static void fail(Throwable t) {
         // Ломать игру из-за несовместимости с чужим модом нельзя.
         bridgeFailed = true;
         Gimpanum.LOGGER.error("Мост к Open Parties and Claims отключён после ошибки; "
-                + "клеймы Контрольных точек выключены до перезапуска", t);
+                + "проверка чужих клеймов выключена до перезапуска", t);
     }
 }
