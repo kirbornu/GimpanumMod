@@ -33,7 +33,6 @@ public final class GimpanumCommands {
         CorpseCommand.register(root);
         LoreCommand.register(root);
         ThawingCommand.register(root);
-        com.kirbornu.gimpanum.debug.SpawnProbeCommand.register(root);
 
         event.getDispatcher().register(root);
     }

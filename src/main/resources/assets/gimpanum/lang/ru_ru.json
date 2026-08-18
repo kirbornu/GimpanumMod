@@ -1,7 +1,6 @@
 {
     "itemGroup.gimpanum.main": "Gimpanum",
     "block.gimpanum.core": "Ядро фоносомики",
-    "block.gimpanum.probe": "Зонд конструкций",
     "block.gimpanum.capture_point": "Контрольная точка",
     "gimpanum.point.neutral": "Контрольная точка ничья",
     "gimpanum.point.held_by": "Контрольная точка за экипажем «%s»",
