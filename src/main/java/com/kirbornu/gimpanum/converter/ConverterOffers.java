@@ -15,7 +15,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
@@ -44,14 +46,28 @@ import net.neoforged.fml.loading.FMLPaths;
  *
  * <p>Вес — относительный: предложение с весом 20 выпадает вдвое чаще, чем с
  * весом 10. Ноль и отрицательные значения выключают предложение.
+ *
+ * <p>У предложения есть {@code id}, и найденный в мире конвертер запоминает
+ * именно его, а не условия обмена. Поэтому правка баланса в файле действует
+ * сразу на все уже стоящие конвертеры этого предложения — см.
+ * {@link ConverterBlockEntity#config()}. Идентификатор менять нельзя: сменив
+ * его, вы отвяжете от файла все конвертеры, которые на него ссылались.
  */
 public final class ConverterOffers {
 
-    /** Одно предложение: что берут, сколько, что дают и насколько часто такое встречается. */
-    public record Offer(int weight, ItemStack input, int quota, ItemStack output, int outputCount,
-                        Optional<String> label) {
+    /**
+     * Одно предложение: что берут, сколько, что дают и насколько часто такое встречается.
+     *
+     * @param id постоянное имя предложения, по которому на него ссылается
+     *           поставленный в мире конвертер. Предложение без имени работает
+     *           по-старому — конвертер получит его условия снимком и с файлом
+     *           больше связан не будет.
+     */
+    public record Offer(Optional<String> id, int weight, ItemStack input, int quota, ItemStack output,
+                        int outputCount, Optional<String> label) {
 
         public static final Codec<Offer> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.STRING.optionalFieldOf("id").forGetter(Offer::id),
                 // Умолчание единица, а не десять: тогда в примере видны все веса —
                 // кодек не пишет поле, совпадающее с умолчанием.
                 Codec.INT.optionalFieldOf("weight", 1).forGetter(Offer::weight),
@@ -78,6 +94,9 @@ public final class ConverterOffers {
 
     private static List<Offer> offers = List.of();
 
+    /** Предложения по именам: по ним конвертеры и находят свои условия обмена. */
+    private static Map<String, Offer> byId = Map.of();
+
     private ConverterOffers() {
     }
 
@@ -98,11 +117,43 @@ public final class ConverterOffers {
             try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
                 offers = parse(ops, JsonParser.parseReader(reader));
             }
+            byId = index(offers);
             Gimpanum.LOGGER.info("Предложений Фонос-конвертеров загружено: {}", offers.size());
         } catch (Exception failure) {
             Gimpanum.LOGGER.error("Не прочитались настройки Фонос-конвертеров {}", file, failure);
             offers = List.of();
+            byId = Map.of();
         }
+    }
+
+    /**
+     * Предложение по имени.
+     *
+     * <p>Пусто, если такого имени в файле нет: предложение убрали, переименовали
+     * или файл не прочитался. Конвертер в этом случае доживает на снимке своих
+     * условий, а не встаёт колом.
+     */
+    public static Optional<Offer> byId(String id) {
+        return Optional.ofNullable(byId.get(id));
+    }
+
+    /**
+     * Раскладывает предложения по именам.
+     *
+     * <p>Повтор имени — опечатка владельца сервера, а не замысел: два разных
+     * обмена под одним именем означают, что часть конвертеров молча сменит
+     * товар. Побеждает первое, остальные отбрасываются с записью в журнал.
+     */
+    private static Map<String, Offer> index(List<Offer> loaded) {
+        Map<String, Offer> named = new LinkedHashMap<>();
+        for (Offer offer : loaded) {
+            offer.id().ifPresent(id -> {
+                if (named.putIfAbsent(id, offer) != null) {
+                    Gimpanum.LOGGER.warn("Предложение Фонос-конвертера с повторным именем «{}» пропущено", id);
+                }
+            });
+        }
+        return Map.copyOf(named);
     }
 
     public static int count() {

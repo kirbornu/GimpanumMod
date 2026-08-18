@@ -1,50 +1,59 @@
 {
   "offers": [
     {
+      "id": "precision_mechanism_to_shard",
       "weight": 10,
       "input": {
         "id": "create:precision_mechanism"
       },
-      "quota": 128,
+      "quota": 640,
       "output": {
         "id": "gimpanum:crystal_shard"
       },
-      "label": "Механизмы в осколки"
+      "label": "Механизмы точности в Хрусталь",
+      "output_count": 1000
     },
     {
+      "id": "noodles_to_shard",
       "weight": 10,
       "input": {
         "id": "farmersdelight:vegetable_noodles"
       },
-      "quota": 128,
+      "quota": 160,
       "output": {
         "id": "gimpanum:crystal_shard"
       },
-      "label": "Лапша в осколки"
+      "label": "Овощная лапща в Хрусталь",
+      "output_count": 250
     },
     {
+      "id": "experience_block_to_shard",
       "weight": 10,
       "input": {
         "id": "create:experience_block"
       },
-      "quota": 64,
+      "quota": 640,
       "output": {
         "id": "gimpanum:crystal_shard"
       },
-      "label": "Опыт в осколки"
+      "label": "Блоки опыта в Хрусталь",
+      "output_count": 10
     },
     {
+      "id": "electric_motor_to_shard",
       "weight": 10,
       "input": {
         "id": "createaddition:electric_motor"
       },
-      "quota": 64,
+      "quota": 320,
       "output": {
         "id": "gimpanum:crystal_shard"
       },
-      "label": "Моторы в осколки"
+      "label": "Электрические моторы в Хрусталь",
+      "output_count": 2000
     },
     {
+      "id": "crystal_shard_to_darkness_crystal",
       "weight": 10,
       "input": {
         "id": "gimpanum:crystal_shard"
@@ -53,10 +62,11 @@
       "output": {
         "id": "gimpanum:darkness_crystal"
       },
-      "label": "Осколки в «Кристалл тьмы»",
-      "output_count": 10
+      "label": "Хрусталь в «Кристалл тьмы»",
+      "output_count": 20
     },
     {
+      "id": "crystal_shard_to_fire_bar",
       "weight": 10,
       "input": {
         "id": "gimpanum:crystal_shard"
@@ -65,10 +75,11 @@
       "output": {
         "id": "gimpanum:fire_bar"
       },
-      "label": "Осколки в «Плитка огня»",
-      "output_count": 10
+      "label": "Хрусталь в «Плитка огня»",
+      "output_count": 20
     },
     {
+      "id": "crystal_shard_to_jade_nut",
       "weight": 10,
       "input": {
         "id": "gimpanum:crystal_shard"
@@ -77,10 +88,11 @@
       "output": {
         "id": "gimpanum:jade_nut"
       },
-      "label": "Осколки в «Нефритовая гайка»",
-      "output_count": 10
+      "label": "Хрусталь в «Нефритовая гайка»",
+      "output_count": 20
     },
     {
+      "id": "crystal_shard_to_plant_ancestor",
       "weight": 10,
       "input": {
         "id": "gimpanum:crystal_shard"
@@ -89,10 +101,11 @@
       "output": {
         "id": "gimpanum:plant_ancestor"
       },
-      "label": "Осколки в «Предок растения»",
-      "output_count": 10
+      "label": "Хрусталь в «Предок растения»",
+      "output_count": 20
     },
     {
+      "id": "crystal_shard_to_sparkle_string",
       "weight": 10,
       "input": {
         "id": "gimpanum:crystal_shard"
@@ -101,10 +114,11 @@
       "output": {
         "id": "gimpanum:sparkle_string"
       },
-      "label": "Осколки в «Искрящаяся нить»",
-      "output_count": 10
+      "label": "Хрусталь в «Искрящаяся нить»",
+      "output_count": 20
     },
     {
+      "id": "crystal_shard_to_stone_rod",
       "weight": 10,
       "input": {
         "id": "gimpanum:crystal_shard"
@@ -113,10 +127,11 @@
       "output": {
         "id": "gimpanum:stone_rod"
       },
-      "label": "Осколки в «Стержень камня»",
-      "output_count": 10
+      "label": "Хрусталь в «Стержень камня»",
+      "output_count": 20
     },
     {
+      "id": "crystal_shard_to_tenderness_stone",
       "weight": 10,
       "input": {
         "id": "gimpanum:crystal_shard"
@@ -125,10 +140,11 @@
       "output": {
         "id": "gimpanum:tenderness_stone"
       },
-      "label": "Осколки в «Камень нежности»",
-      "output_count": 10
+      "label": "Хрусталь в «Камень нежности»",
+      "output_count": 20
     },
     {
+      "id": "crystal_shard_to_transparent_ball",
       "weight": 10,
       "input": {
         "id": "gimpanum:crystal_shard"
@@ -137,10 +153,11 @@
       "output": {
         "id": "gimpanum:transparent_ball"
       },
-      "label": "Осколки в «Прозрачный шарик»",
-      "output_count": 10
+      "label": "Хрусталь в «Прозрачный шарик»",
+      "output_count": 20
     },
     {
+      "id": "totem_of_undying_to_purple_queen_talisman",
       "weight": 10,
       "input": {
         "id": "minecraft:totem_of_undying"
@@ -152,17 +169,19 @@
       "label": "Тотемы в талисман"
     },
     {
-      "weight": 10,
+      "id": "heavy_core_to_furious_shell",
+      "weight": 11,
       "input": {
         "id": "minecraft:heavy_core"
       },
-      "quota": 100,
+      "quota": 101,
       "output": {
         "id": "gimpanum:furious_shell"
       },
       "label": "Навершия в снаряд"
     },
     {
+      "id": "enchanted_golden_apple_to_druid_gift",
       "weight": 10,
       "input": {
         "id": "minecraft:enchanted_golden_apple"
@@ -174,6 +193,7 @@
       "label": "Яблоки в дар друидов"
     },
     {
+      "id": "beacon_to_common_claim",
       "weight": 10,
       "input": {
         "id": "minecraft:beacon"

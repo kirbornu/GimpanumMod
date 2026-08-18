@@ -3,6 +3,8 @@ package com.kirbornu.gimpanum.command;
 import com.kirbornu.gimpanum.converter.ConverterBlockEntity;
 import com.kirbornu.gimpanum.converter.ConverterConfig;
 import com.kirbornu.gimpanum.converter.ConverterIndex;
+import com.kirbornu.gimpanum.converter.ConverterOffers;
+import com.kirbornu.gimpanum.network.GimpanumNetwork;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -143,13 +145,23 @@ public final class ConverterCommand {
         return 1;
     }
 
-    /** Перечитывает файл предложений. На уже стоящие конвертеры не влияет. */
+    /**
+     * Перечитывает файл предложений.
+     *
+     * <p>Новые условия действуют сразу на все конвертеры, привязанные к
+     * предложению по имени, — в том числе на стоящие в выгруженных чанках.
+     * Не затрагивает конвертеры, настроенные вручную: настройка командой
+     * отвязывает конвертер от файла.
+     */
     private static int reloadOffers(CommandContext<CommandSourceStack> context) {
         CommandSourceStack source = context.getSource();
-        com.kirbornu.gimpanum.converter.ConverterOffers.load(source.getServer());
-        int count = com.kirbornu.gimpanum.converter.ConverterOffers.count();
+        ConverterOffers.load(source.getServer());
+        int count = ConverterOffers.count();
+        // Подписи конвертеров идут из предложений, а значит могли поменяться
+        // вместе с файлом — метки на карте обязаны это показать.
+        GimpanumNetwork.broadcastMarkers(source.getServer());
         source.sendSuccess(() -> Component.translatable("gimpanum.command.offers_reloaded",
-                count, com.kirbornu.gimpanum.converter.ConverterOffers.path().toString()), true);
+                count, ConverterOffers.path().toString()), true);
         return count;
     }
 }
