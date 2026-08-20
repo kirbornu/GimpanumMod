@@ -1,0 +1,209 @@
+{
+    "neoforge:conditions": [
+        {
+            "type": "neoforge:mod_loaded",
+            "modid": "create"
+        }
+    ],
+    "type": "create:compacting",
+    "ingredients": [
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        },
+        {
+            "item": "gimpanum:crystal_shard"
+        }
+    ],
+    "results": [
+        {
+            "id": "gimpanum:monolithic_crystal"
+        }
+    ],
+    "processingTime": 400
+}

@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import com.kirbornu.gimpanum.lore.LoreBooks;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -27,6 +28,7 @@ public class ConverterBlockEntity extends BlockEntity {
 
     private static final String KEY_CONFIG = "GimpanumConverterConfig";
     private static final String KEY_PROGRESS = "GimpanumConverterProgress";
+    private static final String KEY_OFFER = "GimpanumConverterOffer";
 
     /**
      * Метка «выбрать обмен при первой загрузке».
@@ -46,7 +48,27 @@ public class ConverterBlockEntity extends BlockEntity {
      */
     private static final int ABSORB_INTERVAL_TICKS = 5;
 
-    private ConverterConfig config = ConverterConfig.EMPTY;
+    /** С какой долей обменов конвертер отдаёт вместе с наградой чужую книгу. */
+    private static final float LORE_CHANCE = 0.02F;
+
+    /**
+     * Условия обмена, записанные в самом блоке.
+     *
+     * <p>Для конвертера, настроенного командой, это и есть его настройка. Для
+     * найденного в мире — снимок предложения на случай, если предложение из
+     * файла пропадёт; обычные условия он берёт из файла, см. {@link #config()}.
+     */
+    private ConverterConfig stored = ConverterConfig.EMPTY;
+
+    /**
+     * Имя предложения из {@code converter_offers.json}, если конвертер к нему привязан.
+     *
+     * <p>Ради этой привязки всё и затевалось: пока она есть, правка баланса в
+     * файле действует на уже стоящий конвертер. Настройка командой её снимает —
+     * иначе указанные оператором вручную условия молча перебивались бы файлом.
+     */
+    private Optional<String> offerId = Optional.empty();
+
     private boolean rollPending;
 
     /** Сколько принятого набрано к текущей квоте. */
@@ -58,8 +80,19 @@ public class ConverterBlockEntity extends BlockEntity {
         super(GimpanumContent.PHONOS_CONVERTER_BLOCK_ENTITY.get(), pos, state);
     }
 
+    /**
+     * Действующие условия обмена.
+     *
+     * <p>У привязанного конвертера читаются из файла предложений при каждом
+     * обращении, а не из блока. Поэтому правка файла и
+     * {@code /gimpanum converter offers reload} доходят и до конвертеров в
+     * выгруженных чанках: обходить мир незачем, они возьмут новое сами, как
+     * только их спросят.
+     */
     public ConverterConfig config() {
-        return config;
+        return offerId.flatMap(ConverterOffers::byId)
+                .map(ConverterOffers.Offer::toConfig)
+                .orElse(stored);
     }
 
     public int progress() {
@@ -67,8 +100,11 @@ public class ConverterBlockEntity extends BlockEntity {
     }
 
     public void setConfig(ConverterConfig config) {
-        boolean labelChanged = !this.config.label().equals(config.label());
-        this.config = config;
+        boolean labelChanged = !config().label().equals(config.label());
+        this.stored = config;
+        // Ручная настройка отвязывает от файла: с этого мгновения у конвертера
+        // свои условия, и общая правка баланса его больше не касается.
+        this.offerId = Optional.empty();
         setChanged();
         // Подпись видна на карте, поэтому её правка обязана дойти до игроков.
         if (labelChanged && level != null && level.getServer() != null) {
@@ -88,8 +124,10 @@ public class ConverterBlockEntity extends BlockEntity {
         if (level instanceof ServerLevel serverLevel) {
             if (rollPending) {
                 rollPending = false;
-                ConverterOffers.roll(serverLevel.getRandom())
-                        .ifPresent(offer -> config = offer.toConfig());
+                ConverterOffers.roll(serverLevel.getRandom()).ifPresent(offer -> {
+                    offerId = offer.id();
+                    stored = offer.toConfig();
+                });
                 setChanged();
             }
             ConverterIndex.put(serverLevel.getServer(), level.dimension(), worldPosition);
@@ -111,6 +149,9 @@ public class ConverterBlockEntity extends BlockEntity {
     }
 
     private void tickInternal() {
+        // Условия берутся один раз на осмотр: у привязанного конвертера каждое
+        // обращение лезет в файл предложений, и незачем делать это на предмет.
+        ConverterConfig config = config();
         if (!(level instanceof ServerLevel serverLevel) || !config.isOperational()) {
             return;
         }
@@ -119,13 +160,14 @@ public class ConverterBlockEntity extends BlockEntity {
         }
         absorbTimer = 0;
 
-        int taken = absorbNearbyItems(serverLevel);
-        if (taken <= 0) {
-            return;
+        int taken = absorbNearbyItems(serverLevel, config);
+        if (taken > 0) {
+            progress += taken;
+            setChanged();
         }
-        progress += taken;
-        setChanged();
-        payOut(serverLevel);
+        // Выдача проверяется и без приёма: после правки баланса квота может
+        // оказаться ниже уже набранного, и ждать следующего броска нечестно.
+        payOut(serverLevel, config);
     }
 
     /**
@@ -139,7 +181,7 @@ public class ConverterBlockEntity extends BlockEntity {
      * остаётся в копилке и достанется следующему — в этом и смысл общей
      * копилки.
      */
-    private int absorbNearbyItems(ServerLevel serverLevel) {
+    private int absorbNearbyItems(ServerLevel serverLevel, ConverterConfig config) {
         AABB area = new AABB(worldPosition).inflate(0.5, 0.0, 0.5)
                 .expandTowards(0.0, 1.0, 0.0);
         List<ItemEntity> nearby = serverLevel.getEntitiesOfClass(ItemEntity.class, area,
@@ -158,7 +200,7 @@ public class ConverterBlockEntity extends BlockEntity {
      *
      * <p>Принесённое сверх квоты не пропадает: остаток переходит к следующей.
      */
-    private void payOut(ServerLevel serverLevel) {
+    private void payOut(ServerLevel serverLevel, ConverterConfig config) {
         int quota = config.effectiveQuota();
         int completed = progress / quota;
         if (completed <= 0) {
@@ -167,7 +209,17 @@ public class ConverterBlockEntity extends BlockEntity {
         progress -= completed * quota;
         setChanged();
 
-        drop(serverLevel, completed * config.outputCount());
+        drop(serverLevel, completed * config.outputCount(), config);
+
+        // Изредка вместе с наградой выпадает чужая книга. Конвертеры стоят
+        // там, где кто-то уже побывал, и это единственный способ, которым
+        // лор до сих пор доходил до живых.
+        for (int i = 0; i < completed; i++) {
+            if (serverLevel.random.nextFloat() < LORE_CHANCE) {
+                LoreBooks.roll(serverLevel.random).ifPresent(
+                        book -> Block.popResource(serverLevel, worldPosition.above(), book));
+            }
+        }
     }
 
     /**
@@ -177,7 +229,7 @@ public class ConverterBlockEntity extends BlockEntity {
      * мира, поэтому крупная выдача выпадает несколькими сущностями — так же, как
      * это делает ваниль.
      */
-    private void drop(ServerLevel serverLevel, int total) {
+    private void drop(ServerLevel serverLevel, int total, ConverterConfig config) {
         ItemStack prototype = config.outputStack(1);
         if (prototype.isEmpty()) {
             return;
@@ -201,6 +253,7 @@ public class ConverterBlockEntity extends BlockEntity {
      * консоль, где игрока нет вовсе.
      */
     public void describe(Consumer<Component> sink) {
+        ConverterConfig config = config();
         sink.accept(Component.translatable("gimpanum.converter.header", label())
                 .withStyle(ChatFormatting.GOLD));
 
@@ -226,7 +279,7 @@ public class ConverterBlockEntity extends BlockEntity {
     }
 
     public String label() {
-        return config.label().orElseGet(() -> Component
+        return config().label().orElseGet(() -> Component
                 .translatable("block.gimpanum.phonos_converter").getString());
     }
 
@@ -248,8 +301,9 @@ public class ConverterBlockEntity extends BlockEntity {
         super.loadAdditional(tag, registries);
         progress = tag.getInt(KEY_PROGRESS);
         rollPending = tag.getBoolean(KEY_ROLL);
+        offerId = tag.contains(KEY_OFFER) ? Optional.of(tag.getString(KEY_OFFER)) : Optional.empty();
         if (tag.contains(KEY_CONFIG)) {
-            config = ConverterConfig.CODEC
+            stored = ConverterConfig.CODEC
                     .parse(NbtOps.INSTANCE, tag.get(KEY_CONFIG))
                     .resultOrPartial(error -> Gimpanum.LOGGER.error(
                             "Настройка конвертера в {} повреждена: {}",
@@ -265,7 +319,8 @@ public class ConverterBlockEntity extends BlockEntity {
         if (rollPending) {
             tag.putBoolean(KEY_ROLL, true);
         }
-        ConverterConfig.CODEC.encodeStart(NbtOps.INSTANCE, config)
+        offerId.ifPresent(id -> tag.putString(KEY_OFFER, id));
+        ConverterConfig.CODEC.encodeStart(NbtOps.INSTANCE, stored)
                 .resultOrPartial(error -> Gimpanum.LOGGER.error(
                         "Не удалось сохранить настройку конвертера в {}: {}",
                         getBlockPos().toShortString(), error))

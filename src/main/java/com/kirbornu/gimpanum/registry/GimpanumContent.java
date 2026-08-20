@@ -1,30 +1,35 @@
 package com.kirbornu.gimpanum.registry;
 
 import com.kirbornu.gimpanum.Gimpanum;
-import com.kirbornu.gimpanum.capture.CapturePointBlock;
-import com.kirbornu.gimpanum.capture.CapturePointBlockEntity;
 import com.kirbornu.gimpanum.converter.ConverterBlock;
 import com.kirbornu.gimpanum.converter.ConverterBlockEntity;
 import com.kirbornu.gimpanum.core.CoreBlock;
 import com.kirbornu.gimpanum.core.CoreBlockEntity;
 import com.kirbornu.gimpanum.core.CoreBlockItem;
 import com.kirbornu.gimpanum.core.CoreConfig;
-import com.kirbornu.gimpanum.debug.ProbeBlock;
 import com.kirbornu.gimpanum.dimension.NebulaPortalBlock;
 import com.kirbornu.gimpanum.dimension.NebulaPortalBlockEntity;
 import com.kirbornu.gimpanum.dimension.ScorchingGasBlock;
-import com.kirbornu.gimpanum.debug.ProbeBlockEntity;
 import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
 import com.kirbornu.gimpanum.item.NebulaWoodItem;
+import com.kirbornu.gimpanum.item.PurpleQueenTalismanItem;
 import com.kirbornu.gimpanum.recipe.ThawingRecipe;
+import com.kirbornu.gimpanum.worldgen.NebulaFruitBlock;
+import com.kirbornu.gimpanum.worldgen.NebulaGasFeature;
 import com.kirbornu.gimpanum.worldgen.NebulaTreeFeature;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.Item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SignItem;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SimpleCookingSerializer;
 import net.minecraft.world.level.block.Block;
@@ -38,8 +43,12 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
+import net.minecraft.world.level.block.SignBlock;
+import net.minecraft.world.level.block.StandingSignBlock;
+import net.minecraft.world.level.block.WallSignBlock;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -76,25 +85,6 @@ public final class GimpanumContent {
             DeferredRegister.create(Registries.RECIPE_SERIALIZER, Gimpanum.MOD_ID);
     public static final DeferredRegister<Feature<?>> FEATURES =
             DeferredRegister.create(Registries.FEATURE, Gimpanum.MOD_ID);
-
-    /**
-     * Диагностический блок-зонд. Не часть задуманной механики — служит только
-     * для выяснения того, как Sable ведёт себя с блоками на конструкциях.
-     */
-    public static final DeferredBlock<ProbeBlock> PROBE = BLOCKS.registerBlock(
-            "probe",
-            ProbeBlock::new,
-            BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.COLOR_LIGHT_BLUE)
-                    .strength(1.0F)
-                    .sound(SoundType.METAL)
-    );
-
-    public static final DeferredItem<?> PROBE_ITEM = ITEMS.registerSimpleBlockItem(PROBE);
-
-    public static final Supplier<BlockEntityType<ProbeBlockEntity>> PROBE_BLOCK_ENTITY =
-            BLOCK_ENTITIES.register("probe",
-                    () -> BlockEntityType.Builder.of(ProbeBlockEntity::new, PROBE.get()).build(null));
 
     /**
      * Ядро. {@code noLootTable} — принципиально: обычный игрок может Ядро
@@ -135,38 +125,6 @@ public final class GimpanumContent {
             BLOCK_ENTITIES.register("core",
                     () -> BlockEntityType.Builder.of(CoreBlockEntity::new, CORE.get()).build(null));
 
-    /**
-     * Контрольная точка. {@code strength(-1, 3600000)} — те же числа, что у
-     * бедрока, и это не украшение:
-     * <ul>
-     *   <li>нулевая прочность {@code -1} делает блок неломаемым в выживании и
-     *       заодно отсеивает его из сборки конструкций — {@code Simulated}
-     *       проверяет ровно это значение;</li>
-     *   <li>сопротивление взрыву читает и Create Big Cannons через
-     *       безаргументный {@code getExplosionResistance()}, поэтому снаряды
-     *       точку не берут и датапак брони ей не нужен.</li>
-     * </ul>
-     *
-     * <p>{@code noLootTable}: точку, как и Ядро, нельзя унести — только снести
-     * в креативе.
-     */
-    public static final DeferredBlock<CapturePointBlock> CAPTURE_POINT = BLOCKS.registerBlock(
-            "capture_point",
-            CapturePointBlock::new,
-            BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.COLOR_CYAN)
-                    .sound(SoundType.NETHERITE_BLOCK)
-                    .strength(-1.0F, 3_600_000.0F)
-                    .lightLevel(state -> 10)
-                    .noLootTable()
-    );
-
-    public static final DeferredItem<?> CAPTURE_POINT_ITEM = ITEMS.registerSimpleBlockItem(CAPTURE_POINT);
-
-    public static final Supplier<BlockEntityType<CapturePointBlockEntity>> CAPTURE_POINT_BLOCK_ENTITY =
-            BLOCK_ENTITIES.register("capture_point",
-                    () -> BlockEntityType.Builder.of(CapturePointBlockEntity::new,
-                            CAPTURE_POINT.get()).build(null));
 
     /**
      * Космический песок — из него состоит почти весь Гимпанум.
@@ -242,6 +200,28 @@ public final class GimpanumContent {
     public static final DeferredItem<?> FROZEN_ORGANICS_ITEM = ITEMS.registerSimpleBlockItem(FROZEN_ORGANICS);
 
     /**
+     * Монолитный хрусталь — осколки, спрессованные в цельный камень.
+     *
+     * <p>Это хранилище и ничего больше: стак осколков уходит под пресс в чаше и
+     * возвращается оттуда механической пилой без потерь. Выигрыш — одна ячейка
+     * вместо шестидесяти четырёх, а заодно повод держать пресс включённым.
+     *
+     * <p>Ровно стак, а не больше: чаша Create принимает за операцию не более 64
+     * ингредиентов, и обойти этот потолок можно только вторым предметом —
+     * полуфабрикатом, которого в моде нет.
+     */
+    public static final DeferredBlock<Block> MONOLITHIC_CRYSTAL = BLOCKS.registerSimpleBlock(
+            "monolithic_crystal",
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.QUARTZ)
+                    .sound(SoundType.AMETHYST)
+                    .strength(1.5F)
+                    .requiresCorrectToolForDrops()
+    );
+
+    public static final DeferredItem<?> MONOLITHIC_CRYSTAL_ITEM = ITEMS.registerSimpleBlockItem(MONOLITHIC_CRYSTAL);
+
+    /**
      * Небула-бревно — ствол пещерной поросли Гимпанума.
      *
      * <p>Ведёт себя как обычное бревно во всём, кроме огня: в мире без воздуха
@@ -259,6 +239,25 @@ public final class GimpanumContent {
     public static final DeferredItem<NebulaWoodItem> NEBULA_LOG_ITEM = ITEMS.registerItem(
             "nebula_log",
             properties -> new NebulaWoodItem(NEBULA_LOG.get(), properties)
+    );
+
+    /**
+     * Небула-плод — то, ради чего к поросли и ходят.
+     *
+     * <p>Предмета у него нет: плод не ставят, а снимают, и остаётся от него
+     * Осколок хрусталя. Поэтому и в творческой вкладке его не найти —
+     * единственный способ добыть плод в том, чтобы найти дерево, на котором он
+     * вырос.
+     */
+    public static final DeferredBlock<NebulaFruitBlock> NEBULA_FRUIT = BLOCKS.registerBlock(
+            "nebula_fruit",
+            NebulaFruitBlock::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_LIGHT_BLUE)
+                    .sound(SoundType.WOOD)
+                    .strength(0.2F)
+                    .noOcclusion()
+                    .pushReaction(PushReaction.DESTROY)
     );
 
     /** Небула-доски. Лежат в ванильном теге досок, но не горят. */
@@ -351,6 +350,40 @@ public final class GimpanumContent {
     public static final DeferredItem<NebulaWoodItem> NEBULA_PRESSURE_PLATE_ITEM =
             woodItem("nebula_pressure_plate", NEBULA_PRESSURE_PLATE);
 
+    /**
+     * Свой тип древесины — только ради табличек.
+     *
+     * <p>Табличка рисуется отдельной моделью с собственной текстурой, и
+     * связывает блок с текстурой именно {@code WoodType}. Всему остальному
+     * набору он не нужен, поэтому и заведён так поздно.
+     */
+    public static final WoodType NEBULA_WOOD_TYPE =
+            WoodType.register(new WoodType(Gimpanum.MOD_ID + ":nebula", SET));
+
+    public static final DeferredBlock<StandingSignBlock> NEBULA_SIGN = BLOCKS.registerBlock(
+            "nebula_sign",
+            properties -> new StandingSignBlock(NEBULA_WOOD_TYPE, properties),
+            signProperties());
+
+    public static final DeferredBlock<WallSignBlock> NEBULA_WALL_SIGN = BLOCKS.registerBlock(
+            "nebula_wall_sign",
+            properties -> new WallSignBlock(NEBULA_WOOD_TYPE, properties),
+            signProperties());
+
+    /** Предмет один на оба блока: игра сама решает, ставить стоячую или настенную. */
+    public static final DeferredItem<SignItem> NEBULA_SIGN_ITEM = ITEMS.registerItem(
+            "nebula_sign",
+            properties -> new SignItem(properties.stacksTo(16),
+                    NEBULA_SIGN.get(), NEBULA_WALL_SIGN.get()));
+
+    private static BlockBehaviour.Properties signProperties() {
+        return BlockBehaviour.Properties.of()
+                .mapColor(MapColor.COLOR_PURPLE)
+                .sound(SoundType.WOOD)
+                .noCollission()
+                .strength(1.0F);
+    }
+
     private static BlockBehaviour.Properties woodProperties() {
         return BlockBehaviour.Properties.of()
                 .mapColor(MapColor.COLOR_PURPLE)
@@ -372,6 +405,10 @@ public final class GimpanumContent {
     /** Фича, растящая эту самую поросль на полу пещер. */
     public static final DeferredHolder<Feature<?>, NebulaTreeFeature> NEBULA_TREE =
             FEATURES.register("nebula_tree", () -> new NebulaTreeFeature(NoneFeatureConfiguration.CODEC));
+
+    /** Озёра раскалённого газа: редкие, но огромные. */
+    public static final DeferredHolder<Feature<?>, NebulaGasFeature> NEBULA_GAS =
+            FEATURES.register("nebula_gas", () -> new NebulaGasFeature(NoneFeatureConfiguration.CODEC));
 
     /**
      * Сериализатор переплавки с непредсказуемым выходом.
@@ -420,7 +457,7 @@ public final class GimpanumContent {
     /**
      * Фонос-конвертер — обменник, на котором держится экономика карты.
      *
-     * <p>Прочность и сопротивление те же, что у Контрольной точки, и по тем же
+     * <p>Прочность и сопротивление те же, что у Фонос-конвертера, и по тем же
      * причинам: {@code -1} отсеивает блок из сборки конструкций и делает его
      * неломаемым, а 3 600 000 останавливает снаряды Create Big Cannons. Обменник
      * обязан пережить бой, который идёт вокруг него.
@@ -460,21 +497,73 @@ public final class GimpanumContent {
     );
 
     /**
-     * Хрусталик — валюта и ничего кроме. Ни свойств, ни применений: весь смысл в
-     * том, чтобы его копили и обменивали между собой.
+     * Осколок хрусталя — то, что остаётся от некрофагов.
      *
-     * <p>{@code fireResistant} — единственная поблажка, та же, что у Печати:
-     * накопленное не должно сгорать в лаве. Срок жизни выброшенного Хрусталика
-     * ванильный, в отличие от Печати.
-     *
-     * <p>Стопка в 99 — не выбор, а потолок игры: {@code ItemStack.CODEC}
-     * принимает количество только в диапазоне {@code 1..99}, и через этот кодек
-     * сохраняется каждый предмет в каждом сундуке. Стопка больше не пережила бы
-     * сохранение мира.
+     * <p>Обыкновенный предмет без свойств: вся его ценность в том, во что его
+     * можно обменять, а это задаётся настройкой конвертеров, а не кодом.
      */
-    public static final DeferredItem<Item> CRYSTAL_BEAD = ITEMS.registerSimpleItem(
-            "crystal_bead",
-            new Item.Properties().fireResistant().stacksTo(MAX_VANILLA_STACK)
+    public static final DeferredItem<Item> CRYSTAL_SHARD = ITEMS.registerSimpleItem("crystal_shard");
+
+    /**
+     * Восемь диковин, которые Фонос-конвертеры выдают за Осколки хрусталя.
+     *
+     * <p>Ни свойств, ни применений, кроме четырёх рецептов Create: это сырьё и
+     * только сырьё. Смысл у них общий — превратить накопленные осколки в то,
+     * что иначе не достать, и цена у всех восьми одинаковая.
+     */
+    public static final DeferredItem<Item> DARKNESS_CRYSTAL = ITEMS.registerSimpleItem("darkness_crystal");
+    public static final DeferredItem<Item> FIRE_BAR = ITEMS.registerSimpleItem("fire_bar");
+    public static final DeferredItem<Item> JADE_NUT = ITEMS.registerSimpleItem("jade_nut");
+    public static final DeferredItem<Item> PLANT_ANCESTOR = ITEMS.registerSimpleItem("plant_ancestor");
+    public static final DeferredItem<Item> SPARKLE_STRING = ITEMS.registerSimpleItem("sparkle_string");
+    public static final DeferredItem<Item> STONE_ROD = ITEMS.registerSimpleItem("stone_rod");
+    public static final DeferredItem<Item> TENDERNESS_STONE = ITEMS.registerSimpleItem("tenderness_stone");
+    public static final DeferredItem<Item> TRANSPARENT_BALL = ITEMS.registerSimpleItem("transparent_ball");
+
+    /**
+     * Дар друидов — то же зачарованное золотое яблоко, доведённое до предела.
+     *
+     * <p>Ставка на живучесть, а не на убойность: поглощение на тридцать два
+     * сердца поверх восьми добавленных, сопротивление III и регенерация IV.
+     * Съевшего трудно убить и нечем поторопить — он не бьёт сильнее, он просто
+     * не умирает.
+     *
+     * <p>{@code ENCHANTMENT_GLINT_OVERRIDE} даёт блеск без единого зачарования:
+     * так же светится ванильное зачарованное яблоко, и по той же причине —
+     * чтобы обычное от особенного отличалось с одного взгляда.
+     */
+    public static final DeferredItem<Item> DRUID_GIFT = ITEMS.registerSimpleItem(
+            "druid_gift",
+            new Item.Properties()
+                    .rarity(Rarity.EPIC)
+                    .component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true)
+                    .food(new FoodProperties.Builder()
+                            .nutrition(4)
+                            .saturationModifier(1.2F)
+                            .alwaysEdible()
+                            .effect(() -> new MobEffectInstance(MobEffects.REGENERATION, 900, 3), 1.0F)
+                            .effect(() -> new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 9600, 2), 1.0F)
+                            .effect(() -> new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 12000, 0), 1.0F)
+                            .effect(() -> new MobEffectInstance(MobEffects.ABSORPTION, 9600, 7), 1.0F)
+                            .effect(() -> new MobEffectInstance(MobEffects.HEALTH_BOOST, 9600, 3), 1.0F)
+                            .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 12000, 0), 1.0F)
+                            .build())
+    );
+
+    /**
+     * Талисман лиловой королевы — возвращает всё из последнего трупа владельца.
+     *
+     * <p>Работает через мод Corpse и только с ним; поведение — в
+     * {@link PurpleQueenTalismanItem}, разговор с чужим модом — в
+     * {@link com.kirbornu.gimpanum.integration.CorpseBridge}.
+     *
+     * <p>{@code fireResistant} по той же причине, что у Печати: страховку от
+     * смерти обидно потерять, свалившись в лаву вместе с ней.
+     */
+    public static final DeferredItem<PurpleQueenTalismanItem> PURPLE_QUEEN_TALISMAN = ITEMS.registerItem(
+            "purple_queen_talisman",
+            PurpleQueenTalismanItem::new,
+            new Item.Properties().rarity(Rarity.EPIC).stacksTo(16).fireResistant()
     );
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register(
@@ -484,7 +573,6 @@ public final class GimpanumContent {
                     .icon(() -> new ItemStack(CORE.get()))
                     .displayItems((params, output) -> {
                         output.accept(CORE_ITEM.get());
-                        output.accept(CAPTURE_POINT_ITEM.get());
                         output.accept(PHONOS_CONVERTER_ITEM.get());
                         output.accept(COSMIC_SAND_ITEM.get());
                         output.accept(COSMIC_ASH_ITEM.get());
@@ -503,13 +591,24 @@ public final class GimpanumContent {
                         output.accept(NEBULA_TRAPDOOR_ITEM.get());
                         output.accept(NEBULA_BUTTON_ITEM.get());
                         output.accept(NEBULA_PRESSURE_PLATE_ITEM.get());
+                        output.accept(NEBULA_SIGN_ITEM.get());
                         output.accept(SEAL.get());
-                        output.accept(CRYSTAL_BEAD.get());
+                        output.accept(CRYSTAL_SHARD.get());
+                        output.accept(MONOLITHIC_CRYSTAL_ITEM.get());
+                        output.accept(DARKNESS_CRYSTAL.get());
+                        output.accept(FIRE_BAR.get());
+                        output.accept(JADE_NUT.get());
+                        output.accept(PLANT_ANCESTOR.get());
+                        output.accept(SPARKLE_STRING.get());
+                        output.accept(STONE_ROD.get());
+                        output.accept(TENDERNESS_STONE.get());
+                        output.accept(TRANSPARENT_BALL.get());
+                        output.accept(DRUID_GIFT.get());
+                        output.accept(PURPLE_QUEEN_TALISMAN.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.COMET_WRAITH_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.DUNE_WALKER_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.SPACE_DEVOURER_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.PLASMA_BOLT_EGG.get());
-                        output.accept(PROBE_ITEM.get());
                     })
                     .build()
     );
@@ -525,10 +624,5 @@ public final class GimpanumContent {
         DATA_COMPONENTS.register(modBus);
         RECIPE_SERIALIZERS.register(modBus);
         FEATURES.register(modBus);
-    }
-
-    /** Удобный доступ без {@code .get()} на каждом вызове. */
-    public static Block probe() {
-        return PROBE.get();
     }
 }

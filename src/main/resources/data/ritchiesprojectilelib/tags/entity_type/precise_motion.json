@@ -1,0 +1,9 @@
+{
+    "replace": false,
+    "values": [
+        {
+            "id": "gimpanum:furious_shell",
+            "required": false
+        }
+    ]
+}

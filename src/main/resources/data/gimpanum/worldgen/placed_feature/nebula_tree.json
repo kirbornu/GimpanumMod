@@ -2,8 +2,12 @@
     "feature": "gimpanum:nebula_tree",
     "placement": [
         {
+            "type": "minecraft:rarity_filter",
+            "chance": 5
+        },
+        {
             "type": "minecraft:count",
-            "count": 8
+            "count": 5
         },
         {
             "type": "minecraft:in_square"

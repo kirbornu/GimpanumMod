@@ -82,6 +82,22 @@ def xaeroJar = file("other_mods_in_modpack/xaerominimap-neoforge-${minecraft_ver
 // чанк не клеймит.
 def opacJar = file("other_mods_in_modpack/open-parties-and-claims-neoforge-${minecraft_version}-${opac_version}.jar")
 
+// Create Big Cannons — Яростный снаряд наследует их снаряд, поэтому это
+// единственная зависимость мода, без которой часть содержимого не появится.
+// Create и Ritchie's Projectile Library нужны лишь затем, чтобы javac
+// разрешил сигнатуры, унаследованные снарядом.
+def cbcJars = files(
+        "other_mods_in_modpack/createbigcannons-${cbc_version}.jar",
+        "other_mods_in_modpack/create-${minecraft_version}-${create_version}.jar",
+        "other_mods_in_modpack/ritchiesprojectilelib-${rpl_version}-neoforge.jar"
+).filter { it.exists() }
+
+// JEI — просмотрщик рецептов. Нужен только затем, чтобы показать все возможные
+// находки Замороженной органики: у неё случайный выход, и обычная запись
+// рецепта врала бы одним предметом. Без JEI мод работает полностью, просто
+// показывать находки негде.
+def jeiJar = file("other_mods_in_modpack/jei-${minecraft_version}-neoforge-${jei_version}.jar")
+
 dependencies {
     if (sableJar.exists()) {
         compileOnly files(sableJar)
@@ -100,6 +116,18 @@ dependencies {
         compileOnly files(opacJar)
     } else {
         logger.lifecycle("Open Parties and Claims jar not found at ${opacJar} — building without claim support.")
+    }
+
+    if (!cbcJars.isEmpty()) {
+        compileOnly cbcJars
+    } else {
+        logger.lifecycle("Create Big Cannons jars not found — building without the Furious Shell.")
+    }
+
+    if (jeiJar.exists()) {
+        compileOnly files(jeiJar)
+    } else {
+        logger.lifecycle("JEI jar not found at ${jeiJar} — building without the thawing recipe screen.")
     }
 
     if (xaeroJar.exists()) {

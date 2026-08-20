@@ -88,8 +88,11 @@ public class CoreBlockEntity extends BlockEntity {
             return;
         }
         MinecraftServer server = level.getServer();
-        if (server != null && !previous.name().equals(config.name())) {
-            CoreIndex.put(server, config.name(), coreId(), level.dimension(), worldPosition);
+        if (server != null) {
+            // Указатель обновляется на любую правку, а не только на
+            // переименование: он хранит снимок настройки, и по нему консоль
+            // показывает Ядра, чьи чанки давно выгружены.
+            CoreIndex.put(server, config.name(), coreId(), level.dimension(), worldPosition, config);
         }
         if (previous.invulnerable() != config.invulnerable()) {
             syncInvulnerableState();
@@ -146,7 +149,7 @@ public class CoreBlockEntity extends BlockEntity {
                 config = config.withName(CoreIndex.nextFreeName(server));
                 setChanged();
             }
-            CoreIndex.put(server, config.name(), coreId(), level.dimension(), worldPosition);
+            CoreIndex.put(server, config.name(), coreId(), level.dimension(), worldPosition, config);
         }
         stateSyncPending = true;
     }

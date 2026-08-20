@@ -1,6 +1,7 @@
 {
     "replace": false,
     "values": [
-        "gimpanum:frozen_organics"
+        "gimpanum:frozen_organics",
+        "gimpanum:monolithic_crystal"
     ]
 }

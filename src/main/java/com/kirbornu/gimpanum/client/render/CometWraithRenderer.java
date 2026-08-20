@@ -1,6 +1,7 @@
 package com.kirbornu.gimpanum.client.render;
 
 import com.kirbornu.gimpanum.Gimpanum;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.entity.AllayRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
@@ -13,6 +14,12 @@ public class CometWraithRenderer extends AllayRenderer {
 
     public CometWraithRenderer(EntityRendererProvider.Context context) {
         super(context);
+    }
+
+    /** Вдвое крупнее аллая — чтобы читался как угроза, а не как огонёк. */
+    @Override
+    protected void scale(Allay entity, PoseStack pose, float partialTick) {
+        pose.scale(2.0F, 2.0F, 2.0F);
     }
 
     @Override

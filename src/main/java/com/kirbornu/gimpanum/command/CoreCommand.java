@@ -36,22 +36,24 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.IntFunction;
 import java.util.function.UnaryOperator;
 
 /**
  * Настройка Ядра командами.
  *
- * <p>Ядро адресуется условным именем — координаты блока на физической
- * конструкции достигают восьмизначных значений и для ручного ввода непригодны.
- * Имя выдаётся автоматически при первой загрузке ({@code core1}, {@code core2}
- * и далее; приставка меняется командой {@code default_name}) и
- * переименовывается командой {@code name}. Ветка {@code at} оставлена на
- * случай, когда имя неизвестно.
+ * <p>Всё лежит под {@code /gimpanum core}. Ядро адресуется условным именем —
+ * координаты блока на физической конструкции достигают восьмизначных значений
+ * и для ручного ввода непригодны. Имя выдаётся автоматически при первой
+ * загрузке ({@code core1}, {@code core2} и далее; приставка меняется командой
+ * {@code /gimpanum core default_name}) и переименовывается командой
+ * {@code name}. Ветка {@code at} оставлена на случай, когда имя неизвестно.
  *
- * <p>Имя может быть образцом: {@code tank+} задаёт все Ядра, чьё имя
- * начинается с {@code tank}, и подкоманда применится к каждому. Переименование
- * так работать не может — имена обязаны оставаться уникальными.
+ * <p>Имя может быть образцом: {@code /gimpanum core tank+ arm} задаёт все
+ * Ядра, чьё имя начинается с {@code tank}, и подкоманда применится к каждому.
+ * Переименование так работать не может — имена обязаны оставаться
+ * уникальными.
  */
 public final class CoreCommand {
 
@@ -119,28 +121,41 @@ public final class CoreCommand {
     }
 
     /**
-     * Навешивает ветки Ядра на общий корень {@code /gimpanum}.
+     * Навешивает ветку {@code core} на общий корень {@code /gimpanum}.
      *
      * <p>Корень строит и регистрирует {@link GimpanumCommands}: веток у мода
-     * теперь несколько, и собирать дерево внутри одной из них значило бы, что
-     * она знает про все остальные.
+     * несколько, и собирать дерево внутри одной из них значило бы, что она
+     * знает про все остальные.
+     *
+     * <p>Имя Ядра — это слово-аргумент, и Brigadier при разборе всегда
+     * предпочитает ему совпавший литерал. Пока ветка имён стояла прямо в
+     * корне, каждое слово рядом с ней отнимало у Ядер возможное имя: Ядро,
+     * названное {@code config} или {@code portal}, переставало отзываться, и
+     * догадаться о причине по сообщению об ошибке было нельзя. Собственная
+     * ветка {@code core} сводит число таких слов к трём — {@code list},
+     * {@code default_name} и {@code at}, — и все три относятся к самим Ядрам,
+     * а не к соседним частям мода, которые будут появляться и дальше.
      */
     public static void register(LiteralArgumentBuilder<CommandSourceStack> root,
                                 CommandBuildContext buildContext) {
-        root.then(Commands.literal("list").executes(CoreCommand::list));
+        LiteralArgumentBuilder<CommandSourceStack> core = Commands.literal("core");
+
+        core.then(Commands.literal("list").executes(CoreCommand::list));
 
         // Приставка для имён новых Ядер: общая на весь сервер, не для отдельного Ядра.
-        root.then(Commands.literal("default_name")
+        core.then(Commands.literal("default_name")
                 .then(Commands.argument("prefix", StringArgumentType.word())
                         .executes(CoreCommand::setDefaultName)));
 
-        root.then(subcommands(
+        core.then(subcommands(
                 Commands.argument("core", StringArgumentType.word()).suggests(CORE_NAMES),
                 CoreCommand::byName, buildContext));
 
-        root.then(Commands.literal("at").then(subcommands(
+        core.then(Commands.literal("at").then(subcommands(
                 Commands.argument("pos", BlockPosArgument.blockPos()),
                 CoreCommand::byPosition, buildContext)));
+
+        root.then(core);
     }
 
     /**
@@ -155,6 +170,13 @@ public final class CoreCommand {
                 .then(Commands.literal("name")
                         .then(Commands.argument("new_name", StringArgumentType.word())
                                 .executes(context -> rename(context, resolver))))
+                // Удаление и подрыв на расстоянии. Ядро может стоять на
+                // корабле в выгруженном чанке за миллионы блоков — дойти до
+                // него ногами и снести киркой иногда попросту невозможно.
+                .then(Commands.literal("delete")
+                        .executes(context -> delete(context, resolver, false)))
+                .then(Commands.literal("detonate")
+                        .executes(context -> delete(context, resolver, true)))
                 .then(Commands.literal("arm")
                         .executes(context -> setArmed(context, resolver, true)))
                 .then(Commands.literal("disarm")
@@ -390,6 +412,33 @@ public final class CoreCommand {
         context.getSource().sendSuccess(
                 () -> Component.translatable("gimpanum.command.renamed", newName), true);
         return 1;
+    }
+
+    /**
+     * Убирает выбранные Ядра из мира.
+     *
+     * <p>Чанк подгружается: смысл команды именно в том, чтобы дотянуться до
+     * Ядра, до которого не дойти. Подрыв отличается от удаления только тем,
+     * что оставляет предохранитель снятым, и потому запускает всё посмертное —
+     * взрыв, команды и Печать.
+     */
+    private static int delete(CommandContext<CommandSourceStack> context, CoreResolver resolver,
+                              boolean detonate) throws CommandSyntaxException {
+        MinecraftServer server = context.getSource().getServer();
+        List<UUID> targets = new ArrayList<>();
+        for (CoreBlockEntity core : resolver.resolve(context, true)) {
+            targets.add(core.coreId());
+        }
+        int removed = 0;
+        for (UUID coreId : targets) {
+            if (CoreIndex.delete(server, coreId, detonate)) {
+                removed++;
+            }
+        }
+        int count = removed;
+        context.getSource().sendSuccess(() -> Component.translatable(
+                detonate ? "gimpanum.command.detonated" : "gimpanum.command.deleted", count), true);
+        return count;
     }
 
     private static int setDefaultName(CommandContext<CommandSourceStack> context) {

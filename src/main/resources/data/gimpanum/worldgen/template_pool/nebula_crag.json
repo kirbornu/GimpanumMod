@@ -3,7 +3,7 @@
     "fallback": "minecraft:empty",
     "elements": [
         {
-            "weight": 1,
+            "weight": 6,
             "element": {
                 "element_type": "minecraft:single_pool_element",
                 "location": "gimpanum:nebula_crag_1",
@@ -12,7 +12,7 @@
             }
         },
         {
-            "weight": 1,
+            "weight": 10,
             "element": {
                 "element_type": "minecraft:single_pool_element",
                 "location": "gimpanum:nebula_crag_2",
@@ -21,7 +21,7 @@
             }
         },
         {
-            "weight": 1,
+            "weight": 14,
             "element": {
                 "element_type": "minecraft:single_pool_element",
                 "location": "gimpanum:nebula_crag_3",
@@ -30,10 +30,46 @@
             }
         },
         {
-            "weight": 1,
+            "weight": 18,
             "element": {
                 "element_type": "minecraft:single_pool_element",
                 "location": "gimpanum:nebula_crag_4",
+                "processors": "minecraft:empty",
+                "projection": "rigid"
+            }
+        },
+        {
+            "weight": 18,
+            "element": {
+                "element_type": "minecraft:single_pool_element",
+                "location": "gimpanum:nebula_crag_5",
+                "processors": "minecraft:empty",
+                "projection": "rigid"
+            }
+        },
+        {
+            "weight": 14,
+            "element": {
+                "element_type": "minecraft:single_pool_element",
+                "location": "gimpanum:nebula_crag_6",
+                "processors": "minecraft:empty",
+                "projection": "rigid"
+            }
+        },
+        {
+            "weight": 10,
+            "element": {
+                "element_type": "minecraft:single_pool_element",
+                "location": "gimpanum:nebula_crag_7",
+                "processors": "minecraft:empty",
+                "projection": "rigid"
+            }
+        },
+        {
+            "weight": 10,
+            "element": {
+                "element_type": "minecraft:single_pool_element",
+                "location": "gimpanum:nebula_crag_8",
                 "processors": "minecraft:empty",
                 "projection": "rigid"
             }

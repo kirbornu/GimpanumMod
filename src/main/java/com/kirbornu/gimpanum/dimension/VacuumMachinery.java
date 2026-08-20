@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -18,6 +19,7 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,6 +61,12 @@ public final class VacuumMachinery {
     private static boolean fanFailed;
     private static Method getAirCurrent;
     private static Field maxDistance;
+    private static Field bounds;
+    private static Field segments;
+    private static Field kineticSpeed;
+
+    /** Коробка нулевого размера: поток, который ничего не задевает. */
+    private static final AABB NOTHING = new AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
     /** Сколько воздуха было в каждом баллоне при прошлом осмотре. */
     private static Map<BlockPos, Integer> lastSeen = new HashMap<>();
@@ -160,6 +168,18 @@ public final class VacuumMachinery {
 
     // ── Вентилятор ──────────────────────────────────────────────────────
 
+    /**
+     * Останавливает Вентилятор в корпусе.
+     *
+     * <p>Обнулить одну лишь дальность потока мало — так и вышло с первой
+     * попытки: Вентилятор пересобирает поток по своему расписанию и оживал
+     * между осмотрами. Поэтому режем в двух местах. Скорость вращения самого
+     * блока ставим в ноль — тогда любая пересборка даёт пустой поток; и заодно
+     * гасим уже собранный, обнуляя дальность, коробку и отрезки.
+     *
+     * <p>Со стороны это выглядит так: вал крутится, а Вентилятор стоит. Это и
+     * есть нужное впечатление — лопастям не за что зацепиться.
+     */
     private static void silenceFan(BlockEntity blockEntity) {
         if (fanFailed) {
             return;
@@ -167,17 +187,40 @@ public final class VacuumMachinery {
         try {
             if (getAirCurrent == null) {
                 getAirCurrent = blockEntity.getClass().getMethod("getAirCurrent");
-                maxDistance = getAirCurrent.getReturnType().getField("maxDistance");
+                Class<?> current = getAirCurrent.getReturnType();
+                maxDistance = current.getField("maxDistance");
+                bounds = current.getField("bounds");
+                segments = current.getField("segments");
+                kineticSpeed = findSpeedField(blockEntity.getClass());
+                kineticSpeed.setAccessible(true);
             }
+            kineticSpeed.setFloat(blockEntity, 0.0F);
+
             Object current = getAirCurrent.invoke(blockEntity);
-            if (current != null && maxDistance.getFloat(current) != 0.0F) {
+            if (current != null) {
                 maxDistance.setFloat(current, 0.0F);
+                bounds.set(current, NOTHING);
+                if (segments.get(current) instanceof List<?> list) {
+                    list.clear();
+                }
             }
         } catch (Throwable failure) {
             fanFailed = true;
             Gimpanum.LOGGER.warn("Не добрался до потока Вентилятора Create — "
                     + "в Гимпануме он будет дуть как ни в чём не бывало", failure);
         }
+    }
+
+    /** Поле скорости лежит в базовом кинетическом классе, не в самом Вентиляторе. */
+    private static Field findSpeedField(Class<?> type) throws NoSuchFieldException {
+        for (Class<?> cls = type; cls != null; cls = cls.getSuperclass()) {
+            try {
+                return cls.getDeclaredField("speed");
+            } catch (NoSuchFieldException ignored) {
+                // ищем выше по цепочке
+            }
+        }
+        throw new NoSuchFieldException("speed");
     }
 
     private static void resolveTypes() {

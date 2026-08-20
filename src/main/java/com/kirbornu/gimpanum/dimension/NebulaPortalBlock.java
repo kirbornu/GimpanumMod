@@ -44,10 +44,26 @@ public class NebulaPortalBlock extends Block implements EntityBlock {
         return Shapes.empty();
     }
 
+    /**
+     * Вход в плоскость — перенос. Но только вход, а не стояние в ней.
+     *
+     * <p>Пока существо остаётся внутри, откат взводится заново каждый тик, и
+     * потому никогда не истекает. Без этого выходило скверно: вышедший из
+     * портала стоит рядом с аркой, задевает плоскость краем, откат тем
+     * временем тикает — и через пятнадцать секунд его утаскивает обратно, хотя
+     * он и шагу не сделал. Так же, слово в слово, поступает и ванильный портал
+     * в {@code Entity.setAsInsidePortal}.
+     */
     @Override
     protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
-        if (level instanceof ServerLevel serverLevel && !entity.isOnPortalCooldown()
-                && entity.canChangeDimensions(level, serverLevel)) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        if (entity.isOnPortalCooldown()) {
+            entity.setPortalCooldown();
+            return;
+        }
+        if (entity.canChangeDimensions(level, serverLevel)) {
             NebulaPortal.teleport(serverLevel, entity);
         }
     }

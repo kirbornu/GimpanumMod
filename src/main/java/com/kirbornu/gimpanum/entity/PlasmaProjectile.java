@@ -6,10 +6,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.projectile.Fireball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -24,6 +26,9 @@ import net.minecraft.world.phys.Vec3;
  */
 public class PlasmaProjectile extends Fireball {
 
+    /** Урон от самой молнии — столько же, сколько у настоящей. */
+    private static final float LIGHTNING_DAMAGE = 10.0F;
+
     public PlasmaProjectile(EntityType<? extends PlasmaProjectile> type, Level level) {
         super(type, level);
         this.setItem(new ItemStack(Items.PRISMARINE_CRYSTALS));
@@ -32,6 +37,18 @@ public class PlasmaProjectile extends Fireball {
     public PlasmaProjectile(Level level, LivingEntity shooter, Vec3 direction) {
         super(GimpanumEntities.PLASMA_PROJECTILE.get(), shooter, direction, level);
         this.setItem(new ItemStack(Items.PRISMARINE_CRYSTALS));
+    }
+
+    /**
+     * Своих не задевает — вовсе, а не «без урона».
+     *
+     * <p>Разряд пролетает сквозь некрофагов насквозь. Иначе Молния, стреляя
+     * поверх голов, снимала бы половину Ходоков собственным залпом, и стая
+     * выкашивала бы себя сама.
+     */
+    @Override
+    protected boolean canHitEntity(Entity candidate) {
+        return super.canHitEntity(candidate) && !candidate.getType().is(NecrophageEvents.NECROPHAGE);
     }
 
     @Override
@@ -57,12 +74,29 @@ public class PlasmaProjectile extends Fireball {
         }
     }
 
+    /**
+     * Молния в точке попадания.
+     *
+     * <p>Молния зажигается «показной»: настоящая подожгла бы всё вокруг, а в
+     * Гимпануме гореть нечему по замыслу. Поэтому урон от разряда наносим
+     * сами — он приходит отдельно от урона самого попадания, как и должен.
+     */
     private void strike(Vec3 where) {
-        if (this.level() instanceof ServerLevel server) {
-            Entity bolt = EntityType.LIGHTNING_BOLT.create(server);
-            if (bolt != null) {
-                bolt.moveTo(Vec3.atBottomCenterOf(BlockPos.containing(where)));
-                server.addFreshEntity(bolt);
+        if (!(this.level() instanceof ServerLevel server)) {
+            this.discard();
+            return;
+        }
+        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(server);
+        if (bolt != null) {
+            bolt.moveTo(Vec3.atBottomCenterOf(BlockPos.containing(where)));
+            bolt.setVisualOnly(true);
+            server.addFreshEntity(bolt);
+        }
+        for (Entity victim : server.getEntities(this, new AABB(where, where).inflate(2.5))) {
+            // По площади — тоже мимо своих: разряд бьёт по всему в радиусе,
+            // а рядом с целью чаще всего стоят как раз некрофаги.
+            if (victim instanceof LivingEntity && !victim.getType().is(NecrophageEvents.NECROPHAGE)) {
+                victim.hurt(this.damageSources().lightningBolt(), LIGHTNING_DAMAGE);
             }
         }
         this.discard();

@@ -1,0 +1,22 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "category": "misc",
+    "group": "sign",
+    "pattern": [
+        "###",
+        "###",
+        " S "
+    ],
+    "key": {
+        "#": {
+            "item": "gimpanum:nebula_planks"
+        },
+        "S": {
+            "item": "minecraft:stick"
+        }
+    },
+    "result": {
+        "id": "gimpanum:nebula_sign",
+        "count": 3
+    }
+}

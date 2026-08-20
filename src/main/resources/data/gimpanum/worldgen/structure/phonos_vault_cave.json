@@ -1,0 +1,22 @@
+{
+    "type": "minecraft:jigsaw",
+    "biomes": [
+        "gimpanum:nebula_sands"
+    ],
+    "step": "surface_structures",
+    "spawn_overrides": {},
+    "start_pool": "gimpanum:phonos_vault",
+    "size": 1,
+    "max_distance_from_center": 16,
+    "use_expansion_hack": false,
+    "start_height": {
+        "type": "minecraft:uniform",
+        "min_inclusive": {
+            "absolute": 12
+        },
+        "max_inclusive": {
+            "absolute": 46
+        }
+    },
+    "terrain_adaptation": "beard_box"
+}

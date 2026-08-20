@@ -1,0 +1,29 @@
+{
+    "ambientocclusion": false,
+    "textures": {
+        "particle": "gimpanum:block/nebula_fruit",
+        "fruit": "gimpanum:block/nebula_fruit"
+    },
+    "elements": [
+        {
+            "from": [ 4, 3, 7 ],
+            "to": [ 12, 12, 15 ],
+            "faces": {
+                "up":    { "uv": [ 0, 0,  8,  8 ], "texture": "#fruit" },
+                "down":  { "uv": [ 0, 0,  8,  8 ], "texture": "#fruit" },
+                "north": { "uv": [ 8, 4, 16, 13 ], "texture": "#fruit" },
+                "south": { "uv": [ 8, 4, 16, 13 ], "texture": "#fruit" },
+                "west":  { "uv": [ 8, 4, 16, 13 ], "texture": "#fruit" },
+                "east":  { "uv": [ 8, 4, 16, 13 ], "texture": "#fruit" }
+            }
+        },
+        {
+            "from": [ 8, 12, 12 ],
+            "to": [ 8, 16, 16 ],
+            "faces": {
+                "east": { "uv": [ 16, 0, 12, 4 ], "texture": "#fruit" },
+                "west": { "uv": [ 12, 0, 16, 4 ], "texture": "#fruit" }
+            }
+        }
+    ]
+}

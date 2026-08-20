@@ -1,0 +1,40 @@
+{
+    "neoforge:conditions": [
+        {
+            "type": "neoforge:mod_loaded",
+            "modid": "create"
+        }
+    ],
+    "type": "create:compacting",
+    "ingredients": [
+        {
+            "item": "gimpanum:fire_bar"
+        },
+        {
+            "item": "gimpanum:fire_bar"
+        },
+        {
+            "item": "gimpanum:fire_bar"
+        },
+        {
+            "item": "gimpanum:fire_bar"
+        },
+        {
+            "item": "gimpanum:stone_rod"
+        },
+        {
+            "item": "gimpanum:stone_rod"
+        },
+        {
+            "item": "gimpanum:stone_rod"
+        },
+        {
+            "item": "gimpanum:stone_rod"
+        }
+    ],
+    "results": [
+        {
+            "id": "minecraft:heavy_core"
+        }
+    ]
+}

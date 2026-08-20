@@ -1,0 +1,208 @@
+{
+  "offers": [
+    {
+      "id": "precision_mechanism_to_shard",
+      "weight": 10,
+      "input": {
+        "id": "create:precision_mechanism"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Механизмы точности в Хрусталь",
+      "output_count": 1000
+    },
+    {
+      "id": "noodles_to_shard",
+      "weight": 10,
+      "input": {
+        "id": "farmersdelight:vegetable_noodles"
+      },
+      "quota": 160,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Овощная лапща в Хрусталь",
+      "output_count": 250
+    },
+    {
+      "id": "experience_block_to_shard",
+      "weight": 10,
+      "input": {
+        "id": "create:experience_block"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Блоки опыта в Хрусталь",
+      "output_count": 10
+    },
+    {
+      "id": "electric_motor_to_shard",
+      "weight": 10,
+      "input": {
+        "id": "createaddition:electric_motor"
+      },
+      "quota": 320,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Электрические моторы в Хрусталь",
+      "output_count": 2000
+    },
+    {
+      "id": "crystal_shard_to_darkness_crystal",
+      "weight": 10,
+      "input": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:darkness_crystal"
+      },
+      "label": "Хрусталь в «Кристалл тьмы»",
+      "output_count": 20
+    },
+    {
+      "id": "crystal_shard_to_fire_bar",
+      "weight": 10,
+      "input": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:fire_bar"
+      },
+      "label": "Хрусталь в «Плитка огня»",
+      "output_count": 20
+    },
+    {
+      "id": "crystal_shard_to_jade_nut",
+      "weight": 10,
+      "input": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:jade_nut"
+      },
+      "label": "Хрусталь в «Нефритовая гайка»",
+      "output_count": 20
+    },
+    {
+      "id": "crystal_shard_to_plant_ancestor",
+      "weight": 10,
+      "input": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:plant_ancestor"
+      },
+      "label": "Хрусталь в «Предок растения»",
+      "output_count": 20
+    },
+    {
+      "id": "crystal_shard_to_sparkle_string",
+      "weight": 10,
+      "input": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:sparkle_string"
+      },
+      "label": "Хрусталь в «Искрящаяся нить»",
+      "output_count": 20
+    },
+    {
+      "id": "crystal_shard_to_stone_rod",
+      "weight": 10,
+      "input": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:stone_rod"
+      },
+      "label": "Хрусталь в «Стержень камня»",
+      "output_count": 20
+    },
+    {
+      "id": "crystal_shard_to_tenderness_stone",
+      "weight": 10,
+      "input": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:tenderness_stone"
+      },
+      "label": "Хрусталь в «Камень нежности»",
+      "output_count": 20
+    },
+    {
+      "id": "crystal_shard_to_transparent_ball",
+      "weight": 10,
+      "input": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:transparent_ball"
+      },
+      "label": "Хрусталь в «Прозрачный шарик»",
+      "output_count": 20
+    },
+    {
+      "id": "totem_of_undying_to_purple_queen_talisman",
+      "weight": 10,
+      "input": {
+        "id": "minecraft:totem_of_undying"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:purple_queen_talisman"
+      },
+      "label": "Тотемы в талисман"
+    },
+    {
+      "id": "heavy_core_to_furious_shell",
+      "weight": 11,
+      "input": {
+        "id": "minecraft:heavy_core"
+      },
+      "quota": 101,
+      "output": {
+        "id": "gimpanum:furious_shell"
+      },
+      "label": "Навершия в снаряд"
+    },
+    {
+      "id": "enchanted_golden_apple_to_druid_gift",
+      "weight": 10,
+      "input": {
+        "id": "minecraft:enchanted_golden_apple"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:druid_gift"
+      },
+      "label": "Яблоки в дар друидов"
+    },
+    {
+      "id": "beacon_to_common_claim",
+      "weight": 10,
+      "input": {
+        "id": "minecraft:beacon"
+      },
+      "quota": 100,
+      "output": {
+        "id": "opacbonusclaims:common_claim"
+      },
+      "label": "Маяки в прибавку к клейму"
+    }
+  ]
+}

@@ -25,9 +25,10 @@ import java.util.EnumSet;
  * считается по самому крепкому блоку в шаре — иначе обсидиановую стену можно
  * было бы обмануть, спрятав за ней песок.
  *
- * <p>Песок уходит за полторы секунды, обсидиан за минуту. Блоки с
- * отрицательной прочностью (коренная порода, Ядро, врата) не трогаются
- * вовсе: это не «крепко», это «нельзя».
+ * <p>Ест почти мгновенно: песок исчезает за тик, обсидиан — за треть
+ * секунды. Не преграда, а задержка на один вдох. Блоки с отрицательной
+ * прочностью (коренная порода, Ядро, врата) не трогаются вовсе: это не
+ * «крепко», это «нельзя».
  */
 public class DevourBlocksGoal extends Goal {
 
@@ -38,8 +39,9 @@ public class DevourBlocksGoal extends Goal {
 
     /** Радиус выедаемой полости. */
     private static final int BITE = 3;
-    private static final int BASE_TICKS = 20;
-    private static final double TICKS_PER_HARDNESS = 20.0;
+    // Сотая доля от прежних тринадцати: стена перестала быть стеной.
+    private static final double BASE_TICKS = 0.13;
+    private static final double TICKS_PER_HARDNESS = 0.13;
 
     private final Mob mob;
 
@@ -107,14 +109,15 @@ public class DevourBlocksGoal extends Goal {
             chewing = pos;
             progress = 0;
             // Обход шара — 343 клетки; считаем его один раз на укус, а не
-            // каждый тик, иначе двадцать поглотителей заметно нагружают сервер.
-            needed = (int) (BASE_TICKS + hardestAround(level, pos) * TICKS_PER_HARDNESS);
+            // каждый тик. И не меньше тика: мгновенное — это всё-таки один
+            // тик, а не ноль.
+            needed = Math.max(1, (int) Math.ceil(BASE_TICKS + hardestAround(level, pos) * TICKS_PER_HARDNESS));
+            // Звук на начало укуса, а не раз в восемь тиков: укус столько
+            // уже и не длится, отбивать больше нечего.
+            level.playSound(null, pos, state.getSoundType(level, pos, mob).getHitSound(), SoundSource.HOSTILE, 0.6F, 0.6F);
         }
 
         progress++;
-        if (progress % 8 == 0) {
-            level.playSound(null, pos, state.getSoundType(level, pos, mob).getHitSound(), SoundSource.HOSTILE, 0.6F, 0.6F);
-        }
         level.destroyBlockProgress(mob.getId(), pos, Math.min(9, progress * 10 / Math.max(needed, 1)));
 
         if (progress >= needed) {
@@ -176,9 +179,17 @@ public class DevourBlocksGoal extends Goal {
                 }
             }
         }
-        // Цель выше или ниже — значит мешает потолок или пол.
-        BlockPos vertical = target.getY() > mob.getY() + 1.0 ? feet.above(2) : feet.below();
-        return edible(level, vertical) ? vertical : null;
+        // Вертикаль трогаем, только если цель и правда выше или ниже. Иначе
+        // поглотитель на ровном месте начинал копать яму прямо под собой.
+        if (target.getY() > mob.getY() + 2.0) {
+            BlockPos above = feet.above(2);
+            return edible(level, above) ? above : null;
+        }
+        if (target.getY() < mob.getY() - 2.0) {
+            BlockPos below = feet.below();
+            return edible(level, below) ? below : null;
+        }
+        return null;
     }
 
     private boolean edible(Level level, BlockPos pos) {

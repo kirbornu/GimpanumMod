@@ -1,14 +1,18 @@
 {
     "structures": [
         {
-            "structure": "gimpanum:phonos_vault",
+            "structure": "gimpanum:phonos_vault_surface",
+            "weight": 1
+        },
+        {
+            "structure": "gimpanum:phonos_vault_cave",
             "weight": 1
         }
     ],
     "placement": {
         "type": "minecraft:random_spread",
-        "spacing": 34,
-        "separation": 8,
+        "spacing": 7,
+        "separation": 1,
         "salt": 8194561
     }
 }

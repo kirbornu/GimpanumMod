@@ -1,5 +1,8 @@
 package com.kirbornu.gimpanum.entity;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -16,10 +19,8 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
-
 import net.minecraft.world.level.Level;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -55,11 +56,11 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 60.0)
-                .add(Attributes.ATTACK_DAMAGE, 16.0)
+                .add(Attributes.ATTACK_DAMAGE, 32.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.145)
-                // 0.97 — полблока в секунду, вымерено: летающие мобы ходят
-                // по FLYING_SPEED, а не по MOVEMENT_SPEED
-                .add(Attributes.FLYING_SPEED, 0.97)
+                // 0.485 — четверть блока в секунду. Летающие мобы ходят по
+                // FLYING_SPEED, а не по MOVEMENT_SPEED; связь линейная, вымерено.
+                .add(Attributes.FLYING_SPEED, 0.485)
                 .add(Attributes.FOLLOW_RANGE, 64.0);
     }
 
@@ -129,4 +130,20 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
     public boolean causeFallDamage(float distance, float multiplier, net.minecraft.world.damagesource.DamageSource source) {
         return false;
     }
+
+    /**
+     * Свет ничего не решает.
+     *
+     * <p>{@link net.minecraft.world.entity.monster.Monster} оценивает точку
+     * появления по освещённости, и чем светлее — тем хуже. В Гимпануме вечный
+     * полдень и {@code ambient_light: 1.0}, то есть предельно светло везде:
+     * по этой мерке всё измерение непригодно, и ни один моб из ветки Монстра
+     * не появился бы нигде и никогда. Мерку убираем — по той же причине, по
+     * какой свет не участвует и в условиях появления.
+     */
+    @Override
+    public float getWalkTargetValue(BlockPos pos, LevelReader level) {
+        return 0.0F;
+    }
+
 }

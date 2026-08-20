@@ -22,25 +22,25 @@
         "monster": [
             {
                 "type": "gimpanum:dune_walker",
-                "weight": 100,
+                "weight": 300,
                 "minCount": 4,
                 "maxCount": 4
             },
             {
                 "type": "gimpanum:comet_wraith",
-                "weight": 105,
+                "weight": 32,
                 "minCount": 1,
                 "maxCount": 1
             },
             {
                 "type": "gimpanum:plasma_bolt",
-                "weight": 50,
+                "weight": 44,
                 "minCount": 1,
                 "maxCount": 1
             },
             {
                 "type": "gimpanum:space_devourer",
-                "weight": 5,
+                "weight": 150,
                 "minCount": 1,
                 "maxCount": 1
             }
