@@ -17,11 +17,26 @@ public final class ThawedOrganicsClient {
 
     private static List<ThawedOrganics.Find> finds = List.of();
 
+    /**
+     * Кого разбудить, когда список пришёл.
+     *
+     * <p>Просмотрщик рецептов составляет свой перечень при входе в мир, а
+     * пакет со списком может прийти и позже. Без оповещения экран остался бы
+     * пустым до перезахода.
+     */
+    private static Runnable listener = () -> {
+    };
+
     private ThawedOrganicsClient() {
     }
 
     public static void accept(List<ThawedOrganics.Find> fresh) {
         finds = List.copyOf(fresh);
+        listener.run();
+    }
+
+    public static void onUpdate(Runnable value) {
+        listener = value;
     }
 
     /** Находки с положительным весом: нулевой вес выключает строку в конфиге. */

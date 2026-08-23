@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.entity;
 
+import com.kirbornu.gimpanum.entity.goal.AllAroundTargetGoal;
 import com.kirbornu.gimpanum.entity.goal.PacedMeleeAttackGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
@@ -68,7 +69,10 @@ public class DuneWalker extends Zombie {
                 .add(Attributes.ATTACK_DAMAGE, 12.0)
                 .add(Attributes.ARMOR, 2.0)
                 // 0.17 — блок в секунду, вымерено (вчетверо медленнее зомби)
-                .add(Attributes.MOVEMENT_SPEED, 0.17)
+                // 0.24 — вдвое быстрее прежнего 0.17. Не вдвое больше числа: скорость
+                // растёт от атрибута примерно как квадрат, значит удвоить её —
+                // это умножить атрибут на корень из двух.
+                .add(Attributes.MOVEMENT_SPEED, 0.24)
                 .add(Attributes.FOLLOW_RANGE, DETECTION)
                 .add(Attributes.SPAWN_REINFORCEMENTS_CHANCE, 0.0);
     }
@@ -79,8 +83,7 @@ public class DuneWalker extends Zombie {
         // Ванильный зомбиный удар идёт раз в секунду — заменяем своим темпом.
         this.goalSelector.removeAllGoals(goal -> goal instanceof ZombieAttackGoal);
         this.goalSelector.addGoal(2, new PacedMeleeAttackGoal(this, 1.0, ATTACK_INTERVAL));
-        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true)
-                .setUnseenMemoryTicks(MEMORY));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MEMORY));
     }
 
     /**

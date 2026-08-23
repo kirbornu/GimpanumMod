@@ -122,7 +122,7 @@ public final class GimpanumEntities {
     public static void placements(RegisterSpawnPlacementsEvent event) {
         event.register(DUNE_WALKER.get(), SpawnPlacementTypes.ON_GROUND,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                (type, level, spawnType, pos, random) -> onSand(level, pos),
+                (type, level, spawnType, pos, random) -> onSand(level, pos) && onSurface(level, pos),
                 RegisterSpawnPlacementsEvent.Operation.REPLACE);
 
         event.register(SPACE_DEVOURER.get(), SpawnPlacementTypes.ON_GROUND,
@@ -132,7 +132,7 @@ public final class GimpanumEntities {
 
         event.register(COMET_WRAITH.get(), SpawnPlacementTypes.NO_RESTRICTIONS,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                (type, level, spawnType, pos, random) -> inAir(level, pos) && pos.getY() <= 20,
+                (type, level, spawnType, pos, random) -> inAir(level, pos) && underground(level, pos),
                 RegisterSpawnPlacementsEvent.Operation.REPLACE);
 
         event.register(PLASMA_BOLT.get(), SpawnPlacementTypes.NO_RESTRICTIONS,
@@ -144,13 +144,38 @@ public final class GimpanumEntities {
     /**
      * Космический песок под ногами и пустота над головой.
      *
-     * <p>Не только поверхность: песком сложены и стены лабиринта, так что
-     * ходоки заводятся и внизу. Это намеренно — требовать именно поверхности
-     * значило бы не появляться почти никогда, см. пояснение у класса.
+     * <p>Песком сложены и стены лабиринта, поэтому одного песка мало: ходоки
+     * заводились и внизу, и стаями по десять забивали общий предел мобов,
+     * не оставляя места ни призракам, ни поглотителям. Теперь к песку
+     * добавлена поверхность — см. {@link #onSurface}.
      */
     private static boolean onSand(LevelAccessor level, BlockPos pos) {
         return level.getBlockState(pos.below()).is(GimpanumContent.COSMIC_SAND.get())
                 && inAir(level, pos);
+    }
+
+    /**
+     * Верхняя кромка барханов, а не лабиринт под ними.
+     *
+     * <p>Пара блоков запаса вниз: в ложбине между барханами точка появления
+     * оказывается чуть ниже кромки, и без запаса ходоки не заводились бы в
+     * половине подходящих мест.
+     */
+    private static boolean onSurface(LevelAccessor level, BlockPos pos) {
+        return pos.getY() >= level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ()) - 2;
+    }
+
+    /**
+     * Лабиринт: всё, что заметно ниже кромки барханов.
+     *
+     * <p>Раньше здесь стояло «не выше двадцатого блока» — число, взятое из
+     * головы и ничему в мире не соответствующее. Лабиринт лежит не на
+     * фиксированной высоте, а под поверхностью, какой бы она ни была, и
+     * сравнивать надо с картой высот. Шесть блоков запаса отделяют настоящий
+     * ход от ямы в бархане.
+     */
+    private static boolean underground(LevelAccessor level, BlockPos pos) {
+        return pos.getY() < level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ()) - 6;
     }
 
     /**

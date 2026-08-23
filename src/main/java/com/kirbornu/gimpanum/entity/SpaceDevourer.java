@@ -101,10 +101,10 @@ public class SpaceDevourer extends Monster {
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.5)
                 // 0.40 — семь блоков в секунду, вымерено на прямом отрезке;
                 // связь атрибута со скоростью нелинейная, по формуле не угадать
-                .add(Attributes.MOVEMENT_SPEED, 0.40)
+                .add(Attributes.MOVEMENT_SPEED, 0.57)
                 // В воздухе управление полётом читает не MOVEMENT_SPEED, а
                 // FLYING_SPEED, и без него моб завис бы на месте.
-                .add(Attributes.FLYING_SPEED, 0.40)
+                .add(Attributes.FLYING_SPEED, 0.80)
                 // Восемьдесят блоков — и сквозь стены: прятаться от Поглотителя
                 // бессмысленно по замыслу, он всё равно прогрызётся.
                 .add(Attributes.FOLLOW_RANGE, 80.0);

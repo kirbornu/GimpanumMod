@@ -15,10 +15,10 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 /**
  * Пониженная тяжесть Гимпанума.
  *
- * <p>Пятая часть обычной: прыжок выносит метров на пять, падение с высоты
- * даёт время подумать, но ходить всё ещё можно и без снаряжения. Полный ноль
- * пробовать не стали — без джетпака измерение стало бы непроходимым, а с ним
- * ничем другим бы и не занимались.
+ * <p>На треть слабее обычной: прыжок чуть выше, падение чуть мягче, но
+ * походка узнаваемая и снаряжения не требует. Полный ноль пробовать не стали —
+ * без джетпака измерение стало бы непроходимым, а с ним ничем другим бы и не
+ * занимались.
  *
  * <p>Живым тяжесть меняется <b>атрибутом</b>, а не толчком каждый тик.
  * {@code LivingEntity.getDefaultGravity()} читает как раз
@@ -41,8 +41,8 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 @EventBusSubscriber(modid = Gimpanum.MOD_ID)
 public final class LowGravity {
 
-    /** Доля от обычной тяжести. Ванильные 0.08 превращаются в 0.016. */
-    public static final double FACTOR = 0.2;
+    /** Доля от обычной тяжести. Ванильные 0.08 превращаются в 0.0533. */
+    public static final double FACTOR = 2.0 / 3.0;
 
     private static final ResourceLocation MODIFIER_ID = Gimpanum.id("low_gravity");
 

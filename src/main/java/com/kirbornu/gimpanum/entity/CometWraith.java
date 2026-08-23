@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.entity;
 
+import com.kirbornu.gimpanum.entity.goal.AllAroundTargetGoal;
 import com.kirbornu.gimpanum.entity.goal.PhaseChaseGoal;
 import com.kirbornu.gimpanum.entity.goal.SinkToDepthsGoal;
 import net.minecraft.sounds.SoundEvent;
@@ -33,6 +34,14 @@ public class CometWraith extends Allay {
     /** Радиус, в котором призрак замечает игрока — сквозь что угодно. */
     public static final double DETECTION = 60.0;
 
+    /**
+     * Сколько тиков призрак помнит жертву, потерянную из виду.
+     *
+     * <p>Двадцать секунд: он проходит сквозь породу, и погоня сквозь толщу
+     * длится дольше, чем ванильные три секунды памяти.
+     */
+    private static final int MEMORY = 400;
+
     /** Раз в 1.2 секунды. */
     private static final int ATTACK_INTERVAL = 24;
 
@@ -62,8 +71,8 @@ public class CometWraith extends Allay {
                 // FLYING_SPEED здесь — единственная настройка погони: она
                 // ведётся вручную, без навигации. 0.98 — двенадцать блоков
                 // в секунду, вымерено.
-                .add(Attributes.FLYING_SPEED, 0.98)
-                .add(Attributes.MOVEMENT_SPEED, 0.3)
+                .add(Attributes.FLYING_SPEED, 1.96)
+                .add(Attributes.MOVEMENT_SPEED, 0.42)
                 .add(Attributes.FOLLOW_RANGE, DETECTION);
     }
 
@@ -73,7 +82,7 @@ public class CometWraith extends Allay {
         this.goalSelector.addGoal(5, new SinkToDepthsGoal(this, HOME_DEPTH, 0.06));
         // mustSee = false — в этом весь смысл: порода ему не помеха.
         this.targetSelector.addGoal(0, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, false));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MEMORY));
     }
 
     /** Мозг Аллая не нужен: он про танцы и подношения, а не про охоту. */

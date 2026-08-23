@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.entity;
 
+import com.kirbornu.gimpanum.entity.goal.AllAroundTargetGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.damagesource.DamageSource;
@@ -57,10 +58,10 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 60.0)
                 .add(Attributes.ATTACK_DAMAGE, 32.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.145)
+                .add(Attributes.MOVEMENT_SPEED, 0.205)
                 // 0.485 — четверть блока в секунду. Летающие мобы ходят по
                 // FLYING_SPEED, а не по MOVEMENT_SPEED; связь линейная, вымерено.
-                .add(Attributes.FLYING_SPEED, 0.485)
+                .add(Attributes.FLYING_SPEED, 0.97)
                 .add(Attributes.FOLLOW_RANGE, 64.0);
     }
 
@@ -82,8 +83,7 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 
         this.targetSelector.addGoal(0, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true)
-                .setUnseenMemoryTicks(400));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, 400));
     }
 
     @Override
