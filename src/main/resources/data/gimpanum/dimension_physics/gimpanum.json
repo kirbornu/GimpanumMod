@@ -2,5 +2,11 @@
     "dimension": "gimpanum:gimpanum",
     "priority": 100,
     "base_pressure": 0.0,
-    "ignore_chunks": false
+    "ignore_chunks": false,
+    "base_gravity": [
+        0.0,
+        -2.2,
+        0.0
+    ],
+    "_comment": "Пятая часть обычной тяжести Sable ([0, -11, 0]) — то же число, что и у сущностей в LowGravity.FACTOR. Менять их надо вместе, иначе корабль и стоящий на нём игрок будут падать по-разному."
 }
