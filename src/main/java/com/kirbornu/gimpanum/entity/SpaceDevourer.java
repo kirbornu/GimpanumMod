@@ -11,10 +11,12 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.control.FlyingMoveControl;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomFlyingGoal;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
@@ -65,6 +67,30 @@ public class SpaceDevourer extends Monster {
     public SpaceDevourer(EntityType<? extends Monster> type, Level level) {
         super(type, level);
         this.xpReward = 20;
+        // hoversInPlace = true: управление полётом само отключает тяготение и
+        // больше его не возвращает. Иначе поглотитель падал бы всякий раз,
+        // когда цель достигнута и движение остановлено, — то есть посреди
+        // прогрызаемого туннеля.
+        this.moveControl = new FlyingMoveControl(this, 20, true);
+        this.setNoGravity(true);
+    }
+
+    /**
+     * Летает, а не ходит.
+     *
+     * <p>Причина не в замысле, а в непроходимости: у моба четыре блока в
+     * ширину, и наземный поиск пути почти нигде не находит прохода — отсюда
+     * прежнее «стоит рядом и ничего не делает». Летающему проходы не нужны
+     * вовсе: он идёт к жертве по прямой, а камень на дороге проедает
+     * ({@link DevourBlocksGoal}). Так он и задуман — червь, а не бегун.
+     */
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        FlyingPathNavigation navigation = new FlyingPathNavigation(this, level);
+        navigation.setCanOpenDoors(false);
+        navigation.setCanFloat(true);
+        navigation.setCanPassDoors(true);
+        return navigation;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -76,6 +102,9 @@ public class SpaceDevourer extends Monster {
                 // 0.40 — семь блоков в секунду, вымерено на прямом отрезке;
                 // связь атрибута со скоростью нелинейная, по формуле не угадать
                 .add(Attributes.MOVEMENT_SPEED, 0.40)
+                // В воздухе управление полётом читает не MOVEMENT_SPEED, а
+                // FLYING_SPEED, и без него моб завис бы на месте.
+                .add(Attributes.FLYING_SPEED, 0.40)
                 // Восемьдесят блоков — и сквозь стены: прятаться от Поглотителя
                 // бессмысленно по замыслу, он всё равно прогрызётся.
                 .add(Attributes.FOLLOW_RANGE, 80.0);
@@ -83,11 +112,10 @@ public class SpaceDevourer extends Monster {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new AvoidLightGoal(this, 1.3));
         this.goalSelector.addGoal(3, new StalkAndStrikeGoal(this, 1.0, ATTACK_INTERVAL));
         this.goalSelector.addGoal(4, new DevourBlocksGoal(this));
-        this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.6));
+        this.goalSelector.addGoal(6, new WaterAvoidingRandomFlyingGoal(this, 0.6));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 12.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
@@ -101,10 +129,24 @@ public class SpaceDevourer extends Monster {
                         .setUnseenMemoryTicks(MEMORY));
     }
 
-    /** Лазает по отвесному, как паук: упёрся — значит полез. */
+    /**
+     * Тяготение на поглотителя не действует никогда.
+     *
+     * <p>Не флагом, а вычислением — и это не придирка. {@code Entity.load}
+     * присваивает признак невесомости из тега {@code NoGravity}, которого у
+     * призванного и у только что загруженного из чанка моба попросту нет, а
+     * отсутствующий тег читается как «нет». Выставленный в конструкторе флаг
+     * поэтому доживал ровно до первой загрузки, и поглотитель падал с неба
+     * камнем, пока управление полётом не спохватится.
+     */
     @Override
-    public boolean onClimbable() {
-        return this.horizontalCollision;
+    public boolean isNoGravity() {
+        return true;
+    }
+
+    /** Падать неоткуда, но толчком вниз его всё же можно приложить о землю. */
+    @Override
+    protected void checkFallDamage(double distance, boolean onGround, BlockState state, BlockPos pos) {
     }
 
     /**

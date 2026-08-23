@@ -1,7 +1,6 @@
 package com.kirbornu.gimpanum.entity.goal;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -14,14 +13,16 @@ import org.jetbrains.annotations.Nullable;
 import java.util.EnumSet;
 
 /**
- * Прогрызание пути к цели.
+ * Прогрызание пути к цели по прямой.
  *
- * <p>Включается не сразу: сперва моб честно пытается дойти. Только если он
- * {@value #STALL} тиков не приблизился к жертве, он начинает есть то, что
- * стоит на пути. Иначе поглотитель грыз бы стены, имея открытую дверь рядом.
+ * <p>Поглотитель летает и не ищет обходов: он смотрит на жертву и проедает
+ * то, что стоит между ними. Раньше цель включалась, только когда моб сорок
+ * тиков не мог приблизиться, — это имело смысл для ходока, которому стоило
+ * сперва поискать открытую дверь. Летающему искать нечего: если на луче к
+ * жертве есть камень, значит камень и мешает, и ждать сорок тиков не за чем.
  *
  * <p>Грызёт не по блоку, а сразу шаром радиусом {@value #BITE}: поглотитель
- * четыре блока в ширину, и однин выеденный кубик ему бесполезен. Время
+ * четыре блока в ширину, и один выеденный кубик ему бесполезен. Время
  * считается по самому крепкому блоку в шаре — иначе обсидиановую стену можно
  * было бы обмануть, спрятав за ней песок.
  *
@@ -32,10 +33,14 @@ import java.util.EnumSet;
  */
 public class DevourBlocksGoal extends Goal {
 
-    private static final int STALL = 40;
+    /** Ближе этого грызть незачем — жертва уже на расстоянии удара. */
     private static final double GIVE_UP = 3.0;
-    private static final double PROGRESS = 1.5;
-    private static final int RANGE = 3;
+
+    /** Насколько далеко вперёд смотреть по лучу к жертве. */
+    private static final double REACH = 6.0;
+
+    /** Шаг выборки по лучу: меньше половины блока, чтобы не проскочить угол. */
+    private static final double STEP = 0.4;
 
     /** Радиус выедаемой полости. */
     private static final int BITE = 3;
@@ -49,8 +54,6 @@ public class DevourBlocksGoal extends Goal {
     private BlockPos chewing;
     private int progress;
     private int needed;
-    private int stalled;
-    private double closest = Double.MAX_VALUE;
 
     public DevourBlocksGoal(Mob mob) {
         this.mob = mob;
@@ -60,25 +63,12 @@ public class DevourBlocksGoal extends Goal {
     @Override
     public boolean canUse() {
         LivingEntity target = mob.getTarget();
-        if (target == null || !target.isAlive() || mob.distanceToSqr(target) < GIVE_UP * GIVE_UP) {
-            reset();
-            return false;
-        }
-        double distance = mob.distanceToSqr(target);
-        // Приблизился хотя бы на полтора блока — значит путь есть, грызть незачем.
-        if (distance + PROGRESS * PROGRESS < closest) {
-            closest = distance;
-            stalled = 0;
-        } else {
-            stalled++;
-        }
-        return stalled >= STALL;
+        return target != null && target.isAlive() && mob.distanceToSqr(target) >= GIVE_UP * GIVE_UP;
     }
 
     @Override
     public boolean canContinueToUse() {
-        LivingEntity target = mob.getTarget();
-        return target != null && target.isAlive() && mob.distanceToSqr(target) >= GIVE_UP * GIVE_UP;
+        return canUse();
     }
 
     @Override
@@ -123,8 +113,6 @@ public class DevourBlocksGoal extends Goal {
         if (progress >= needed) {
             bite(level, pos);
             clearProgress();
-            closest = Double.MAX_VALUE;
-            stalled = 0;
         }
     }
 
@@ -162,32 +150,34 @@ public class DevourBlocksGoal extends Goal {
         clearProgress();
     }
 
-    /** Что именно грызть: первая преграда по направлению к цели. */
+    /**
+     * Первая преграда на луче от глаз поглотителя к глазам жертвы.
+     *
+     * <p>Именно луч, а не «блок по направлению взгляда»: жертва бывает выше и
+     * ниже, и червю всё равно, куда рыть. Выборка идёт с шагом меньше
+     * половины блока, иначе луч наискось проскакивал бы сквозь угол между
+     * двумя блоками и стена считалась бы пройденной.
+     */
     @Nullable
     private BlockPos pick(LivingEntity target) {
         Level level = mob.level();
-        Vec3 towards = target.position().subtract(mob.position());
-        Direction facing = Direction.getNearest(towards.x, 0.0, towards.z);
-        BlockPos feet = mob.blockPosition();
+        Vec3 from = mob.getEyePosition();
+        Vec3 towards = target.getEyePosition().subtract(from);
+        double length = towards.length();
+        if (length < 1.0E-4) {
+            return null;
+        }
+        Vec3 step = towards.scale(STEP / length);
+        // Ближе половины ширины тела смотреть нечего: там сам моб.
+        double limit = Math.min(REACH, length);
 
-        // Сначала вперёд: на уровне головы, потом на уровне ног.
-        for (int step = 1; step <= RANGE; step++) {
-            for (int height : new int[]{1, 0}) {
-                BlockPos candidate = feet.above(height).relative(facing, step);
-                if (edible(level, candidate)) {
-                    return candidate;
-                }
+        Vec3 point = from;
+        for (double travelled = 0.0; travelled <= limit; travelled += STEP) {
+            BlockPos candidate = BlockPos.containing(point);
+            if (edible(level, candidate)) {
+                return candidate;
             }
-        }
-        // Вертикаль трогаем, только если цель и правда выше или ниже. Иначе
-        // поглотитель на ровном месте начинал копать яму прямо под собой.
-        if (target.getY() > mob.getY() + 2.0) {
-            BlockPos above = feet.above(2);
-            return edible(level, above) ? above : null;
-        }
-        if (target.getY() < mob.getY() - 2.0) {
-            BlockPos below = feet.below();
-            return edible(level, below) ? below : null;
+            point = point.add(step);
         }
         return null;
     }
@@ -204,11 +194,5 @@ public class DevourBlocksGoal extends Goal {
         }
         progress = 0;
         needed = 0;
-    }
-
-    private void reset() {
-        clearProgress();
-        stalled = 0;
-        closest = Double.MAX_VALUE;
     }
 }
