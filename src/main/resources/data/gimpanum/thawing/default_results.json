@@ -54,6 +54,16 @@
         { "weight": 3, "item": { "id": "farmersdelight:brown_mushroom_colony" } },
         { "weight": 3, "item": { "id": "farmersdelight:red_mushroom_colony" } },
 
+        { "weight": 8, "item": { "id": "herbalbrews:coffee_beans" } },
+        { "weight": 8, "item": { "id": "herbalbrews:tea_blossom" } },
+        { "weight": 8, "item": { "id": "herbalbrews:rooibos_leaf" } },
+        { "weight": 8, "item": { "id": "herbalbrews:yerba_mate_leaf" } },
+        { "weight": 5, "item": { "id": "herbalbrews:hibiscus" } },
+        { "weight": 5, "item": { "id": "herbalbrews:lavender" } },
+        { "weight": 4, "item": { "id": "herbalbrews:wild_coffee_plant" } },
+        { "weight": 4, "item": { "id": "herbalbrews:wild_rooibos_plant" } },
+        { "weight": 4, "item": { "id": "herbalbrews:wild_yerba_mate_plant" } },
+
         { "weight": 3, "item": { "id": "vinery:red_grape_seeds" } },
         { "weight": 3, "item": { "id": "vinery:white_grape_seeds" } },
         { "weight": 3, "item": { "id": "vinery:savanna_grape_seeds_red" } },
