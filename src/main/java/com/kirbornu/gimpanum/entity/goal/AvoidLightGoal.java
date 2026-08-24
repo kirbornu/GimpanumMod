@@ -20,7 +20,7 @@ import java.util.EnumSet;
 public class AvoidLightGoal extends Goal {
 
     /** Ярче этого — бежать. Факел вблизи даёт 14, дневное небо 15. */
-    private static final int BRIGHT = 12;
+    public static final int BRIGHT = 12;
     private static final int SEARCH_RADIUS = 16;
     private static final int TRIES = 24;
 
@@ -80,6 +80,18 @@ public class AvoidLightGoal extends Goal {
             }
         }
         return best;
+    }
+
+    /**
+     * Светло ли мобу здесь настолько, чтобы бросить всё и уходить.
+     *
+     * <p>Вынесено наружу, потому что порог обязан быть один на все цели: если
+     * бегство от света и прогрызание разойдутся в мнении о том, что такое
+     * «светло», поглотитель на свету будет пятиться и одновременно грызть, и
+     * свет перестанет быть защитой.
+     */
+    public static boolean isBright(net.minecraft.world.entity.Mob mob) {
+        return mob.level().getMaxLocalRawBrightness(mob.blockPosition()) >= BRIGHT;
     }
 
     private int brightness(BlockPos pos) {

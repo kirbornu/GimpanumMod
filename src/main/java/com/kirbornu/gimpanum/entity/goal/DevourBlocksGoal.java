@@ -67,10 +67,21 @@ public class DevourBlocksGoal extends Goal {
         this.setFlags(EnumSet.of(Goal.Flag.JUMP));
     }
 
+    /**
+     * Грызть можно, когда есть до кого добираться и когда вокруг темно.
+     *
+     * <p>Проверка света здесь не для красоты. Бегство от света занимает флаг
+     * движения и потому останавливает погоню, но прогрызание идёт по другому
+     * флагу и продолжалось бы: поглотитель на свету пятился бы назад,
+     * не переставая вгрызаться в породу. Свет обязан отменять и то, и другое,
+     * иначе он перестаёт быть защитой.
+     */
     @Override
     public boolean canUse() {
         LivingEntity target = mob.getTarget();
-        return target != null && target.isAlive() && mob.distanceToSqr(target) >= GIVE_UP * GIVE_UP;
+        return target != null && target.isAlive()
+                && mob.distanceToSqr(target) >= GIVE_UP * GIVE_UP
+                && !AvoidLightGoal.isBright(mob);
     }
 
     @Override
