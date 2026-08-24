@@ -1,8 +1,8 @@
 package com.kirbornu.gimpanum.entity;
 
 import com.kirbornu.gimpanum.entity.goal.AvoidLightGoal;
+import com.kirbornu.gimpanum.entity.goal.BoreChaseGoal;
 import com.kirbornu.gimpanum.entity.goal.DevourBlocksGoal;
-import com.kirbornu.gimpanum.entity.goal.StalkAndStrikeGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -104,7 +104,7 @@ public class SpaceDevourer extends Monster {
                 .add(Attributes.MOVEMENT_SPEED, 0.57)
                 // В воздухе управление полётом читает не MOVEMENT_SPEED, а
                 // FLYING_SPEED, и без него моб завис бы на месте.
-                .add(Attributes.FLYING_SPEED, 0.80)
+                .add(Attributes.FLYING_SPEED, 2.0)
                 // Восемьдесят блоков — и сквозь стены: прятаться от Поглотителя
                 // бессмысленно по замыслу, он всё равно прогрызётся.
                 .add(Attributes.FOLLOW_RANGE, 80.0);
@@ -113,7 +113,7 @@ public class SpaceDevourer extends Monster {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new AvoidLightGoal(this, 1.3));
-        this.goalSelector.addGoal(3, new StalkAndStrikeGoal(this, 1.0, ATTACK_INTERVAL));
+        this.goalSelector.addGoal(3, new BoreChaseGoal(this, ATTACK_INTERVAL));
         this.goalSelector.addGoal(4, new DevourBlocksGoal(this));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomFlyingGoal(this, 0.6));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 12.0F));

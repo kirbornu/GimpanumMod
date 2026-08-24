@@ -71,7 +71,7 @@ public class CometWraith extends Allay {
                 // FLYING_SPEED здесь — единственная настройка погони: она
                 // ведётся вручную, без навигации. 0.98 — двенадцать блоков
                 // в секунду, вымерено.
-                .add(Attributes.FLYING_SPEED, 1.96)
+                .add(Attributes.FLYING_SPEED, 3.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.42)
                 .add(Attributes.FOLLOW_RANGE, DETECTION);
     }
