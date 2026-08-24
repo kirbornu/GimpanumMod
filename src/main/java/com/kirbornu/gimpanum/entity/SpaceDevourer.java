@@ -1,6 +1,5 @@
 package com.kirbornu.gimpanum.entity;
 
-import com.kirbornu.gimpanum.entity.goal.AvoidLightGoal;
 import com.kirbornu.gimpanum.entity.goal.BoreChaseGoal;
 import com.kirbornu.gimpanum.entity.goal.DevourBlocksGoal;
 import net.minecraft.core.BlockPos;
@@ -29,12 +28,16 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Поглотитель космоса — быстрый, лазающий и прогрызающий.
  *
- * <p>Догнать его нельзя: он быстрее бегущего игрока. Спрятаться за стеной —
- * тоже: стену он съест, и не по блоку, а полостью в свой рост (см.
- * {@link DevourBlocksGoal}). Единственная защита — свет: яркое место обращает
- * его в бегство, а {@link AvoidLightGoal} стоит выше цели преследования и
- * занимает тот же флаг движения, так что на свету он физически не может
- * гнаться.
+ * <p>Догнать его нельзя: он впятеро быстрее бегущего игрока. Спрятаться за
+ * стеной — тоже: породу он проедает с той же скоростью, с какой летит по
+ * воздуху, и не по блоку, а полостью в свой рост (см.
+ * {@link DevourBlocksGoal}).
+ *
+ * <p>Защиты от него нет никакой — ни света, ни стен, ни расстояния в пределах
+ * чутья. Так решено намеренно: это не противник, которого переигрывают, а
+ * событие, которое переживают. Остаётся одно — убить его, пока он не добрался.
+ * Прежде свет обращал его в бегство, но защита, которая ставится одним факелом,
+ * обесценивала весь замысел.
  */
 public class SpaceDevourer extends Monster {
 
@@ -112,7 +115,6 @@ public class SpaceDevourer extends Monster {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new AvoidLightGoal(this, 1.3));
         this.goalSelector.addGoal(3, new BoreChaseGoal(this, ATTACK_INTERVAL));
         this.goalSelector.addGoal(4, new DevourBlocksGoal(this));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomFlyingGoal(this, 0.6));
