@@ -43,8 +43,10 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
      * около сотого блока, и молния должна висеть над ними, а не следовать за
      * рельефом в низину.
      */
-    private static final int FLOOR = 100;
-    private static final int CEILING = 122;
+    public static final int FLOOR = 100;
+
+    /** Выше этого — тоже не поднимается. */
+    public static final int CEILING = 122;
     private static final double LIFT = 0.05;
 
     public PlasmaBolt(EntityType<? extends Monster> type, Level level) {

@@ -19,32 +19,7 @@
         "axolotls": [],
         "creature": [],
         "misc": [],
-        "monster": [
-            {
-                "type": "gimpanum:dune_walker",
-                "weight": 120,
-                "minCount": 10,
-                "maxCount": 14
-            },
-            {
-                "type": "gimpanum:comet_wraith",
-                "weight": 400,
-                "minCount": 2,
-                "maxCount": 4
-            },
-            {
-                "type": "gimpanum:plasma_bolt",
-                "weight": 44,
-                "minCount": 1,
-                "maxCount": 1
-            },
-            {
-                "type": "gimpanum:space_devourer",
-                "weight": 150,
-                "minCount": 1,
-                "maxCount": 1
-            }
-        ],
+        "monster": [],
         "underground_water_creature": [],
         "water_ambient": [],
         "water_creature": []
@@ -67,5 +42,6 @@
             "gimpanum:nebula_tree"
         ],
         []
-    ]
+    ],
+    "_comment": "Список мобов пуст намеренно. Ванильный заселитель держит около четверти враждебного моба на чанк на всех вместе и берёт высоту случайно от дна мира до поверхности — под барханами Гимпанума лежит лабиринт в полсотни блоков, поэтому почти каждая попытка приходилась на подземелье. Отсюда пустая пустыня и битком набитый лабиринт. Плотность задаётся напрямую в GimpanumSpawner."
 }
