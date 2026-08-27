@@ -6,6 +6,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -147,9 +149,24 @@ public class DevourBlocksGoal extends Goal {
                     SoundSource.HOSTILE, 0.7F, 0.6F);
             soundCooldown = SOUND_INTERVAL;
         }
+
+        // Один всплеск частиц на весь укус — и это не мелочь.
+        //
+        // Раньше блоки убирались через level.destroyBlock, а он на КАЖДЫЙ блок
+        // шлёт событие 2001 всем игрокам в 64 блоках. Полость в укусе — до
+        // полутора сотен блоков, и грызёт он каждый тик: три тысячи пакетов и
+        // три тысячи всплесков частиц в секунду на одного поглотителя. Сервер
+        // этого почти не замечает — вымерено, шесть поглотителей стоили 1.2 мс
+        // при бюджете 50, — а клиент захлёбывается. В одиночном мире, где
+        // клиент и сервер в одном процессе, это и выглядит как падение TPS.
+        level.levelEvent(2001, centre, Block.getId(sample));
+
         for (BlockPos pos : mouthful) {
-            // Без выпадения: поглотитель не добывает, он поглощает.
-            level.destroyBlock(pos, false);
+            // Флаг UPDATE_CLIENTS и ничего сверх: без выпадения (поглотитель не
+            // добывает, он поглощает) и без обновления соседей. Обновления
+            // соседей здесь не нужны и стоят дорого — за укус их было бы
+            // столько же, сколько блоков, помноженное на шесть сторон.
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
         }
     }
 

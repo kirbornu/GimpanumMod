@@ -61,6 +61,13 @@ public class DuneWalker extends Zombie {
     public DuneWalker(EntityType<? extends Zombie> type, Level level) {
         super(type, level);
         this.xpReward = 6;
+        // Предел обхода при поиске пути игра берёт как FOLLOW_RANGE * 16, а
+        // чутьё у ходока дальнее — вышло бы 1536 узлов на каждый поиск. Путь он
+        // теперь строит только вблизи (см. PacedMeleeAttackGoal), и такой запас
+        // там не нужен: четверть от него — это 384 узла, чего с избытком хватает
+        // на два десятка блоков. Обрезаем здесь, а не в цели, потому что через
+        // навигацию ходят и прочие цели — блуждание, бегство, вода.
+        this.getNavigation().setMaxVisitedNodesMultiplier(0.25F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {

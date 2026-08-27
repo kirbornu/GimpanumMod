@@ -70,13 +70,13 @@ public final class GimpanumSpawner {
     private static final int WALKERS_PER_CHUNK = 2;
 
     /** Одна Молния на столько Ходоков. */
-    private static final int WALKERS_PER_BOLT = 20;
+    private static final int WALKERS_PER_BOLT = 50;
 
-    /** Призраков на чанк лабиринта. */
-    private static final int WRAITHS_PER_CHUNK = 1;
+    /** Один Призрак на столько чанков лабиринта. */
+    private static final int CHUNKS_PER_WRAITH = 4;
 
     /** Один Поглотитель на столько чанков, независимо от высоты. */
-    private static final int CHUNKS_PER_DEVOURER = 30;
+    private static final int CHUNKS_PER_DEVOURER = 200;
 
     /** Раз в две секунды. */
     private static final int PERIOD = 40;
@@ -85,14 +85,15 @@ public final class GimpanumSpawner {
     private static final int KEEP_AWAY = 24;
 
     /** Появлений за один заход — чтобы население набиралось плавно. */
-    private static final int PER_PASS = 24;
+    private static final int PER_PASS = 12;
 
     /** Попыток найти место под одного моба. */
-    private static final int TRIES = 8;
+    private static final int TRIES = 3;
 
     /** Запас от кромки барханов, ниже которого начинается лабиринт. */
     private static final int DEPTH = 7;
 
+    private static final long WRAITH_SALT = 0x7A3B91C6L;
     private static final long BOLT_SALT = 0x51ED270BL;
     private static final long DEVOURER_SALT = 0x2F1E3C4DL;
 
@@ -146,13 +147,20 @@ public final class GimpanumSpawner {
 
         // Какие чанки несут одиночек. Считаем заранее: это же число задаёт и
         // предел на всю область, а не только ответ по каждому чанку.
+        boolean[] withWraith = new boolean[chunks];
         boolean[] withBolt = new boolean[chunks];
         boolean[] withDevourer = new boolean[chunks];
+        int wraithQuota = 0;
         int boltQuota = 0;
         int devourerQuota = 0;
         for (int dx = -RADIUS; dx <= RADIUS; dx++) {
             for (int dz = -RADIUS; dz <= RADIUS; dz++) {
                 int i = (dx + RADIUS) * side + (dz + RADIUS);
+                if (!surface && carries(level, centre.x + dx, centre.z + dz,
+                        CHUNKS_PER_WRAITH, WRAITH_SALT)) {
+                    withWraith[i] = true;
+                    wraithQuota++;
+                }
                 if (surface && carries(level, centre.x + dx, centre.z + dz,
                         WALKERS_PER_BOLT / WALKERS_PER_CHUNK, BOLT_SALT)) {
                     withBolt[i] = true;
@@ -175,7 +183,7 @@ public final class GimpanumSpawner {
         // просит добавки, а ушедшие никуда не делись.
         int walkerRoom = surface ? WALKERS_PER_CHUNK * chunks - total(walkers) : 0;
         int boltRoom = surface ? boltQuota - total(bolts) : 0;
-        int wraithRoom = surface ? 0 : WRAITHS_PER_CHUNK * chunks - total(wraiths);
+        int wraithRoom = surface ? 0 : wraithQuota - total(wraiths);
         int devourerRoom = devourerQuota - total(devourers);
 
         for (int dx = -RADIUS; dx <= RADIUS; dx++) {
@@ -204,11 +212,13 @@ public final class GimpanumSpawner {
                     budget -= added;
                 }
 
-                added = fill(level, cx, cz, GimpanumEntities.COMET_WRAITH.get(),
-                        Math.min(WRAITHS_PER_CHUNK - wraiths.get(key), wraithRoom), budget,
-                        GimpanumSpawner::labyrinth);
-                wraithRoom -= added;
-                budget -= added;
+                if (withWraith[i]) {
+                    added = fill(level, cx, cz, GimpanumEntities.COMET_WRAITH.get(),
+                            Math.min(1 - wraiths.get(key), wraithRoom), budget,
+                            GimpanumSpawner::labyrinth);
+                    wraithRoom -= added;
+                    budget -= added;
+                }
 
                 if (withDevourer[i]) {
                     added = fill(level, cx, cz, GimpanumEntities.SPACE_DEVOURER.get(),
