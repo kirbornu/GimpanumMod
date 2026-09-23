@@ -245,6 +245,23 @@ public final class GimpanumContent {
     public static final DeferredItem<?> MONOLITHIC_CRYSTAL_ITEM = ITEMS.registerSimpleBlockItem(MONOLITHIC_CRYSTAL);
 
     /**
+     * Хрустальная корка — выстилка жеод.
+     *
+     * <p>Тусклая родня Монолитного хрусталя: при добыче рассыпается на один-два
+     * Осколка, с шёлковым касанием снимается целиком.
+     */
+    public static final DeferredBlock<Block> CRYSTAL_CRUST = BLOCKS.registerSimpleBlock(
+            "crystal_crust",
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_GRAY)
+                    .sound(SoundType.AMETHYST)
+                    .strength(1.5F)
+                    .requiresCorrectToolForDrops()
+    );
+
+    public static final DeferredItem<?> CRYSTAL_CRUST_ITEM = ITEMS.registerSimpleBlockItem(CRYSTAL_CRUST);
+
+    /**
      * Небула-бревно — ствол пещерной поросли Гимпанума.
      *
      * <p>Ведёт себя как обычное бревно во всём, кроме огня: в мире без воздуха
@@ -647,6 +664,7 @@ public final class GimpanumContent {
                         output.accept(SEAL.get());
                         output.accept(CRYSTAL_SHARD.get());
                         output.accept(MONOLITHIC_CRYSTAL_ITEM.get());
+                        output.accept(CRYSTAL_CRUST_ITEM.get());
                         output.accept(DARKNESS_CRYSTAL.get());
                         output.accept(FIRE_BAR.get());
                         output.accept(JADE_NUT.get());
