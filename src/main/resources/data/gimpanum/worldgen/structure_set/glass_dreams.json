@@ -1,0 +1,14 @@
+{
+    "structures": [
+        {
+            "structure": "gimpanum:glass_dreams",
+            "weight": 1
+        }
+    ],
+    "placement": {
+        "type": "minecraft:random_spread",
+        "spacing": 18,
+        "separation": 7,
+        "salt": 58213377
+    }
+}
