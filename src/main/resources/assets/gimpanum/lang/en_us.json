@@ -82,6 +82,7 @@
     "biome.gimpanum.nebula_sands": "Nebula Sands",
     "block.gimpanum.cosmic_ash": "Cosmic Ash",
     "block.gimpanum.scorching_nebula_gas": "Scorching Nebula Gas",
+    "block.gimpanum.volatile_nebula_gas": "Volatile Nebula Gas",
     "block.gimpanum.nebula_gate": "Nebula Gate",
     "block.gimpanum.nebula_portal": "Nebula Portal",
     "gimpanum.command.portal_placed": "Portal arch placed at %s",

@@ -10,6 +10,7 @@ import com.kirbornu.gimpanum.core.CoreConfig;
 import com.kirbornu.gimpanum.dimension.NebulaPortalBlock;
 import com.kirbornu.gimpanum.dimension.NebulaPortalBlockEntity;
 import com.kirbornu.gimpanum.dimension.ScorchingGasBlock;
+import com.kirbornu.gimpanum.dimension.VolatileGasBlock;
 import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
 import com.kirbornu.gimpanum.item.NebulaWoodItem;
@@ -17,6 +18,7 @@ import com.kirbornu.gimpanum.item.PurpleQueenTalismanItem;
 import com.kirbornu.gimpanum.recipe.ThawingRecipe;
 import com.kirbornu.gimpanum.worldgen.NebulaFruitBlock;
 import com.kirbornu.gimpanum.worldgen.NebulaGasFeature;
+import com.kirbornu.gimpanum.worldgen.VolatileGasFeature;
 import com.kirbornu.gimpanum.worldgen.NebulaTreeFeature;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.food.FoodProperties;
@@ -181,6 +183,21 @@ public final class GimpanumContent {
 
     public static final DeferredItem<?> SCORCHING_NEBULA_GAS_ITEM =
             ITEMS.registerSimpleBlockItem(SCORCHING_NEBULA_GAS);
+
+    /** Летучий небула-газ — карманы в породе, взрывающиеся от сотрясения. */
+    public static final DeferredBlock<VolatileGasBlock> VOLATILE_NEBULA_GAS = BLOCKS.registerBlock(
+            "volatile_nebula_gas",
+            VolatileGasBlock::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_LIGHT_GREEN)
+                    .sound(SoundType.GLASS)
+                    .strength(0.4F)
+                    .lightLevel(state -> 7)
+                    .noOcclusion()
+    );
+
+    public static final DeferredItem<?> VOLATILE_NEBULA_GAS_ITEM =
+            ITEMS.registerSimpleBlockItem(VOLATILE_NEBULA_GAS);
 
     /**
      * Замороженная органика — руда в обломках астероидов.
@@ -410,6 +427,10 @@ public final class GimpanumContent {
     public static final DeferredHolder<Feature<?>, NebulaGasFeature> NEBULA_GAS =
             FEATURES.register("nebula_gas", () -> new NebulaGasFeature(NoneFeatureConfiguration.CODEC));
 
+    /** Карманы летучего газа: мелкие и частые. */
+    public static final DeferredHolder<Feature<?>, VolatileGasFeature> VOLATILE_GAS =
+            FEATURES.register("volatile_gas", () -> new VolatileGasFeature(NoneFeatureConfiguration.CODEC));
+
     /**
      * Сериализатор переплавки с непредсказуемым выходом.
      *
@@ -577,6 +598,7 @@ public final class GimpanumContent {
                         output.accept(COSMIC_SAND_ITEM.get());
                         output.accept(COSMIC_ASH_ITEM.get());
                         output.accept(SCORCHING_NEBULA_GAS_ITEM.get());
+                        output.accept(VOLATILE_NEBULA_GAS_ITEM.get());
                         output.accept(FROZEN_ORGANICS_ITEM.get());
                         output.accept(NEBULA_LOG_ITEM.get());
                         output.accept(NEBULA_WOOD_ITEM.get());

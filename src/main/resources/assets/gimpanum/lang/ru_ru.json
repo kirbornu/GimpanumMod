@@ -82,6 +82,7 @@
     "biome.gimpanum.nebula_sands": "Пески туманности",
     "block.gimpanum.cosmic_ash": "Космический пепел",
     "block.gimpanum.scorching_nebula_gas": "Раскалённый небула-газ",
+    "block.gimpanum.volatile_nebula_gas": "Летучий небула-газ",
     "block.gimpanum.nebula_gate": "Небула-врата",
     "block.gimpanum.nebula_portal": "Портал туманности",
     "gimpanum.command.portal_placed": "Портальная арка поставлена в %s",

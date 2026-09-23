@@ -1,5 +1,7 @@
 package com.kirbornu.gimpanum.entity.goal;
 
+import com.kirbornu.gimpanum.dimension.VolatileGasBlock;
+import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -172,6 +174,11 @@ public class DevourBlocksGoal extends Goal {
         level.levelEvent(2001, centre, Block.getId(sample));
 
         for (BlockPos pos : mouthful) {
+            // Летучий газ не глотается, а вспыхивает у самой пасти.
+            if (level.getBlockState(pos).is(GimpanumContent.VOLATILE_NEBULA_GAS.get())) {
+                VolatileGasBlock.disturb(level, pos);
+                continue;
+            }
             // Флаг UPDATE_CLIENTS и ничего сверх: без выпадения (поглотитель не
             // добывает, он поглощает) и без обновления соседей. Обновления
             // соседей здесь не нужны и стоят дорого — за укус их было бы
