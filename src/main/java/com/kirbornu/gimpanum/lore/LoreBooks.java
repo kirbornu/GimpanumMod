@@ -8,6 +8,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.WrittenBookContent;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
@@ -41,8 +42,15 @@ public final class LoreBooks {
     /** Кодек заголовка обрезает по этой длине, поэтому режем сами и заранее. */
     private static final int TITLE_LIMIT = 32;
 
-    /** Мягкий предел страницы: дальше ищем ближайший пробел. */
-    private static final int PAGE_SOFT_LIMIT = 400;
+    /**
+     * Мягкий предел страницы: дальше ищем ближайший пробел. Окно книги
+     * вмещает 14 строк по 114 пикселей — это около 240 знаков кириллицы;
+     * всё, что ниже, игра молча не показывает.
+     */
+    private static final int PAGE_SOFT_LIMIT = 220;
+
+    /** Где в джарке лежат книги, которые кладутся в новую папку. */
+    private static final String[] BUILT_IN = {"data", Gimpanum.MOD_ID, DIR};
 
     private static final String PAGE_BREAK = "---";
 
@@ -172,27 +180,16 @@ public final class LoreBooks {
         return title.length() <= TITLE_LIMIT ? title : title.substring(0, TITLE_LIMIT);
     }
 
+    /**
+     * Книги из джарки. Их полторы сотни, поэтому они лежат файлами в
+     * ресурсах, а не строками в коде, и копируются как есть.
+     */
     private static void writeSamples(Path dir) throws IOException {
-        write(dir.resolve("01_first_survey.txt"), """
-                Отчёт разведки
-                Безымянный картограф
-                Мы вышли из арки на девятый день и не нашли ни ветра, ни звука.
-                Песок здесь не сыплется — он висит, пока его не тронешь.
-                ---
-                Второй отряд ушёл вниз, в ходы, и не вернулся.
-                Записываю это на случай, если кто-то поднимет мою книгу с пола.
-                Не ходите вниз без запаса воздуха. Вниз вообще не ходите.""");
-        write(dir.resolve("02_on_devourers.txt"), """
-                О Поглотителях
-                Тот, кто считал
-                Их слышно раньше, чем видно. Это единственная поблажка,
-                которую здесь дают.
-                ---
-                Стена не помогает. Стена лишь решает, с какой стороны
-                он до тебя доберётся.""");
-    }
-
-    private static void write(Path file, String text) throws IOException {
-        Files.writeString(file, text + System.lineSeparator(), StandardCharsets.UTF_8);
+        Path source = ModList.get().getModFileById(Gimpanum.MOD_ID).getFile().findResource(BUILT_IN);
+        try (Stream<Path> files = Files.list(source)) {
+            for (Path file : files.filter(Files::isRegularFile).toList()) {
+                Files.copy(file, dir.resolve(file.getFileName().toString()));
+            }
+        }
     }
 }
