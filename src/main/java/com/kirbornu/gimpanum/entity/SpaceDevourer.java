@@ -9,7 +9,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -57,7 +56,7 @@ public class SpaceDevourer extends Monster {
 
     public SpaceDevourer(EntityType<? extends Monster> type, Level level) {
         super(type, level);
-        this.xpReward = MobStats.of("space_devourer").experience();
+        this.xpReward = MobStats.of("space_devourer").integer("experience");
         // hoversInPlace = true: управление полётом само отключает тяготение и
         // больше его не возвращает. Иначе поглотитель падал бы всякий раз,
         // когда цель достигнута и движение остановлено, — то есть посреди
@@ -85,38 +84,29 @@ public class SpaceDevourer extends Monster {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 100.0)
-                .add(Attributes.ATTACK_DAMAGE, 40.0)
-                .add(Attributes.ARMOR, 4.0)
-                .add(Attributes.KNOCKBACK_RESISTANCE, 0.5)
-                // 0.40 — семь блоков в секунду, вымерено на прямом отрезке;
-                // связь атрибута со скоростью нелинейная, по формуле не угадать
-                .add(Attributes.MOVEMENT_SPEED, 0.57)
-                // В воздухе управление полётом читает не MOVEMENT_SPEED, а
-                // FLYING_SPEED, и без него моб завис бы на месте.
-                .add(Attributes.FLYING_SPEED, 2.0)
-                // Восемьдесят блоков — и сквозь стены: прятаться от Поглотителя
-                // бессмысленно по замыслу, он всё равно прогрызётся.
-                .add(Attributes.FOLLOW_RANGE, 80.0);
+        // В воздухе управление полётом читает не MOVEMENT_SPEED, а
+        // FLYING_SPEED, и без него моб завис бы на месте. Чутьё — сквозь
+        // стены: прятаться от Поглотителя бессмысленно по замыслу, он всё
+        // равно прогрызётся.
+        return MobStats.attributes(Monster.createMonsterAttributes(), "space_devourer");
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(3, new BoreChaseGoal(this, MobStats.of("space_devourer").attackTicks()));
+        this.goalSelector.addGoal(3, new BoreChaseGoal(this, MobStats.of("space_devourer").integer("attack_interval_ticks")));
         this.goalSelector.addGoal(4, new DevourBlocksGoal(this));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomFlyingGoal(this, 0.6));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 12.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
         this.targetSelector.addGoal(1, (HurtByTargetGoal) new HurtByTargetGoal(this)
-                .setUnseenMemoryTicks(MobStats.of("space_devourer").memoryTicks()));
+                .setUnseenMemoryTicks(MobStats.of("space_devourer").integer("memory_ticks")));
         // Предпоследний {@code false} — «видеть цель необязательно». Поглотитель
         // чует жертву сквозь любую толщу, и это не поблажка, а весь его смысл:
         // стена от него не спасает, она лишь откладывает встречу.
         this.targetSelector.addGoal(2,
                 new NearestAttackableTargetGoal<>(this, Player.class, 0, false, false, null)
-                        .setUnseenMemoryTicks(MobStats.of("space_devourer").memoryTicks()));
+                        .setUnseenMemoryTicks(MobStats.of("space_devourer").integer("memory_ticks")));
     }
 
     /**

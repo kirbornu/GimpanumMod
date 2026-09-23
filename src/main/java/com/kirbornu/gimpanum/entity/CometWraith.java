@@ -10,7 +10,6 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
@@ -26,13 +25,10 @@ import net.minecraft.world.level.Level;
  * пуст, — а поведение задано обычными целями, как у любого моба постарше.
  *
  * <p>Стен для него не существует ни в каком смысле: он видит игрока сквозь
- * породу за {@value #DETECTION} блоков и сквозь неё же летит. Прятаться от
+ * породу на всю дальность чутья и сквозь неё же летит. Прятаться от
  * него бесполезно, можно только уйти.
  */
 public class CometWraith extends Allay {
-
-    /** Радиус, в котором призрак замечает игрока — сквозь что угодно. */
-    public static final double DETECTION = 60.0;
 
     /** Куда он возвращается, оставшись без жертвы: к самому дну лабиринта. */
     private static final int HOME_DEPTH = 12;
@@ -50,28 +46,22 @@ public class CometWraith extends Allay {
         this.moveControl = new FlyingMoveControl(this, 20, true);
         this.setNoGravity(true);
         this.noPhysics = true;
-        this.xpReward = MobStats.of("comet_wraith").experience();
+        this.xpReward = MobStats.of("comet_wraith").integer("experience");
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Allay.createAttributes()
-                .add(Attributes.MAX_HEALTH, 12.0)
-                .add(Attributes.ATTACK_DAMAGE, 24.0)
-                // FLYING_SPEED здесь — единственная настройка погони: она
-                // ведётся вручную, без навигации. 0.98 — двенадцать блоков
-                // в секунду, вымерено.
-                .add(Attributes.FLYING_SPEED, 3.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.42)
-                .add(Attributes.FOLLOW_RANGE, DETECTION);
+        // FLYING_SPEED здесь — единственная настройка погони: она ведётся
+        // вручную, без навигации.
+        return MobStats.attributes(Allay.createAttributes(), "comet_wraith");
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new PhaseChaseGoal(this, MobStats.of("comet_wraith").attackTicks()));
+        this.goalSelector.addGoal(1, new PhaseChaseGoal(this, MobStats.of("comet_wraith").integer("attack_interval_ticks")));
         this.goalSelector.addGoal(5, new SinkToDepthsGoal(this, HOME_DEPTH, 0.06));
         // mustSee = false — в этом весь смысл: порода ему не помеха.
         this.targetSelector.addGoal(0, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("comet_wraith").memoryTicks()));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("comet_wraith").integer("memory_ticks")));
     }
 
     /** Мозг Аллая не нужен: он про танцы и подношения, а не про охоту. */

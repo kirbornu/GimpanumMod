@@ -19,11 +19,14 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 /**
  * Заселение Гимпанума — своё, вместо ванильного.
@@ -47,9 +50,10 @@ import org.jetbrains.annotations.Nullable;
  * <p>Поэтому список мобов в биоме пуст, а расселением занимается этот класс.
  * Он идёт по чанкам вокруг игрока, считает, кто там уже есть, и добирает до
  * заданной плотности — то есть задаёт плотность прямо, а не через доли общего
- * предела. Ставит не ближе {@link #KEEP_AWAY} блоков и не больше
- * {@link #PER_PASS} штук за заход, чтобы население набиралось за несколько
- * секунд, а не одним рывком.
+ * предела. Плотность каждого моба и общие ручки — радиус, частота, отступ от
+ * игрока, предел за заход — берутся из {@link MobStats}, разделы
+ * {@code spawn_per_chunk} и {@code spawner}. Предел за заход нужен, чтобы
+ * население набиралось за несколько секунд, а не одним рывком.
  *
  * <p>Убирает мобов по-прежнему игра: всё, что отошло от игрока дальше 128
  * блоков, исчезает само. Поэтому население держится около заданного и не растёт
@@ -58,47 +62,44 @@ import org.jetbrains.annotations.Nullable;
 @EventBusSubscriber(modid = Gimpanum.MOD_ID)
 public final class GimpanumSpawner {
 
-    /**
-     * Сколько чанков вокруг игрока заселяем.
-     *
-     * <p>Четыре — это 64 блока, дальность, на которой мобы вообще
-     * отрисовываются. Ставить дальше незачем: их не увидят, а тикать они будут.
-     */
-    private static final int RADIUS = 4;
-
-    /** Ходоков на чанк поверхности. */
-    private static final int WALKERS_PER_CHUNK = 2;
-
-    /** Одна Молния на столько Ходоков. */
-    private static final int WALKERS_PER_BOLT = 50;
-
-    /** Один Призрак на столько чанков лабиринта. */
-    private static final int CHUNKS_PER_WRAITH = 4;
-
-    /** Один Поглотитель на столько чанков, независимо от высоты. */
-    private static final int CHUNKS_PER_DEVOURER = 200;
-
-    /** Раз в две секунды. */
-    private static final int PERIOD = 40;
-
-    /** Ближе этого к игроку никто не появляется. */
-    private static final int KEEP_AWAY = 24;
-
-    /** Появлений за один заход — чтобы население набиралось плавно. */
-    private static final int PER_PASS = 12;
-
     /** Попыток найти место под одного моба. */
     private static final int TRIES = 3;
 
     /** Запас от кромки барханов, ниже которого начинается лабиринт. */
     private static final int DEPTH = 7;
 
-    private static final long WRAITH_SALT = 0x7A3B91C6L;
-    private static final long BOLT_SALT = 0x51ED270BL;
-    private static final long DEVOURER_SALT = 0x2F1E3C4DL;
+    /** Где живёт вид: на барханах, в лабиринте под ними или где угодно. */
+    private enum Layer {
+        SURFACE, DEPTHS, ANYWHERE;
 
-    /** Пустой счёт для слоя, который сейчас не заселяем. */
-    private static final Long2IntMap EMPTY = new Long2IntOpenHashMap();
+        boolean admits(boolean surface) {
+            return this == ANYWHERE || (this == SURFACE) == surface;
+        }
+    }
+
+    /**
+     * Вид, которого заселитель держит на заданной плотности.
+     *
+     * <p>Слой выбирается по самому игроку: стоящему на барханах достаются
+     * Ходоки и Молнии, спустившемуся в лабиринт — Призраки. Это не поблажка
+     * ради нагрузки, а то же самое, что и в замысле: Призрак живёт у дна и сам
+     * туда возвращается ({@link com.kirbornu.gimpanum.entity.goal.SinkToDepthsGoal}),
+     * а Ходок с бархана вниз не спускается. Держать полсотни Призраков под
+     * ногами у того, кто гуляет по поверхности, значило бы тикать ими впустую.
+     */
+    private record Kind(DeferredHolder<EntityType<?>, ? extends EntityType<? extends Mob>> type,
+                        Layer layer, Spot spot) {
+
+        String name() {
+            return type.getId().getPath();
+        }
+    }
+
+    private static final List<Kind> KINDS = List.of(
+            new Kind(GimpanumEntities.DUNE_WALKER, Layer.SURFACE, GimpanumSpawner::dunes),
+            new Kind(GimpanumEntities.PLASMA_BOLT, Layer.SURFACE, GimpanumSpawner::sky),
+            new Kind(GimpanumEntities.COMET_WRAITH, Layer.DEPTHS, GimpanumSpawner::labyrinth),
+            new Kind(GimpanumEntities.SPACE_DEVOURER, Layer.ANYWHERE, GimpanumSpawner::anywhere));
 
     private GimpanumSpawner() {
     }
@@ -106,19 +107,21 @@ public final class GimpanumSpawner {
     @SubscribeEvent
     public static void tick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
-        if (server.getTickCount() % PERIOD != 0) {
+        MobStats.Section spawner = MobStats.of("spawner");
+        if (server.getTickCount() % Math.max(1, spawner.integer("period_ticks")) != 0) {
             return;
         }
         ServerLevel level = server.getLevel(NebulaPortal.GIMPANUM);
         if (level == null || level.players().isEmpty()) {
             return;
         }
-        int budget = PER_PASS;
+        int budget = spawner.integer("max_per_pass");
+        int radius = spawner.integer("radius_chunks");
         for (ServerPlayer player : level.players()) {
             if (player.isSpectator()) {
                 continue;
             }
-            budget = populate(level, player.chunkPosition(), onSurface(level, player), budget);
+            budget = populate(level, player.chunkPosition(), onSurface(level, player), radius, budget);
             if (budget <= 0) {
                 return;
             }
@@ -128,103 +131,63 @@ public final class GimpanumSpawner {
     /**
      * Добрать население вокруг одного игрока.
      *
-     * <p>Слой выбирается по самому игроку: стоящему на барханах достаются
-     * Ходоки и Молнии, спустившемуся в лабиринт — Призраки. Это не поблажка
-     * ради нагрузки, а то же самое, что и в замысле: Призрак живёт у дна и сам
-     * туда возвращается ({@link com.kirbornu.gimpanum.entity.goal.SinkToDepthsGoal}),
-     * а Ходок с бархана вниз не спускается. Держать полсотни Призраков под
-     * ногами у того, кто гуляет по поверхности, значило бы тикать ими впустую.
-     *
-     * <p>Поглотитель не привязан ни к какому слою и добирается всегда.
+     * <p>Виды перебираются внутри чанка, а не чанки внутри вида: иначе Ходоки,
+     * которых больше всех, выбирали бы весь предел захода, и Молнии ждали бы,
+     * пока барханы заполнятся целиком.
      */
-    private static int populate(ServerLevel level, ChunkPos centre, boolean surface, int budget) {
+    private static int populate(ServerLevel level, ChunkPos centre, boolean surface, int radius, int budget) {
         AABB region = new AABB(
-                (centre.x - RADIUS) << 4, level.getMinBuildHeight(), (centre.z - RADIUS) << 4,
-                (centre.x + RADIUS + 1) << 4, level.getMaxBuildHeight(), (centre.z + RADIUS + 1) << 4);
+                (centre.x - radius) << 4, level.getMinBuildHeight(), (centre.z - radius) << 4,
+                (centre.x + radius + 1) << 4, level.getMaxBuildHeight(), (centre.z + radius + 1) << 4);
 
-        int side = 2 * RADIUS + 1;
+        int side = 2 * radius + 1;
         int chunks = side * side;
 
-        // Какие чанки несут одиночек. Считаем заранее: это же число задаёт и
-        // предел на всю область, а не только ответ по каждому чанку.
-        boolean[] withWraith = new boolean[chunks];
-        boolean[] withBolt = new boolean[chunks];
-        boolean[] withDevourer = new boolean[chunks];
-        int wraithQuota = 0;
-        int boltQuota = 0;
-        int devourerQuota = 0;
-        for (int dx = -RADIUS; dx <= RADIUS; dx++) {
-            for (int dz = -RADIUS; dz <= RADIUS; dz++) {
-                int i = (dx + RADIUS) * side + (dz + RADIUS);
-                if (!surface && carries(level, centre.x + dx, centre.z + dz,
-                        CHUNKS_PER_WRAITH, WRAITH_SALT)) {
-                    withWraith[i] = true;
-                    wraithQuota++;
-                }
-                if (surface && carries(level, centre.x + dx, centre.z + dz,
-                        WALKERS_PER_BOLT / WALKERS_PER_CHUNK, BOLT_SALT)) {
-                    withBolt[i] = true;
-                    boltQuota++;
-                }
-                if (carries(level, centre.x + dx, centre.z + dz, CHUNKS_PER_DEVOURER, DEVOURER_SALT)) {
-                    withDevourer[i] = true;
-                    devourerQuota++;
+        List<Kind> kinds = KINDS.stream()
+                .filter(kind -> kind.layer().admits(surface))
+                .filter(kind -> MobStats.of(kind.name()).number("spawn_per_chunk") > 0)
+                .toList();
+
+        // Сколько каждого вида положено каждому чанку. Считаем заранее: сумма
+        // задаёт и предел на всю область, а не только ответ по каждому чанку.
+        int[][] quota = new int[kinds.size()][chunks];
+        Long2IntMap[] present = new Long2IntMap[kinds.size()];
+        int[] room = new int[kinds.size()];
+        for (int k = 0; k < kinds.size(); k++) {
+            Kind kind = kinds.get(k);
+            double density = MobStats.of(kind.name()).number("spawn_per_chunk");
+            long salt = kind.name().hashCode();
+            int sum = 0;
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    int i = (dx + radius) * side + (dz + radius);
+                    quota[k][i] = quota(level, centre.x + dx, centre.z + dz, density, salt);
+                    sum += quota[k][i];
                 }
             }
+            present[k] = count(level, kind.type().get(), region);
+            // Предел на всю область поверх предела на чанк. Без него население
+            // медленно ползёт вверх: мобы расходятся по соседям, опустевший чанк
+            // просит добавки, а ушедшие никуда не делись.
+            room[k] = sum - total(present[k]);
         }
 
-        Long2IntMap walkers = surface ? count(level, GimpanumEntities.DUNE_WALKER.get(), region) : EMPTY;
-        Long2IntMap bolts = surface ? count(level, GimpanumEntities.PLASMA_BOLT.get(), region) : EMPTY;
-        Long2IntMap wraiths = surface ? EMPTY : count(level, GimpanumEntities.COMET_WRAITH.get(), region);
-        Long2IntMap devourers = count(level, GimpanumEntities.SPACE_DEVOURER.get(), region);
-
-        // Предел на всю область поверх предела на чанк. Без него население
-        // медленно ползёт вверх: мобы расходятся по соседям, опустевший чанк
-        // просит добавки, а ушедшие никуда не делись.
-        int walkerRoom = surface ? WALKERS_PER_CHUNK * chunks - total(walkers) : 0;
-        int boltRoom = surface ? boltQuota - total(bolts) : 0;
-        int wraithRoom = surface ? 0 : wraithQuota - total(wraiths);
-        int devourerRoom = devourerQuota - total(devourers);
-
-        for (int dx = -RADIUS; dx <= RADIUS; dx++) {
-            for (int dz = -RADIUS; dz <= RADIUS; dz++) {
-                if (budget <= 0) {
-                    return 0;
-                }
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
                 int cx = centre.x + dx;
                 int cz = centre.z + dz;
                 if (level.getChunkSource().getChunkNow(cx, cz) == null) {
                     continue;
                 }
                 long key = ChunkPos.asLong(cx, cz);
-                int i = (dx + RADIUS) * side + (dz + RADIUS);
-
-                int added = fill(level, cx, cz, GimpanumEntities.DUNE_WALKER.get(),
-                        Math.min(WALKERS_PER_CHUNK - walkers.get(key), walkerRoom), budget,
-                        GimpanumSpawner::dunes);
-                walkerRoom -= added;
-                budget -= added;
-
-                if (withBolt[i]) {
-                    added = fill(level, cx, cz, GimpanumEntities.PLASMA_BOLT.get(),
-                            Math.min(1 - bolts.get(key), boltRoom), budget, GimpanumSpawner::sky);
-                    boltRoom -= added;
-                    budget -= added;
-                }
-
-                if (withWraith[i]) {
-                    added = fill(level, cx, cz, GimpanumEntities.COMET_WRAITH.get(),
-                            Math.min(1 - wraiths.get(key), wraithRoom), budget,
-                            GimpanumSpawner::labyrinth);
-                    wraithRoom -= added;
-                    budget -= added;
-                }
-
-                if (withDevourer[i]) {
-                    added = fill(level, cx, cz, GimpanumEntities.SPACE_DEVOURER.get(),
-                            Math.min(1 - devourers.get(key), devourerRoom), budget,
-                            GimpanumSpawner::anywhere);
-                    devourerRoom -= added;
+                int i = (dx + radius) * side + (dz + radius);
+                for (int k = 0; k < kinds.size(); k++) {
+                    if (budget <= 0) {
+                        return 0;
+                    }
+                    int added = fill(level, cx, cz, kinds.get(k).type().get(),
+                            Math.min(quota[k][i] - present[k].get(key), room[k]), budget, kinds.get(k).spot());
+                    room[k] -= added;
                     budget -= added;
                 }
             }
@@ -268,20 +231,23 @@ public final class GimpanumSpawner {
     }
 
     /**
-     * Чанк, который всегда несёт одного такого моба.
+     * Сколько мобов этого вида положено чанку.
      *
-     * <p>Зерно замешано из зерна мира и координат чанка, как это делает игра при
+     * <p>Целая часть плотности — каждому чанку, дробная — доле чанков. Зерно
+     * замешано из зерна мира и координат чанка, как это делает игра при
      * размещении структур: один и тот же чанк всегда даёт один и тот же ответ,
-     * и «раз в тридцать чанков» означает ровно это, а не «с вероятностью один к
-     * тридцати каждый заход».
+     * и «один на четыре чанка» означает ровно это, а не «с вероятностью
+     * четверть каждый заход».
      */
-    private static boolean carries(ServerLevel level, int chunkX, int chunkZ, int oneIn, long salt) {
-        if (oneIn <= 1) {
-            return true;
+    private static int quota(ServerLevel level, int chunkX, int chunkZ, double density, long salt) {
+        int whole = (int) density;
+        double part = density - whole;
+        if (part <= 0.0) {
+            return whole;
         }
         RandomSource random = RandomSource.create(
                 chunkX * 341873128712L + chunkZ * 132897987541L + level.getSeed() + salt);
-        return random.nextInt(oneIn) == 0;
+        return whole + (random.nextDouble() < part ? 1 : 0);
     }
 
     /** Кромка барханов: Ходоки. */
@@ -349,8 +315,9 @@ public final class GimpanumSpawner {
         if (!level.noCollision(box)) {
             return null;
         }
+        int keepAway = MobStats.of("spawner").integer("min_distance_blocks");
         for (ServerPlayer player : level.players()) {
-            if (!player.isSpectator() && player.distanceToSqr(x, y, z) < KEEP_AWAY * KEEP_AWAY) {
+            if (!player.isSpectator() && player.distanceToSqr(x, y, z) < (double) keepAway * keepAway) {
                 return null;
             }
         }

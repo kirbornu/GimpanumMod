@@ -39,8 +39,6 @@ import org.jetbrains.annotations.Nullable;
  */
 public class DuneWalker extends Zombie {
 
-    public static final double DETECTION = 96.0;
-
     private static final int AFTERMATH = 200;
 
     /** Игровое время прошлого тика — по разрыву видно, что моб выпадал из прогрузки. */
@@ -48,7 +46,7 @@ public class DuneWalker extends Zombie {
 
     public DuneWalker(EntityType<? extends Zombie> type, Level level) {
         super(type, level);
-        this.xpReward = MobStats.of("dune_walker").experience();
+        this.xpReward = MobStats.of("dune_walker").integer("experience");
         // Предел обхода при поиске пути игра берёт как FOLLOW_RANGE * 16, а
         // чутьё у ходока дальнее — вышло бы 1536 узлов на каждый поиск. Путь он
         // теперь строит только вблизи (см. PacedMeleeAttackGoal), и такой запас
@@ -59,16 +57,7 @@ public class DuneWalker extends Zombie {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Zombie.createAttributes()
-                .add(Attributes.MAX_HEALTH, 25.0)
-                .add(Attributes.ATTACK_DAMAGE, 12.0)
-                .add(Attributes.ARMOR, 2.0)
-                // 0.17 — блок в секунду, вымерено (вчетверо медленнее зомби)
-                // 0.24 — вдвое быстрее прежнего 0.17. Не вдвое больше числа: скорость
-                // растёт от атрибута примерно как квадрат, значит удвоить её —
-                // это умножить атрибут на корень из двух.
-                .add(Attributes.MOVEMENT_SPEED, 0.24)
-                .add(Attributes.FOLLOW_RANGE, DETECTION)
+        return MobStats.attributes(Zombie.createAttributes(), "dune_walker")
                 .add(Attributes.SPAWN_REINFORCEMENTS_CHANCE, 0.0);
     }
 
@@ -77,8 +66,8 @@ public class DuneWalker extends Zombie {
         super.addBehaviourGoals();
         // Ванильный зомбиный удар идёт раз в секунду — заменяем своим темпом.
         this.goalSelector.removeAllGoals(goal -> goal instanceof ZombieAttackGoal);
-        this.goalSelector.addGoal(2, new PacedMeleeAttackGoal(this, 1.0, MobStats.of("dune_walker").attackTicks()));
-        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("dune_walker").memoryTicks()));
+        this.goalSelector.addGoal(2, new PacedMeleeAttackGoal(this, 1.0, MobStats.of("dune_walker").integer("attack_interval_ticks")));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("dune_walker").integer("memory_ticks")));
     }
 
     /**
