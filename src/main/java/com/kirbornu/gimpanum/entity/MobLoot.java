@@ -66,6 +66,11 @@ public final class MobLoot {
                 || !level.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
             return;
         }
+        // Истлевший сирота не роняет ничего — ни добычи, ни того, что на нём.
+        if (dead instanceof DuneWalker walker && walker.withered()) {
+            event.setCanceled(true);
+            return;
+        }
         MobStats.Section stats = MobStats.of(name);
         RandomSource random = dead.getRandom();
         for (JsonElement entry : stats.list("drops")) {
