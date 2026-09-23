@@ -29,7 +29,9 @@
     "features": [
         [],
         [],
-        [],
+        [
+            "gimpanum:meteor_crater"
+        ],
         [],
         [],
         [],
