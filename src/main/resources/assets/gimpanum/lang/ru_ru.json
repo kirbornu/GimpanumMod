@@ -227,5 +227,5 @@
     "gimpanum.tooltip.thawing_hint": "Внутри что-то живое: %s видов. Shift — какие.",
     "gimpanum.tooltip.thawing_header": "Внутри может оказаться:",
     "gimpanum.tooltip.thawing_line": "  %s — %s%%",
-    "gimpanum.command.mobs_count": "Характеристик мобов: %s. Файл: %s"
+    "gimpanum.command.mobs_count": "Разделов в настройке мобов: %s. Файл: %s"
 }

@@ -7,7 +7,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -53,18 +52,12 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
         super(type, level);
         this.moveControl = new FlyingMoveControl(this, 10, true);
         this.setNoGravity(true);
-        this.xpReward = MobStats.of("plasma_bolt").experience();
+        this.xpReward = MobStats.of("plasma_bolt").integer("experience");
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 60.0)
-                .add(Attributes.ATTACK_DAMAGE, 32.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.205)
-                // 0.485 — четверть блока в секунду. Летающие мобы ходят по
-                // FLYING_SPEED, а не по MOVEMENT_SPEED; связь линейная, вымерено.
-                .add(Attributes.FLYING_SPEED, 0.97)
-                .add(Attributes.FOLLOW_RANGE, 64.0);
+        // Летающие мобы ходят по FLYING_SPEED, а не по MOVEMENT_SPEED.
+        return MobStats.attributes(Monster.createMonsterAttributes(), "plasma_bolt");
     }
 
     @Override
@@ -79,14 +72,14 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
     @Override
     protected void registerGoals() {
         // Раз в три-четыре секунды, с расстояния, на котором ответить нечем.
-        this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.9, MobStats.of("plasma_bolt").attackTicks(),
-                MobStats.of("plasma_bolt").attackTicks() + 20, 30.0F));
+        this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.9, MobStats.of("plasma_bolt").integer("attack_interval_ticks"),
+                MobStats.of("plasma_bolt").integer("attack_interval_ticks") + 20, 30.0F));
         this.goalSelector.addGoal(5, new WaterAvoidingRandomFlyingGoal(this, 0.7));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 40.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 
         this.targetSelector.addGoal(0, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("plasma_bolt").memoryTicks()));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("plasma_bolt").integer("memory_ticks")));
     }
 
     @Override
