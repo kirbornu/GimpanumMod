@@ -266,5 +266,22 @@
     "gimpanum.emission.guilt": "Fit of Guilt",
     "gimpanum.emission.guilt.hint": "They were Verites. Every blow comes back to you",
     "block.gimpanum.phonos_clot": "Phonos Clot",
-    "gimpanum.command.structures_count": "Structure config sections: %s. File: %s"
+    "gimpanum.command.structures_count": "Structure config sections: %s. File: %s",
+    "item.gimpanum.radita_wings": "Radita Wings",
+    "item.gimpanum.god_heartbeat": "Beat of the God's Heart",
+    "item.gimpanum.god_heartbeat.hint": "Eat it to gain one more heart for good",
+    "item.gimpanum.god_heartbeat.count": "Hearts from Beats: %s",
+    "item.gimpanum.god_heartbeat.full": "Your heart already beats at full strength",
+    "item.gimpanum.sklav_carapace": "Sklav Carapace",
+    "item.gimpanum.sklav_carapace.empty": "Empty. The first item put in sets its kind",
+    "item.gimpanum.sklav_carapace.holds": "%s: %s of %s",
+    "item.gimpanum.sklav_carapace.hint": "Right-click: one stack, Shift+Right-click: as much as fits",
+    "item.gimpanum.faceting_template": "Faceting",
+    "upgrade.gimpanum.faceting": "Crystal Faceting",
+    "item.gimpanum.faceting_template.applies_to": "Netherite Armor, Weapons and Tools",
+    "item.gimpanum.faceting_template.ingredients": "Monolithic Crystal",
+    "item.gimpanum.faceting_template.base_slot_description": "Add netherite armor, weapon, or tool",
+    "item.gimpanum.faceting_template.additions_slot_description": "Add Monolithic Crystal",
+    "item.gimpanum.faceted": "Faceted with crystal",
+    "gimpanum.command.items_count": "Item config sections: %s. File: %s"
 }

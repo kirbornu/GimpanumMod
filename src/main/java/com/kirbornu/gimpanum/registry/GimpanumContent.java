@@ -16,7 +16,19 @@ import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
 import com.kirbornu.gimpanum.item.NebulaWoodItem;
 import com.kirbornu.gimpanum.item.PurpleQueenTalismanItem;
+import com.kirbornu.gimpanum.item.CarapaceContents;
+import com.kirbornu.gimpanum.item.GodHeartbeatItem;
+import com.kirbornu.gimpanum.item.RaditaWingsItem;
+import com.kirbornu.gimpanum.item.SklavCarapaceItem;
+import com.kirbornu.gimpanum.recipe.FacetingRecipe;
 import com.kirbornu.gimpanum.recipe.ThawingRecipe;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Unit;
+import net.minecraft.world.item.SmithingTemplateItem;
+import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
+import java.util.List;
 import com.kirbornu.gimpanum.worldgen.NebulaFruitBlock;
 import com.kirbornu.gimpanum.worldgen.NebulaGasFeature;
 import com.kirbornu.gimpanum.worldgen.VolatileGasFeature;
@@ -653,6 +665,79 @@ public final class GimpanumContent {
             new Item.Properties().rarity(Rarity.EPIC).stacksTo(16).fireResistant()
     );
 
+    /**
+     * Крылья Радитажа — элитры, которым не нужны ракеты.
+     *
+     * <p>Прочность и починка как у элитр: сила Крыльев в том, что они машут
+     * сами, а не в том, что их не надо беречь.
+     */
+    public static final DeferredItem<RaditaWingsItem> RADITA_WINGS = ITEMS.registerItem(
+            "radita_wings",
+            RaditaWingsItem::new,
+            new Item.Properties().durability(432).rarity(Rarity.EPIC).fireResistant()
+    );
+
+    /** Биение Сердца Бога — навсегда +1 сердце. */
+    public static final DeferredItem<GodHeartbeatItem> GOD_HEARTBEAT = ITEMS.registerItem(
+            "god_heartbeat",
+            GodHeartbeatItem::new,
+            new Item.Properties().rarity(Rarity.EPIC).stacksTo(16).fireResistant()
+    );
+
+    /** Что лежит в Панцире Склава. */
+    public static final Supplier<DataComponentType<CarapaceContents>> CARAPACE_CONTENTS =
+            DATA_COMPONENTS.register("carapace_contents",
+                    () -> DataComponentType.<CarapaceContents>builder()
+                            .persistent(CarapaceContents.CODEC)
+                            .networkSynchronized(CarapaceContents.STREAM_CODEC)
+                            .build());
+
+    /** Панцирь Склава — короб на тысячи вещей одного вида. */
+    public static final DeferredItem<SklavCarapaceItem> SKLAV_CARAPACE = ITEMS.registerItem(
+            "sklav_carapace",
+            SklavCarapaceItem::new,
+            new Item.Properties().rarity(Rarity.EPIC).stacksTo(1).fireResistant()
+    );
+
+    /** Отметка огранённой вещи: огранить дважды нельзя, а подсказка говорит, что она огранена. */
+    public static final Supplier<DataComponentType<Unit>> FACETED =
+            DATA_COMPONENTS.register("faceted",
+                    () -> DataComponentType.<Unit>builder()
+                            .persistent(Unit.CODEC)
+                            .networkSynchronized(StreamCodec.unit(Unit.INSTANCE))
+                            .build());
+
+    /**
+     * Огранка — шаблон кузнечного стола, поднимающий незерит выше незерита.
+     *
+     * <p>Шаблон кузнечного стола задаёт свойства предмета сам, поэтому
+     * редкость и стойкость к огню ему доставляет {@link #epicTemplate}.
+     */
+    public static final DeferredItem<SmithingTemplateItem> FACETING_TEMPLATE = ITEMS.register(
+            "faceting_template",
+            () -> new SmithingTemplateItem(
+                    Component.translatable("item.gimpanum.faceting_template.applies_to")
+                            .withStyle(ChatFormatting.BLUE),
+                    Component.translatable("item.gimpanum.faceting_template.ingredients")
+                            .withStyle(ChatFormatting.BLUE),
+                    Component.translatable("upgrade.gimpanum.faceting").withStyle(ChatFormatting.GRAY),
+                    Component.translatable("item.gimpanum.faceting_template.base_slot_description"),
+                    Component.translatable("item.gimpanum.faceting_template.additions_slot_description"),
+                    List.of(ResourceLocation.withDefaultNamespace("item/empty_armor_slot_helmet"),
+                            ResourceLocation.withDefaultNamespace("item/empty_slot_sword"),
+                            ResourceLocation.withDefaultNamespace("item/empty_armor_slot_chestplate"),
+                            ResourceLocation.withDefaultNamespace("item/empty_slot_pickaxe"),
+                            ResourceLocation.withDefaultNamespace("item/empty_armor_slot_leggings"),
+                            ResourceLocation.withDefaultNamespace("item/empty_slot_axe"),
+                            ResourceLocation.withDefaultNamespace("item/empty_armor_slot_boots"),
+                            ResourceLocation.withDefaultNamespace("item/empty_slot_shovel"),
+                            ResourceLocation.withDefaultNamespace("item/empty_slot_hoe")),
+                    List.of(ResourceLocation.withDefaultNamespace("item/empty_slot_amethyst_shard")))
+    );
+
+    public static final DeferredHolder<RecipeSerializer<?>, FacetingRecipe.Serializer> FACETING =
+            RECIPE_SERIALIZERS.register("faceting", FacetingRecipe.Serializer::new);
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register(
             "main",
             () -> CreativeModeTab.builder()
@@ -695,6 +780,10 @@ public final class GimpanumContent {
                         output.accept(TRANSPARENT_BALL.get());
                         output.accept(DRUID_GIFT.get());
                         output.accept(PURPLE_QUEEN_TALISMAN.get());
+                        output.accept(RADITA_WINGS.get());
+                        output.accept(GOD_HEARTBEAT.get());
+                        output.accept(SKLAV_CARAPACE.get());
+                        output.accept(FACETING_TEMPLATE.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.COMET_WRAITH_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.DUNE_WALKER_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.DUNE_CAPTAIN_EGG.get());
@@ -715,5 +804,13 @@ public final class GimpanumContent {
         DATA_COMPONENTS.register(modBus);
         RECIPE_SERIALIZERS.register(modBus);
         FEATURES.register(modBus);
+        modBus.addListener(GimpanumContent::epicTemplate);
+    }
+
+    /** Огранка — предмет высшего тира, как и прочие: эпическая и не горит. */
+    private static void epicTemplate(ModifyDefaultComponentsEvent event) {
+        event.modify(FACETING_TEMPLATE.get(), patch -> patch
+                .set(DataComponents.RARITY, Rarity.EPIC)
+                .set(DataComponents.FIRE_RESISTANT, Unit.INSTANCE));
     }
 }

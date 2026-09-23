@@ -39,6 +39,8 @@ public final class GimpanumNetwork {
 
         registrar.playToClient(ThawingResultsPayload.TYPE, ThawingResultsPayload.STREAM_CODEC,
                 ThawingResultsHandler::handle);
+
+        registrar.playToServer(WingFlapPayload.TYPE, WingFlapPayload.STREAM_CODEC, WingFlapPayload::handle);
     }
 
     /**

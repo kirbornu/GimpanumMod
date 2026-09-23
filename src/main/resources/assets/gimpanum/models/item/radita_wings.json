@@ -1,0 +1,14 @@
+{
+    "parent": "minecraft:item/generated",
+    "textures": {
+        "layer0": "gimpanum:item/radita_wings"
+    },
+    "overrides": [
+        {
+            "predicate": {
+                "minecraft:broken": 1
+            },
+            "model": "gimpanum:item/broken_radita_wings"
+        }
+    ]
+}
