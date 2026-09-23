@@ -3,10 +3,8 @@ package com.kirbornu.gimpanum.worldgen;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
-import net.minecraft.world.level.block.AmethystClusterBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -20,10 +18,10 @@ import java.util.List;
 /**
  * Хрустальная жеода — маленькая, не больше трёх блоков в радиусе.
  *
- * <p>Слои снаружи внутрь: гладкий базальт, кальцит, аметист и крошечная полость
- * в середине, где на стенках сидят аметистовые друзы. В аметистовой выстилке
- * — один-два блока Монолитного хрусталя, изредка больше, но никогда не больше
- * пяти: жеода — находка, а не рудник.
+ * <p>Своя, а не ванильная аметистовая: слои снаружи внутрь — Космический пепел,
+ * Хрустальная корка и крошечная полость в середине. В корке — один-два блока
+ * Монолитного хрусталя, изредка больше, но никогда не больше пяти: жеода —
+ * находка, а не рудник.
  *
  * <p>Ставится только в сплошную породу и замещает только её: пещера, прошедшая
  * рядом, вскрывает жеоду, и тогда её видно из хода.
@@ -31,9 +29,8 @@ import java.util.List;
 public class CrystalGeodeFeature extends Feature<NoneFeatureConfiguration> {
 
     private static final double HOLLOW = 1.3;
-    private static final double AMETHYST = 2.0;
-    private static final double CALCITE = 2.55;
-    private static final double SHELL = 3.0;
+    private static final double CRUST = 2.0;
+    private static final double SHELL = 2.8;
 
     /** Меньше этой доли породы в шаре — жеода висела бы в пустоте, не ставим. */
     private static final double SOLID_SHARE = 0.6;
@@ -66,7 +63,8 @@ public class CrystalGeodeFeature extends Feature<NoneFeatureConfiguration> {
         }
 
         List<BlockPos> lining = new ArrayList<>();
-        List<BlockPos> hollow = new ArrayList<>();
+        BlockState crust = GimpanumContent.CRYSTAL_CRUST.get().defaultBlockState();
+        BlockState ash = GimpanumContent.COSMIC_ASH.get().defaultBlockState();
         for (BlockPos pos : BlockPos.betweenClosed(centre.offset(-reach, -reach, -reach), centre.offset(reach, reach, reach))) {
             // Край только внутрь: граница гуляет, но шар не выходит за радиус.
             double distance = Math.sqrt(pos.distSqr(centre)) + random.nextDouble() * 0.3;
@@ -74,34 +72,25 @@ public class CrystalGeodeFeature extends Feature<NoneFeatureConfiguration> {
                 continue;
             }
             BlockPos cell = pos.immutable();
-            BlockState state = level.getBlockState(cell);
-            if (distance <= HOLLOW && state.isAir()) {
-                hollow.add(cell);
-                continue;
-            }
-            if (!Terrain.rock(state)) {
+            if (!Terrain.rock(level.getBlockState(cell))) {
                 continue;
             }
             if (distance <= HOLLOW) {
                 level.setBlock(cell, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
-                hollow.add(cell);
-            } else if (distance <= AMETHYST) {
-                level.setBlock(cell, Blocks.AMETHYST_BLOCK.defaultBlockState(), Block.UPDATE_CLIENTS);
+            } else if (distance <= CRUST) {
+                level.setBlock(cell, crust, Block.UPDATE_CLIENTS);
                 lining.add(cell);
-            } else if (distance <= CALCITE) {
-                level.setBlock(cell, Blocks.CALCITE.defaultBlockState(), Block.UPDATE_CLIENTS);
             } else {
-                level.setBlock(cell, Blocks.SMOOTH_BASALT.defaultBlockState(), Block.UPDATE_CLIENTS);
+                level.setBlock(cell, ash, Block.UPDATE_CLIENTS);
             }
         }
 
         crystals(level, random, lining);
-        druses(level, random, hollow);
         return true;
     }
 
     /**
-     * Монолитный хрусталь в выстилке — один, а дальше каждый следующий всё
+     * Монолитный хрусталь в корке — один, а дальше каждый следующий всё
      * реже: второй с шансом 40 %, третий 16 %, и так до пяти.
      */
     private static void crystals(WorldGenLevel level, RandomSource random, List<BlockPos> lining) {
@@ -112,24 +101,6 @@ public class CrystalGeodeFeature extends Feature<NoneFeatureConfiguration> {
         BlockState crystal = GimpanumContent.MONOLITHIC_CRYSTAL.get().defaultBlockState();
         for (int i = 0; i < count && !lining.isEmpty(); i++) {
             level.setBlock(lining.remove(random.nextInt(lining.size())), crystal, Block.UPDATE_CLIENTS);
-        }
-    }
-
-    /** Друзы на стенках полости — каждая растёт от аметиста, к которому прилипла. */
-    private static void druses(WorldGenLevel level, RandomSource random, List<BlockPos> hollow) {
-        Block[] sizes = {Blocks.SMALL_AMETHYST_BUD, Blocks.MEDIUM_AMETHYST_BUD, Blocks.LARGE_AMETHYST_BUD,
-                Blocks.AMETHYST_CLUSTER};
-        for (BlockPos pos : hollow) {
-            if (random.nextFloat() > 0.5F) {
-                continue;
-            }
-            for (Direction side : Direction.values()) {
-                if (level.getBlockState(pos.relative(side)).is(Blocks.AMETHYST_BLOCK)) {
-                    level.setBlock(pos, sizes[random.nextInt(sizes.length)].defaultBlockState()
-                            .setValue(AmethystClusterBlock.FACING, side.getOpposite()), Block.UPDATE_CLIENTS);
-                    break;
-                }
-            }
         }
     }
 }
