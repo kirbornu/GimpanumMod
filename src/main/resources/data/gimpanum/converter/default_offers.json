@@ -1,6 +1,214 @@
 {
   "offers": [
     {
+      "id": "blank_offer_1",
+      "weight": 3,
+      "input": {
+        "id": "createdieselgenerators:chemical_turret"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Химические турели в Хрусталь",
+      "output_count": 4000
+    },
+    {
+      "id": "blank_offer_2",
+      "weight": 3,
+      "input": {
+        "id": "createbigcannons:nitropowder"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Бездымный порох в Хрусталь",
+      "output_count": 1500
+    },
+    {
+      "id": "blank_offer_3",
+      "weight": 3,
+      "input": {
+        "id": "gimpanum:stripped_nebula_wood"
+      },
+      "quota": 64,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Небула-древесина в Хрусталь",
+      "output_count": 500
+    },
+    {
+      "id": "blank_offer_4",
+      "weight": 3,
+      "input": {
+        "id": "createaddition:tesla_coil"
+      },
+      "quota": 320,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Катушки Тесла в Хрусталь",
+      "output_count": 3000
+    },
+    {
+      "id": "blank_offer_5",
+      "weight": 3,
+      "input": {
+        "id": "createaddition:festive_spool"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Гирлянды в Хрусталь",
+      "output_count": 600
+    },
+    {
+      "id": "blank_offer_6",
+      "weight": 3,
+      "input": {
+        "id": "createdieselgenerators:biodiesel_bucket"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Биодизель в Хрусталь",
+      "output_count": 2500
+    },
+    {
+      "id": "blank_offer_7",
+      "weight": 3,
+      "input": {
+        "id": "create:sturdy_sheet"
+      },
+      "quota": 1280,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Прочные листы в Хрусталь",
+      "output_count": 500
+    },
+    {
+      "id": "blank_offer_8",
+      "weight": 3,
+      "input": {
+        "id": "create:electron_tube"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Электронные лампы в Хрусталь",
+      "output_count": 400
+    },
+    {
+      "id": "blank_offer_9",
+      "weight": 3,
+      "input": {
+        "id": "createfood:spicy_sausages"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Острые колбаски в Хрусталь",
+      "output_count": 2000
+    },
+    {
+      "id": "blank_offer_10",
+      "weight": 3,
+      "input": {
+        "id": "createfood:chorus_fruit_ice_cream_cone"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Хорусовое мороженое в Хрусталь",
+      "output_count": 2500
+    },
+    {
+      "id": "blank_offer_11",
+      "weight": 3,
+      "input": {
+        "id": "createfood:apple_milkshake_bottle"
+      },
+      "quota": 160,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Яблочный молочный коктейль в Хрусталь",
+      "output_count": 400
+    },
+    {
+      "id": "blank_offer_12",
+      "weight": 3,
+      "input": {
+        "id": "createfood:bar_of_white_chocolate"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Белый шоколад в Хрусталь",
+      "output_count": 2000
+    },
+    {
+      "id": "blank_offer_13",
+      "weight": 3,
+      "input": {
+        "id": "create:precision_mechanism"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Механизмы точности в Хрусталь",
+      "output_count": 1000
+    },
+    {
+      "id": "blank_offer_14",
+      "weight": 3,
+      "input": {
+        "id": "farmersdelight:vegetable_noodles"
+      },
+      "quota": 128,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Овощная лапща в Хрусталь",
+      "output_count": 200
+    },
+    {
+      "id": "blank_offer_15",
+      "weight": 3,
+      "input": {
+        "id": "create:experience_block"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Блоки опыта в Хрусталь",
+      "output_count": 10
+    },
+    {
+      "id": "blank_offer_16",
+      "weight": 3,
+      "input": {
+        "id": "createaddition:electric_motor"
+      },
+      "quota": 320,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Электрические моторы в Хрусталь",
+      "output_count": 2000
+    },
+    {
       "id": "chemical_turret_to_shard",
       "weight": 3,
       "input": {
@@ -210,7 +418,7 @@
     },
     {
       "id": "crystal_shard_to_darkness_crystal",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "gimpanum:crystal_shard"
       },
@@ -223,7 +431,7 @@
     },
     {
       "id": "crystal_shard_to_fire_bar",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "gimpanum:crystal_shard"
       },
@@ -236,7 +444,7 @@
     },
     {
       "id": "crystal_shard_to_jade_nut",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "gimpanum:crystal_shard"
       },
@@ -249,7 +457,7 @@
     },
     {
       "id": "crystal_shard_to_plant_ancestor",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "gimpanum:crystal_shard"
       },
@@ -262,7 +470,7 @@
     },
     {
       "id": "crystal_shard_to_sparkle_string",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "gimpanum:crystal_shard"
       },
@@ -275,7 +483,7 @@
     },
     {
       "id": "crystal_shard_to_stone_rod",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "gimpanum:crystal_shard"
       },
@@ -288,7 +496,7 @@
     },
     {
       "id": "crystal_shard_to_tenderness_stone",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "gimpanum:crystal_shard"
       },
@@ -301,7 +509,7 @@
     },
     {
       "id": "crystal_shard_to_transparent_ball",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "gimpanum:crystal_shard"
       },
@@ -314,7 +522,7 @@
     },
     {
       "id": "totem_of_undying_to_purple_queen_talisman",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "minecraft:totem_of_undying"
       },
@@ -326,7 +534,7 @@
     },
     {
       "id": "heavy_core_to_furious_shell",
-      "weight": 11,
+      "weight": 22,
       "input": {
         "id": "minecraft:heavy_core"
       },
@@ -338,7 +546,7 @@
     },
     {
       "id": "enchanted_golden_apple_to_druid_gift",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "minecraft:enchanted_golden_apple"
       },
@@ -350,7 +558,7 @@
     },
     {
       "id": "beacon_to_common_claim",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "minecraft:beacon"
       },
@@ -362,7 +570,7 @@
     },
     {
       "id": "elytra_to_radita_wings",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "minecraft:elytra"
       },
@@ -374,7 +582,7 @@
     },
     {
       "id": "heart_of_the_sea_to_god_heartbeat",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "minecraft:heart_of_the_sea"
       },
@@ -386,7 +594,7 @@
     },
     {
       "id": "shulker_shell_to_sklav_carapace",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "minecraft:shulker_shell"
       },
@@ -398,7 +606,7 @@
     },
     {
       "id": "netherite_template_to_faceting",
-      "weight": 10,
+      "weight": 20,
       "input": {
         "id": "minecraft:netherite_upgrade_smithing_template"
       },
