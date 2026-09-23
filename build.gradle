@@ -77,11 +77,6 @@ def ftbJars = files(
 // поэтому мост ходит по внутренним классам и обязан переживать их исчезновение.
 def xaeroJar = file("other_mods_in_modpack/xaerominimap-neoforge-${minecraft_version}-${xaero_minimap_version}.jar")
 
-// Open Parties and Claims — единственный клеймовый мод сборки с публичным API.
-// Нужен только для компиляции моста; без него Контрольная точка работает, но
-// чанк не клеймит.
-def opacJar = file("other_mods_in_modpack/open-parties-and-claims-neoforge-${minecraft_version}-${opac_version}.jar")
-
 // Create Big Cannons — Яростный снаряд наследует их снаряд, поэтому это
 // единственная зависимость мода, без которой часть содержимого не появится.
 // Create и Ritchie's Projectile Library нужны лишь затем, чтобы javac
@@ -110,12 +105,6 @@ dependencies {
         compileOnly ftbJars
     } else {
         logger.lifecycle("FTB Teams jars not found — building without team support.")
-    }
-
-    if (opacJar.exists()) {
-        compileOnly files(opacJar)
-    } else {
-        logger.lifecycle("Open Parties and Claims jar not found at ${opacJar} — building without claim support.")
     }
 
     if (!cbcJars.isEmpty()) {
