@@ -41,18 +41,6 @@ public class DuneWalker extends Zombie {
 
     public static final double DETECTION = 96.0;
 
-    /**
-     * Десять минут памяти о потерянной из виду цели.
-     *
-     * <p>Число не случайное: при скорости в блок в секунду за это время ходок
-     * покрывает больше, чем радиус, в котором он способен кого-то заметить.
-     * То есть замеченного он догоняет всегда — вопрос лишь во времени.
-     */
-    private static final int MEMORY = 12000;
-
-    /** Раз в две с половиной секунды. */
-    private static final int ATTACK_INTERVAL = 50;
-
     private static final int AFTERMATH = 200;
 
     /** Игровое время прошлого тика — по разрыву видно, что моб выпадал из прогрузки. */
@@ -60,7 +48,7 @@ public class DuneWalker extends Zombie {
 
     public DuneWalker(EntityType<? extends Zombie> type, Level level) {
         super(type, level);
-        this.xpReward = 6;
+        this.xpReward = MobStats.of("dune_walker").experience();
         // Предел обхода при поиске пути игра берёт как FOLLOW_RANGE * 16, а
         // чутьё у ходока дальнее — вышло бы 1536 узлов на каждый поиск. Путь он
         // теперь строит только вблизи (см. PacedMeleeAttackGoal), и такой запас
@@ -89,8 +77,8 @@ public class DuneWalker extends Zombie {
         super.addBehaviourGoals();
         // Ванильный зомбиный удар идёт раз в секунду — заменяем своим темпом.
         this.goalSelector.removeAllGoals(goal -> goal instanceof ZombieAttackGoal);
-        this.goalSelector.addGoal(2, new PacedMeleeAttackGoal(this, 1.0, ATTACK_INTERVAL));
-        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MEMORY));
+        this.goalSelector.addGoal(2, new PacedMeleeAttackGoal(this, 1.0, MobStats.of("dune_walker").attackTicks()));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("dune_walker").memoryTicks()));
     }
 
     /**

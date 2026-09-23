@@ -34,17 +34,6 @@ public class CometWraith extends Allay {
     /** Радиус, в котором призрак замечает игрока — сквозь что угодно. */
     public static final double DETECTION = 60.0;
 
-    /**
-     * Сколько тиков призрак помнит жертву, потерянную из виду.
-     *
-     * <p>Двадцать секунд: он проходит сквозь породу, и погоня сквозь толщу
-     * длится дольше, чем ванильные три секунды памяти.
-     */
-    private static final int MEMORY = 400;
-
-    /** Раз в 1.2 секунды. */
-    private static final int ATTACK_INTERVAL = 24;
-
     /** Куда он возвращается, оставшись без жертвы: к самому дну лабиринта. */
     private static final int HOME_DEPTH = 12;
 
@@ -61,7 +50,7 @@ public class CometWraith extends Allay {
         this.moveControl = new FlyingMoveControl(this, 20, true);
         this.setNoGravity(true);
         this.noPhysics = true;
-        this.xpReward = 5;
+        this.xpReward = MobStats.of("comet_wraith").experience();
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -78,11 +67,11 @@ public class CometWraith extends Allay {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new PhaseChaseGoal(this, ATTACK_INTERVAL));
+        this.goalSelector.addGoal(1, new PhaseChaseGoal(this, MobStats.of("comet_wraith").attackTicks()));
         this.goalSelector.addGoal(5, new SinkToDepthsGoal(this, HOME_DEPTH, 0.06));
         // mustSee = false — в этом весь смысл: порода ему не помеха.
         this.targetSelector.addGoal(0, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MEMORY));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("comet_wraith").memoryTicks()));
     }
 
     /** Мозг Аллая не нужен: он про танцы и подношения, а не про охоту. */

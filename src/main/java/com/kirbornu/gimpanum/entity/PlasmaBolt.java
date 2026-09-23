@@ -53,7 +53,7 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
         super(type, level);
         this.moveControl = new FlyingMoveControl(this, 10, true);
         this.setNoGravity(true);
-        this.xpReward = 8;
+        this.xpReward = MobStats.of("plasma_bolt").experience();
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -79,13 +79,14 @@ public class PlasmaBolt extends Monster implements RangedAttackMob {
     @Override
     protected void registerGoals() {
         // Раз в три-четыре секунды, с расстояния, на котором ответить нечем.
-        this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.9, 60, 80, 30.0F));
+        this.goalSelector.addGoal(1, new RangedAttackGoal(this, 0.9, MobStats.of("plasma_bolt").attackTicks(),
+                MobStats.of("plasma_bolt").attackTicks() + 20, 30.0F));
         this.goalSelector.addGoal(5, new WaterAvoidingRandomFlyingGoal(this, 0.7));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 40.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 
         this.targetSelector.addGoal(0, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, 400));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("plasma_bolt").memoryTicks()));
     }
 
     @Override
