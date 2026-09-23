@@ -3,7 +3,11 @@ package com.kirbornu.gimpanum.entity;
 import com.kirbornu.gimpanum.entity.goal.BoreChaseGoal;
 import com.kirbornu.gimpanum.entity.goal.DevourBlocksGoal;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -24,6 +28,8 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * Поглотитель космоса — быстрый, лазающий и прогрызающий.
  *
@@ -40,8 +46,26 @@ import org.jetbrains.annotations.Nullable;
  */
 public class SpaceDevourer extends Monster {
 
-    /** Как часто вопить, пока идёт погоня: раз в четыре секунды с разбросом. */
-    private static final int CHASE_CRY = 80;
+    /**
+     * Чужие глотки, которыми подпевает его собственный рёв — по одной на вопль.
+     *
+     * <p>Один и тот же звук раз в секунду ухо быстро перестаёт слышать. Смесь
+     * из четырёх разных чудовищ не привыкает.
+     */
+    private static final List<SoundEvent> CHORUS = List.of(
+            SoundEvents.WARDEN_ROAR,
+            SoundEvents.GHAST_SCREAM,
+            SoundEvents.ENDER_DRAGON_GROWL,
+            SoundEvents.RAVAGER_ROAR);
+
+    /**
+     * Громкость его собственных звуков — ранения, смерти, голоса без погони.
+     *
+     * <p>Громкость в игре одновременно и дальность: выше единицы звук громче
+     * не становится, зато слышен на 16 блоков за каждую единицу. Пять — это
+     * восемьдесят блоков, вся дальность его чутья.
+     */
+    private static final float VOICE = 5.0F;
 
     /**
      * Номер цели, о которой он уже объявил.
@@ -130,12 +154,18 @@ public class SpaceDevourer extends Monster {
     }
 
     /**
-     * Рёв — при выборе жертвы и потом всю погоню.
+     * Рёв — при выборе жертвы и потом всю погоню, каждую секунду.
      *
      * <p>Один раз при захвате мало: Поглотитель идёт за жертвой минутами и
      * сквозь стены, и всё это время он должен быть слышен. Иначе выходит
      * тишина, из которой внезапно выламывается стена, — а нужно, чтобы
      * приближение было слышно заранее и с каждым разом ближе.
+     *
+     * <p>И не просто слышен, а невыносим — так задумано. Громче игрового
+     * предела один звук не станет, поэтому давим числом: свой рёв и чужой
+     * поверх него, оба на всю дальность чутья и с разной высотой, чтобы не
+     * сливались. А жертве вдобавок — ещё раз прямо в ухо, на полной громкости
+     * и где бы она ни была: издали позиционный звук затухает, а этот нет.
      */
     @Override
     public void aiStep() {
@@ -146,10 +176,36 @@ public class SpaceDevourer extends Monster {
         LivingEntity target = this.getTarget();
         int id = target == null ? -1 : target.getId();
         if (target != null && (id != lastAnnounced || --chaseCry <= 0)) {
-            this.playSound(GimpanumSounds.DEVOURER_ROAR.get(), 2.0F, 1.0F);
-            chaseCry = CHASE_CRY + this.random.nextInt(CHASE_CRY / 2);
+            roar(target);
+            // Лёгкий разброс, чтобы два Поглотителя не ревели в унисон.
+            int interval = Math.max(1, MobStats.of("space_devourer").integer("roar_interval_ticks"));
+            chaseCry = interval + this.random.nextInt(interval / 4 + 1);
         }
         lastAnnounced = id;
+    }
+
+    private void roar(LivingEntity target) {
+        if (this.isSilent()) {
+            return;
+        }
+        float volume = (float) (MobStats.of("space_devourer").number("roar_range_blocks") / 16.0);
+        float pitch = 0.7F + this.random.nextFloat() * 0.6F;
+        this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
+                GimpanumSounds.DEVOURER_ROAR.get(), this.getSoundSource(), volume, pitch);
+        this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
+                CHORUS.get(this.random.nextInt(CHORUS.size())), this.getSoundSource(), volume,
+                0.6F + this.random.nextFloat() * 0.6F);
+        if (target instanceof ServerPlayer player) {
+            player.connection.send(new ClientboundSoundPacket(
+                    BuiltInRegistries.SOUND_EVENT.wrapAsHolder(GimpanumSounds.DEVOURER_ROAR.get()),
+                    this.getSoundSource(), player.getX(), player.getEyeY(), player.getZ(),
+                    1.0F, pitch, this.random.nextLong()));
+        }
+    }
+
+    @Override
+    protected float getSoundVolume() {
+        return VOICE;
     }
 
     @Override
@@ -169,7 +225,7 @@ public class SpaceDevourer extends Monster {
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) {
-        this.playSound(GimpanumSounds.DEVOURER_STEP.get(), 0.6F, 1.0F);
+        this.playSound(GimpanumSounds.DEVOURER_STEP.get(), 2.0F, 1.0F);
     }
 
     /**

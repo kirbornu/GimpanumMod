@@ -56,7 +56,15 @@ public class DevourBlocksGoal extends Goal {
     private static final double TICKS_PER_HARDNESS = 0.13;
 
     /** Не чаще, чем раз в столько тиков, отбивать звук укуса. */
-    private static final int SOUND_INTERVAL = 5;
+    private static final int SOUND_INTERVAL = 3;
+
+    /**
+     * Громкость хруста — и дальность: четыре — это шестьдесят четыре блока.
+     *
+     * <p>Хруст — часть его рёва: сквозь толщу слышно, что он идёт, и слышно,
+     * что именно он сейчас грызёт.
+     */
+    private static final float CRUNCH = 4.0F;
 
     private final Mob mob;
 
@@ -145,8 +153,10 @@ public class DevourBlocksGoal extends Goal {
 
         BlockState sample = level.getBlockState(mouthful.get(0));
         if (soundCooldown <= 0) {
-            level.playSound(null, centre, sample.getSoundType(level, mouthful.get(0), mob).getHitSound(),
-                    SoundSource.HOSTILE, 0.7F, 0.6F);
+            // Звук разрушения, а не удара: удар — это кирка по камню, а тут
+            // камень исчезает целиком.
+            level.playSound(null, centre, sample.getSoundType(level, mouthful.get(0), mob).getBreakSound(),
+                    SoundSource.HOSTILE, CRUNCH, 0.5F + mob.getRandom().nextFloat() * 0.3F);
             soundCooldown = SOUND_INTERVAL;
         }
 
