@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.entity;
 
+import com.kirbornu.gimpanum.config.JsonConfig;
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.dimension.NebulaPortal;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
@@ -108,7 +109,7 @@ public final class GimpanumSpawner {
     @SubscribeEvent
     public static void tick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
-        MobStats.Section spawner = MobStats.of("spawner");
+        JsonConfig.Section spawner = MobStats.of("spawner");
         if (server.getTickCount() % Math.max(1, spawner.integer("period_ticks")) != 0) {
             return;
         }
