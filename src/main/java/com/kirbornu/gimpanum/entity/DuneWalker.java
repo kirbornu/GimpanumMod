@@ -1,11 +1,15 @@
 package com.kirbornu.gimpanum.entity;
 
 import com.kirbornu.gimpanum.entity.goal.AllAroundTargetGoal;
+import com.kirbornu.gimpanum.entity.goal.FollowCaptainGoal;
 import com.kirbornu.gimpanum.entity.goal.PacedMeleeAttackGoal;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -15,8 +19,9 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.MoveThroughVillageGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.ZombieAttackGoal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -25,35 +30,56 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 /**
- * Ходок бархан — медленный, но неотвратимый.
+ * Ходок бархан — солдат в отряде {@link DuneCaptain капитана}.
  *
- * <p>Зомби во всём, кроме трёх вещей. Не горит на свету: в Гимпануме вечный
- * полдень, и обычный зомби сгорел бы через десять секунд после появления.
- * Помнит замеченного десять минут — при его скорости этого хватает, чтобы
- * покрыть расстояние, на котором он вообще способен кого-то заметить.
- * И его удар оставляет след: Замедление и Слепота на десять секунд.
+ * <p>Зомби во всём, кроме нескольких вещей. Не горит на свету: в Гимпануме
+ * вечный полдень, и обычный зомби сгорел бы через десять секунд после
+ * появления. Его удар оставляет след: Замедление и Слепота на десять секунд.
  *
- * <p>Убежать от него может кто угодно; вопрос в том, сколько их успеет
- * собраться по дороге.
+ * <p>Сам по себе солдат почти слеп — чует лишь в нескольких шагах. Сам он и не
+ * появляется: его приводит капитан, и дальше солдат держится в его толпе,
+ * пока капитан не спустит отряд с поводка. Тогда солдат бросается на ту же
+ * жертву; когда капитан её теряет — возвращается в строй. Заметивший кого-то
+ * вблизи бросается и без приказа, а удар по любому бойцу спускает весь отряд.
+ *
+ * <p>Капитан погиб — солдат осиротел. Сирота стоит на месте, дерётся с тем,
+ * кто подошёл вплотную, и понемногу истлевает; от такой смерти с него ничего
+ * не падает. Сиротами же становятся и ходоки из старых миров, и солдат из
+ * яйца: капитана у них нет и не было.
  */
 public class DuneWalker extends Zombie {
 
     private static final int AFTERMATH = 200;
+
+    /**
+     * Сколько тиков солдат ждёт, не найдя капитана в мире, прежде чем уйти.
+     *
+     * <p>Капитан, исчезнувший от дальности, забирает с собой всех, кто
+     * загружен рядом. Но солдат мог стоять в соседнем, невыгруженном чанке —
+     * он проснётся потом, а капитана нет и уже не будет. Пять секунд — с
+     * запасом на то, чтобы капитан успел подгрузиться, если он просто рядом.
+     */
+    private static final int MISSING_LIMIT = 100;
+
+    /** Капитан отряда; {@code null} — сирота. */
+    @Nullable
+    private UUID captain;
+
+    /** Сколько тиков подряд капитана нет в мире, хотя он и не погиб. */
+    private int missing;
+
+    /** Спущен с поводка и дерётся за цель капитана. */
+    private boolean unleashed;
 
     /** Игровое время прошлого тика — по разрыву видно, что моб выпадал из прогрузки. */
     private long lastTicked = Long.MIN_VALUE;
 
     public DuneWalker(EntityType<? extends Zombie> type, Level level) {
         super(type, level);
-        this.xpReward = MobStats.of("dune_walker").integer("experience");
-        // Предел обхода при поиске пути игра берёт как FOLLOW_RANGE * 16, а
-        // чутьё у ходока дальнее — вышло бы 1536 узлов на каждый поиск. Путь он
-        // теперь строит только вблизи (см. PacedMeleeAttackGoal), и такой запас
-        // там не нужен: четверть от него — это 384 узла, чего с избытком хватает
-        // на два десятка блоков. Обрезаем здесь, а не в цели, потому что через
-        // навигацию ходят и прочие цели — блуждание, бегство, вода.
-        this.getNavigation().setMaxVisitedNodesMultiplier(0.25F);
+        this.xpReward = MobStats.of(this.stats()).integer("experience");
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -61,13 +87,155 @@ public class DuneWalker extends Zombie {
                 .add(Attributes.SPAWN_REINFORCEMENTS_CHANCE, 0.0);
     }
 
+    /**
+     * Раздел настройки с числами этого вида.
+     *
+     * <p>Метод, а не поле: он нужен уже при расстановке целей, а их игра
+     * расставляет из конструктора предка — раньше, чем заполнятся поля.
+     */
+    protected String stats() {
+        return "dune_walker";
+    }
+
     @Override
     protected void addBehaviourGoals() {
         super.addBehaviourGoals();
         // Ванильный зомбиный удар идёт раз в секунду — заменяем своим темпом.
         this.goalSelector.removeAllGoals(goal -> goal instanceof ZombieAttackGoal);
-        this.goalSelector.addGoal(2, new PacedMeleeAttackGoal(this, 1.0, MobStats.of("dune_walker").integer("attack_interval_ticks")));
-        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("dune_walker").integer("memory_ticks")));
+        this.goalSelector.addGoal(2, new PacedMeleeAttackGoal(this, 1.0, MobStats.of(this.stats()).integer("attack_interval_ticks")));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of(this.stats()).integer("memory_ticks")));
+        this.addSquadGoals();
+    }
+
+    /**
+     * Солдат не бродит сам по себе: он либо в строю, либо стоит на месте.
+     */
+    protected void addSquadGoals() {
+        this.goalSelector.removeAllGoals(goal -> goal instanceof WaterAvoidingRandomStrollGoal
+                || goal instanceof MoveThroughVillageGoal);
+        this.goalSelector.addGoal(3, new FollowCaptainGoal(this));
+    }
+
+    /** Капитан этого солдата, если он жив и сейчас в мире. */
+    @Nullable
+    public DuneCaptain leader() {
+        if (captain == null || !(this.level() instanceof ServerLevel level)) {
+            return null;
+        }
+        return level.getEntity(captain) instanceof DuneCaptain found && found.isAlive() ? found : null;
+    }
+
+    /** Кто отвечает за этот отряд: у солдата — его капитан, у капитана — он сам. */
+    @Nullable
+    protected DuneCaptain commander() {
+        return this.leader();
+    }
+
+    boolean serves(UUID id) {
+        return id.equals(captain);
+    }
+
+    void enlist(UUID id) {
+        captain = id;
+    }
+
+    /** Капитан погиб: дальше сам по себе, и цель — только та, что рядом. */
+    void orphan() {
+        captain = null;
+        unleashed = false;
+        this.setTarget(null);
+    }
+
+    /** Истлел ли он без капитана — от этого с него ничего не падает. */
+    public boolean withered() {
+        DamageSource last = this.getLastDamageSource();
+        return last != null && last.is(DamageTypes.STARVE);
+    }
+
+    /**
+     * Поводок, сиротство и ожидание капитана.
+     *
+     * <p>Спущенный солдат получает цель капитана, только если своей у него
+     * нет: того, кто уже дерётся с кем-то вблизи, не отзываем.
+     */
+    @Override
+    protected void customServerAiStep() {
+        super.customServerAiStep();
+        if (captain == null) {
+            wither();
+            return;
+        }
+        DuneCaptain leader = this.leader();
+        if (leader == null) {
+            if (++missing > MISSING_LIMIT) {
+                this.discard();
+            }
+            return;
+        }
+        missing = 0;
+        LivingEntity prey = leader.getTarget();
+        if (leader.unleashed() && prey != null) {
+            unleashed = true;
+            if (this.getTarget() == null) {
+                this.setTarget(prey);
+            }
+        } else if (unleashed) {
+            unleashed = false;
+            this.setTarget(null);
+        }
+    }
+
+    /**
+     * Сирота истлевает — понемногу, но до конца.
+     *
+     * <p>Урон «от голода»: мобы им больше никогда не получают, поэтому по нему
+     * смерть от сиротства видна безошибочно — см. {@link #withered()}.
+     */
+    private void wither() {
+        MobStats.Section stats = MobStats.of("dune_walker");
+        int every = Math.max(1, stats.integer("orphan_damage_interval_ticks"));
+        if (this.tickCount % every == 0) {
+            this.hurt(this.damageSources().starve(), (float) stats.number("orphan_damage"));
+        }
+    }
+
+    /** Удар по любому бойцу спускает весь отряд. */
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        boolean hurt = super.hurt(source, amount);
+        if (hurt && !this.level().isClientSide && source.getEntity() instanceof Player player
+                && !player.isCreative() && !player.isSpectator()) {
+            DuneCaptain leader = this.commander();
+            if (leader != null) {
+                leader.alarm(player);
+            }
+        }
+        return hurt;
+    }
+
+    /** Солдата уводит капитан, сам по себе он не исчезает — иначе строй таял бы по одному. */
+    @Override
+    public boolean removeWhenFarAway(double distance) {
+        return captain == null && super.removeWhenFarAway(distance);
+    }
+
+    @Override
+    public boolean shouldDropExperience() {
+        return super.shouldDropExperience() && !this.withered();
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        if (captain != null) {
+            tag.putUUID("Captain", captain);
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        captain = tag.hasUUID("Captain") ? tag.getUUID("Captain") : null;
     }
 
     /**
@@ -116,10 +284,23 @@ public class DuneWalker extends Zombie {
     @Nullable
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
                                         MobSpawnType spawnType, @Nullable SpawnGroupData groupData) {
-        SpawnGroupData result = super.finalizeSpawn(level, difficulty, spawnType, groupData);
-        // Детёныши бегают быстро — это ровно то, чем ходок быть не должен.
-        this.setBaby(false);
-        return result;
+        // Свои данные группы вместо пустых: иначе зомби сам бросает жребий на
+        // детёныша, а детёныш — на курицу, и ходок уезжал верхом. Детёныши
+        // к тому же бегают быстро — ровно то, чем ходок быть не должен.
+        return super.finalizeSpawn(level, difficulty, spawnType, new ZombieGroupData(false, false));
+    }
+
+    /**
+     * Без ванильных надбавок при появлении.
+     *
+     * <p>Зомби при появлении получает случайную прибавку к чутью — до двух с
+     * половиной раз, изредка становится вожаком с учетверённым здоровьем, а
+     * шанс звать подкрепление выставляет себе сам, поверх нуля из атрибутов.
+     * Всё это молча искажало числа из настройки, а подкрепление на высокой
+     * сложности и вовсе звало обычных зомби, которые в вечный полдень горят.
+     */
+    @Override
+    protected void handleAttributes(float difficulty) {
     }
 
     /**

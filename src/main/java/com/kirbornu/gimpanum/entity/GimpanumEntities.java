@@ -72,6 +72,15 @@ public final class GimpanumEntities {
                     .clientTrackingRange(8)
                     .build("dune_walker"));
 
+    /** Размеры взрослого: детский рост игра считает от них сама. */
+    public static final DeferredHolder<EntityType<?>, EntityType<DuneCaptain>> DUNE_CAPTAIN =
+            ENTITIES.register("dune_captain", () -> EntityType.Builder
+                    .of(DuneCaptain::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.95F)
+                    .eyeHeight(1.74F)
+                    .clientTrackingRange(8)
+                    .build("dune_captain"));
+
     public static final DeferredHolder<EntityType<?>, EntityType<SpaceDevourer>> SPACE_DEVOURER =
             ENTITIES.register("space_devourer", () -> EntityType.Builder
                     .of(SpaceDevourer::new, MobCategory.MONSTER)
@@ -100,6 +109,7 @@ public final class GimpanumEntities {
 
     public static final DeferredItem<Item> COMET_WRAITH_EGG = egg("comet_wraith", COMET_WRAITH, 0x8FD8E6, 0xEAFBFF);
     public static final DeferredItem<Item> DUNE_WALKER_EGG = egg("dune_walker", DUNE_WALKER, 0x8B877D, 0xCFCABE);
+    public static final DeferredItem<Item> DUNE_CAPTAIN_EGG = egg("dune_captain", DUNE_CAPTAIN, 0x1D1D21, 0x8B877D);
     public static final DeferredItem<Item> SPACE_DEVOURER_EGG = egg("space_devourer", SPACE_DEVOURER, 0x0C0A11, 0x4A3E62);
     public static final DeferredItem<Item> PLASMA_BOLT_EGG = egg("plasma_bolt", PLASMA_BOLT, 0x2C4A9E, 0xB6D6FF);
 
@@ -114,6 +124,7 @@ public final class GimpanumEntities {
     public static void attributes(EntityAttributeCreationEvent event) {
         event.put(COMET_WRAITH.get(), CometWraith.createAttributes().build());
         event.put(DUNE_WALKER.get(), DuneWalker.createAttributes().build());
+        event.put(DUNE_CAPTAIN.get(), DuneCaptain.createAttributes().build());
         event.put(SPACE_DEVOURER.get(), SpaceDevourer.createAttributes().build());
         event.put(PLASMA_BOLT.get(), PlasmaBolt.createAttributes().build());
     }

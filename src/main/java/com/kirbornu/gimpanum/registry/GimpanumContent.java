@@ -607,6 +607,7 @@ public final class GimpanumContent {
                         output.accept(PURPLE_QUEEN_TALISMAN.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.COMET_WRAITH_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.DUNE_WALKER_EGG.get());
+                        output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.DUNE_CAPTAIN_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.SPACE_DEVOURER_EGG.get());
                         output.accept(com.kirbornu.gimpanum.entity.GimpanumEntities.PLASMA_BOLT_EGG.get());
                     })

@@ -96,7 +96,8 @@ public final class GimpanumSpawner {
     }
 
     private static final List<Kind> KINDS = List.of(
-            new Kind(GimpanumEntities.DUNE_WALKER, Layer.SURFACE, GimpanumSpawner::dunes),
+            // Солдат заселитель не ставит: их приводит капитан.
+            new Kind(GimpanumEntities.DUNE_CAPTAIN, Layer.SURFACE, GimpanumSpawner::dunes),
             new Kind(GimpanumEntities.PLASMA_BOLT, Layer.SURFACE, GimpanumSpawner::sky),
             new Kind(GimpanumEntities.COMET_WRAITH, Layer.DEPTHS, GimpanumSpawner::labyrinth),
             new Kind(GimpanumEntities.SPACE_DEVOURER, Layer.ANYWHERE, GimpanumSpawner::anywhere));

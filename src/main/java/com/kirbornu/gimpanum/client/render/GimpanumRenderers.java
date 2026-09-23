@@ -18,6 +18,8 @@ public final class GimpanumRenderers {
     public static void register(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(GimpanumEntities.COMET_WRAITH.get(), CometWraithRenderer::new);
         event.registerEntityRenderer(GimpanumEntities.DUNE_WALKER.get(), DuneWalkerRenderer::new);
+        // Та же модель и текстура: детский рост и броню зомби рисует сам.
+        event.registerEntityRenderer(GimpanumEntities.DUNE_CAPTAIN.get(), DuneWalkerRenderer::new);
         event.registerEntityRenderer(GimpanumEntities.SPACE_DEVOURER.get(), SpaceDevourerRenderer::new);
         event.registerEntityRenderer(GimpanumEntities.PLASMA_BOLT.get(), PlasmaBoltRenderer::new);
         event.registerEntityRenderer(GimpanumEntities.PLASMA_PROJECTILE.get(),
