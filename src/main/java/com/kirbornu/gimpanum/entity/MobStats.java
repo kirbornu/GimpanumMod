@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -121,7 +122,12 @@ public final class MobStats {
 
     /** Сколько разделов прочитано — мобов и общих настроек. */
     public static int count() {
-        return (int) loaded.keySet().stream().filter(key -> !key.startsWith("_")).count();
+        return sections().size();
+    }
+
+    /** Имена всех разделов — мобов и общих настроек. */
+    public static List<String> sections() {
+        return loaded.keySet().stream().filter(key -> !key.startsWith("_")).toList();
     }
 
     /** Числа из файла для раздела, например {@code dune_walker} или {@code spawner}. */
@@ -172,6 +178,7 @@ public final class MobStats {
             Gimpanum.LOGGER.error("Не прочитались характеристики мобов {} — беру встроенные", file, failure);
             loaded = BUILT_IN;
         }
+        MobLoot.check();
     }
 
     /**
