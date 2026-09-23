@@ -8,7 +8,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -24,7 +23,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  * куда-то вверх.
  *
  * <p>Над барханами трещина не кончается: из неё вырастают одна-три тонкие
- * колонны из кварцевых столбов, каждая клонится в свою сторону, и тем
+ * колонны из тех же кварцевых блоков, каждая клонится в свою сторону, и тем
  * сильнее, чем выше, — как огромные травинки. По ним трещину и находят с
  * поверхности.
  *
@@ -78,7 +77,7 @@ public class QuartzCrackFeature extends Feature<NoneFeatureConfiguration> {
 
         int blades = 1 + random.nextInt(3);
         for (int i = 0; i < blades; i++) {
-            blade(level, random, x, y, z);
+            blade(level, random, x, y, z, quartz);
         }
         return true;
     }
@@ -107,9 +106,10 @@ public class QuartzCrackFeature extends Feature<NoneFeatureConfiguration> {
      * <p>Смещение растёт как квадрат высоты — у основания стоит почти прямо, у
      * верхушки заваливается. Когда смещение прыгает на клетку, ставим
      * перемычку на той же высоте, чтобы травинка не рассыпалась на висящие по
-     * диагонали блоки; у перемычки столб лежит поперёк.
+     * диагонали блоки.
      */
-    private static void blade(WorldGenLevel level, RandomSource random, int baseX, int baseY, int baseZ) {
+    private static void blade(WorldGenLevel level, RandomSource random, int baseX, int baseY, int baseZ,
+                              BlockState quartz) {
         int height = 6 + random.nextInt(9);
         double lean = 2.0 + random.nextDouble() * (MAX_LEAN - 2.0);
         double angle = random.nextDouble() * Math.PI * 2.0;
@@ -124,13 +124,13 @@ public class QuartzCrackFeature extends Feature<NoneFeatureConfiguration> {
             int wantZ = baseZ + (int) Math.round(Math.sin(angle) * offset);
             while (x != wantX) {
                 x += Integer.signum(wantX - x);
-                intoAir(level, cursor.set(x, y, z), Direction.Axis.X);
+                intoAir(level, cursor.set(x, y, z), quartz);
             }
             while (z != wantZ) {
                 z += Integer.signum(wantZ - z);
-                intoAir(level, cursor.set(x, y, z), Direction.Axis.Z);
+                intoAir(level, cursor.set(x, y, z), quartz);
             }
-            intoAir(level, cursor.set(x, y, z), Direction.Axis.Y);
+            intoAir(level, cursor.set(x, y, z), quartz);
         }
     }
 
@@ -140,10 +140,9 @@ public class QuartzCrackFeature extends Feature<NoneFeatureConfiguration> {
         }
     }
 
-    private static void intoAir(WorldGenLevel level, BlockPos pos, Direction.Axis axis) {
+    private static void intoAir(WorldGenLevel level, BlockPos pos, BlockState state) {
         if (level.isEmptyBlock(pos)) {
-            level.setBlock(pos, Blocks.QUARTZ_PILLAR.defaultBlockState().setValue(RotatedPillarBlock.AXIS, axis),
-                    Block.UPDATE_CLIENTS);
+            level.setBlock(pos, state, Block.UPDATE_CLIENTS);
         }
     }
 }
