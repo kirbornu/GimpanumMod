@@ -268,7 +268,8 @@ public final class GimpanumSpawner {
         int x = (chunkX << 4) + random.nextInt(16);
         int z = (chunkZ << 4) + random.nextInt(16);
         int floor = level.getMinBuildHeight() + 1;
-        int ceiling = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - DEPTH;
+        int ceiling = Math.min(level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - DEPTH,
+                MobStats.of("comet_wraith").integer("max_y"));
         if (ceiling <= floor) {
             return null;
         }

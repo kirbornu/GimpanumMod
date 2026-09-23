@@ -1,8 +1,12 @@
 package com.kirbornu.gimpanum.entity.goal;
 
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Predicate;
 
 /**
  * Круговое чутьё: подкрасться к некрофагу нельзя.
@@ -28,9 +32,17 @@ public class AllAroundTargetGoal extends NearestAttackableTargetGoal<Player> {
      * @param memoryTicks сколько тиков помнить цель, потерянную из виду
      */
     public AllAroundTargetGoal(Mob mob, int memoryTicks) {
+        this(mob, memoryTicks, null);
+    }
+
+    /**
+     * @param memoryTicks сколько тиков помнить цель, потерянную из виду
+     * @param admits      кого вообще можно заметить, сверх расстояния
+     */
+    public AllAroundTargetGoal(Mob mob, int memoryTicks, @Nullable Predicate<LivingEntity> admits) {
         // randomInterval 0 — искать каждый тик: чутьё не должно мигать.
         // mustSee и mustReach — false: ни видеть, ни дойти не обязательно.
-        super(mob, Player.class, 0, false, false, null);
+        super(mob, Player.class, 0, false, false, admits);
         this.setUnseenMemoryTicks(memoryTicks);
         this.targetConditions = this.targetConditions
                 .ignoreLineOfSight()

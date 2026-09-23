@@ -26,7 +26,14 @@ import net.minecraft.world.level.Level;
  *
  * <p>Стен для него не существует ни в каком смысле: он видит игрока сквозь
  * породу на всю дальность чутья и сквозь неё же летит. Прятаться от
- * него бесполезно, можно только уйти.
+ * него бесполезно, можно только уйти — наверх.
+ *
+ * <p>Потому что лабиринт — его предел. Выше {@code max_y} он не поднимается и
+ * тех, кто выше, не замечает; погоню бросает, как только жертва туда ушла.
+ * Число берётся из настройки и по умолчанию равно 64 — там по генерации
+ * кончаются пещеры, а барханы начинаются не ниже 72-го блока. Мерить именно
+ * высотой, а не открытым небом: игрок, прокопавший шахту в лабиринт, должен
+ * оставаться добычей, хотя над ним и видно небо.
  */
 public class CometWraith extends Allay {
 
@@ -61,12 +68,28 @@ public class CometWraith extends Allay {
         this.goalSelector.addGoal(5, new SinkToDepthsGoal(this, HOME_DEPTH, 0.06));
         // mustSee = false — в этом весь смысл: порода ему не помеха.
         this.targetSelector.addGoal(0, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("comet_wraith").integer("memory_ticks")));
+        this.targetSelector.addGoal(1, new AllAroundTargetGoal(this, MobStats.of("comet_wraith").integer("memory_ticks"),
+                target -> target.getY() < ceiling()));
     }
 
-    /** Мозг Аллая не нужен: он про танцы и подношения, а не про охоту. */
+    /** Выше этого он не поднимается и никого не замечает. */
+    private static int ceiling() {
+        return MobStats.of("comet_wraith").integer("max_y");
+    }
+
+    /**
+     * Мозг Аллая не нужен: он про танцы и подношения, а не про охоту.
+     *
+     * <p>Здесь только отпускаем жертву, ушедшую выше потолка. Выбор цели её
+     * такую не возьмёт, но уже взятую ванильная память держит до последнего,
+     * и отвечать на удар она тоже заставила бы.
+     */
     @Override
     protected void customServerAiStep() {
+        LivingEntity target = this.getTarget();
+        if (target != null && target.getY() >= ceiling()) {
+            this.setTarget(null);
+        }
     }
 
     /**
@@ -109,6 +132,12 @@ public class CometWraith extends Allay {
         this.noPhysics = true;
         super.tick();
         this.setNoGravity(true);
+        // Потолок — жёстко, а не тягой вниз: на полном ходу он проходит три
+        // блока за тик и мягкую преграду проскочил бы насквозь.
+        if (!this.level().isClientSide && this.getY() > ceiling()) {
+            this.setPos(this.getX(), ceiling(), this.getZ());
+            this.setDeltaMovement(this.getDeltaMovement().multiply(1.0, 0.0, 1.0));
+        }
     }
 
     /**
