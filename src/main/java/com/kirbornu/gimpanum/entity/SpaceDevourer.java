@@ -4,6 +4,7 @@ import com.kirbornu.gimpanum.entity.goal.BoreChaseGoal;
 import com.kirbornu.gimpanum.entity.goal.DevourBlocksGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -77,6 +78,14 @@ public class SpaceDevourer extends Monster {
 
     /** Сколько тиков осталось до следующего вопля в погоне. */
     private int chaseCry;
+
+    /**
+     * Вышел на охоту по Кошмару Спящего Бога.
+     *
+     * <p>Пока жертва не потеряна, Поглотитель не исчезает от дальности: иначе
+     * охоту обрывало бы то, что жертва просто убежала подальше.
+     */
+    private boolean hunting;
 
     public SpaceDevourer(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -174,6 +183,9 @@ public class SpaceDevourer extends Monster {
             return;
         }
         LivingEntity target = this.getTarget();
+        if (hunting && target == null) {
+            hunting = false;
+        }
         int id = target == null ? -1 : target.getId();
         if (target != null && (id != lastAnnounced || --chaseCry <= 0)) {
             roar(target);
@@ -206,6 +218,31 @@ public class SpaceDevourer extends Monster {
     @Override
     protected float getSoundVolume() {
         return VOICE;
+    }
+
+    /** Назначить жертву и не отставать от неё. */
+    public void hunt(Player prey) {
+        this.setTarget(prey);
+        hunting = true;
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double distance) {
+        return !hunting && super.removeWhenFarAway(distance);
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        if (hunting) {
+            tag.putBoolean("Hunting", true);
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        hunting = tag.getBoolean("Hunting");
     }
 
     @Override

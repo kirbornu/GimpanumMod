@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.entity;
 
+import com.kirbornu.gimpanum.emission.MemoryEntity;
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.core.BlockPos;
@@ -106,6 +107,16 @@ public final class GimpanumEntities {
                     .clientTrackingRange(4)
                     .updateInterval(10)
                     .build("plasma_projectile"));
+
+    /** Воспоминание — невидимый взрыв Плохих Воспоминаний. */
+    public static final DeferredHolder<EntityType<?>, EntityType<MemoryEntity>> MEMORY =
+            ENTITIES.register("memory", () -> EntityType.Builder
+                    .<MemoryEntity>of(MemoryEntity::new, MobCategory.MISC)
+                    .sized(0.5F, 0.5F)
+                    .clientTrackingRange(8)
+                    .updateInterval(10)
+                    .noSave()
+                    .build("memory"));
 
     public static final DeferredItem<Item> COMET_WRAITH_EGG = egg("comet_wraith", COMET_WRAITH, 0x8FD8E6, 0xEAFBFF);
     public static final DeferredItem<Item> DUNE_WALKER_EGG = egg("dune_walker", DUNE_WALKER, 0x8B877D, 0xCFCABE);

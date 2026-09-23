@@ -32,6 +32,7 @@ public final class GimpanumCommands {
         PortalCommand.register(root);
         DashboardCommand.register(root);
         ConfigCommand.register(root);
+        EmissionCommand.register(root);
 
         event.getDispatcher().register(root);
     }

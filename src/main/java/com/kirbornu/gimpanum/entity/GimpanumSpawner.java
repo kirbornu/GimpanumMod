@@ -350,7 +350,7 @@ public final class GimpanumSpawner {
     }
 
     /** Игрок на барханах, а не в лабиринте под ними. */
-    private static boolean onSurface(ServerLevel level, ServerPlayer player) {
+    public static boolean onSurface(ServerLevel level, ServerPlayer player) {
         BlockPos pos = player.blockPosition();
         return pos.getY() >= level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ()) - DEPTH;
     }
