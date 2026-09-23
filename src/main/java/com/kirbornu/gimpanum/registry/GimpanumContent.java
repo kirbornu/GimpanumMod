@@ -19,6 +19,7 @@ import com.kirbornu.gimpanum.recipe.ThawingRecipe;
 import com.kirbornu.gimpanum.worldgen.NebulaFruitBlock;
 import com.kirbornu.gimpanum.worldgen.NebulaGasFeature;
 import com.kirbornu.gimpanum.worldgen.VolatileGasFeature;
+import com.kirbornu.gimpanum.worldgen.CrystalGeodeFeature;
 import com.kirbornu.gimpanum.worldgen.QuartzCrackFeature;
 import com.kirbornu.gimpanum.worldgen.NebulaTreeFeature;
 import net.minecraft.world.item.Rarity;
@@ -431,6 +432,10 @@ public final class GimpanumContent {
     /** Карманы летучего газа: мелкие и частые. */
     public static final DeferredHolder<Feature<?>, VolatileGasFeature> VOLATILE_GAS =
             FEATURES.register("volatile_gas", () -> new VolatileGasFeature(NoneFeatureConfiguration.CODEC));
+
+    /** Маленькие хрустальные жеоды с крупицей Монолитного хрусталя. */
+    public static final DeferredHolder<Feature<?>, CrystalGeodeFeature> CRYSTAL_GEODE =
+            FEATURES.register("crystal_geode", () -> new CrystalGeodeFeature(NoneFeatureConfiguration.CODEC));
 
     /** Кварцевые трещины сквозь всю толщу, над барханами — травинками. */
     public static final DeferredHolder<Feature<?>, QuartzCrackFeature> QUARTZ_CRACK =
