@@ -264,5 +264,7 @@
     "gimpanum.emission.convulsions": "Convulsions",
     "gimpanum.emission.convulsions.hint": "The god's body thrashes in agony",
     "gimpanum.emission.guilt": "Fit of Guilt",
-    "gimpanum.emission.guilt.hint": "They were Verites. Every blow comes back to you"
+    "gimpanum.emission.guilt.hint": "They were Verites. Every blow comes back to you",
+    "block.gimpanum.phonos_clot": "Phonos Clot",
+    "gimpanum.command.structures_count": "Structure config sections: %s. File: %s"
 }

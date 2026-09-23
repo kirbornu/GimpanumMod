@@ -36,7 +36,7 @@ public class MemoryEntity extends Entity {
         this.setNoGravity(true);
     }
 
-    void arm(int fuse, float radius, float damage) {
+    public void arm(int fuse, float radius, float damage) {
         this.fuse = fuse;
         this.radius = radius;
         this.damage = damage;

@@ -2,6 +2,7 @@ package com.kirbornu.gimpanum.command;
 
 import com.kirbornu.gimpanum.converter.ConverterOffers;
 import com.kirbornu.gimpanum.emission.EmissionConfig;
+import com.kirbornu.gimpanum.structure.StructureConfig;
 import com.kirbornu.gimpanum.entity.MobStats;
 import com.kirbornu.gimpanum.lore.LoreBooks;
 import com.kirbornu.gimpanum.network.GimpanumNetwork;
@@ -45,6 +46,7 @@ public final class ConfigCommand {
                     // боя пришлось бы вслепую.
                     MobStats.applyToLoaded(source.getServer());
                     EmissionConfig.load();
+                    StructureConfig.load();
                     // Подписи конвертеров идут из предложений, а значит могли
                     // поменяться вместе с файлом — метки на карте обязаны это
                     // показать, не дожидаясь перезахода игроков.
@@ -72,6 +74,8 @@ public final class ConfigCommand {
                 MobStats.count(), MobStats.path().toString()), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.command.emissions_count",
                 EmissionConfig.count(), EmissionConfig.path().toString()), false);
+        source.sendSuccess(() -> Component.translatable("gimpanum.command.structures_count",
+                StructureConfig.count(), StructureConfig.path().toString()), false);
         return ConverterOffers.count() + ThawedOrganics.count() + LoreBooks.count();
     }
 }

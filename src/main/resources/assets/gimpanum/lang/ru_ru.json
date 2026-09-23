@@ -264,5 +264,7 @@
     "gimpanum.emission.convulsions": "Судороги",
     "gimpanum.emission.convulsions.hint": "Тело бога бьётся в агонии",
     "gimpanum.emission.guilt": "Приступ Вины",
-    "gimpanum.emission.guilt.hint": "Они были Веритами. Каждый удар вернётся к тебе"
+    "gimpanum.emission.guilt.hint": "Они были Веритами. Каждый удар вернётся к тебе",
+    "block.gimpanum.phonos_clot": "Сгусток фоноса",
+    "gimpanum.command.structures_count": "Разделов в настройке структур: %s. Файл: %s"
 }

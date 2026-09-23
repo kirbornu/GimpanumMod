@@ -1,5 +1,7 @@
 package com.kirbornu.gimpanum.dimension;
 
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.core.BlockPos;
 import com.kirbornu.gimpanum.Gimpanum;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.Registries;
@@ -53,6 +55,9 @@ public final class VacuumEvents {
         if (entity instanceof Player player && (player.isCreative() || player.isSpectator())) {
             return;
         }
+        if (entity instanceof Player && meadow(entity)) {
+            return;
+        }
         if (BreathingGear.sealed(entity)) {
             if (entity.tickCount % BreathingGear.DRAIN_INTERVAL == 0) {
                 BreathingGear.drain(entity);
@@ -61,6 +66,23 @@ public final class VacuumEvents {
         }
         // Расход воздуха не трогаем: там уже учтена Подводное дыхание на шлеме.
         event.setCanBreathe(false);
+    }
+
+    /**
+     * Рядом трава — значит, это Застывшее воспоминание, и в нём можно дышать.
+     *
+     * <p>Трава в Гимпануме не растёт нигде, кроме этих лужаек, поэтому она и
+     * есть признак. Когда воспоминание рушится и трава осыпается пеплом,
+     * воздух уходит вместе с ней — без всякого отдельного учёта.
+     */
+    private static boolean meadow(LivingEntity entity) {
+        BlockPos feet = entity.blockPosition();
+        for (BlockPos pos : BlockPos.betweenClosed(feet.offset(-2, -2, -2), feet.offset(2, 0, 2))) {
+            if (entity.level().getBlockState(pos).is(Blocks.GRASS_BLOCK)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** В вакууме пузырьков не бывает — иначе задыхаться будет «под водой». */

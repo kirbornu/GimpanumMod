@@ -1,0 +1,16 @@
+{
+    "variants": {
+        "kind=frozen_memory": {
+            "model": "gimpanum:block/phonos_clot"
+        },
+        "kind=glass_dreams": {
+            "model": "gimpanum:block/phonos_clot"
+        },
+        "kind=radita_gallery": {
+            "model": "gimpanum:block/phonos_clot"
+        },
+        "kind=primo_city": {
+            "model": "gimpanum:block/phonos_clot"
+        }
+    }
+}
