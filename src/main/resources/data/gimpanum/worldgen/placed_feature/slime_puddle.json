@@ -1,0 +1,27 @@
+{
+    "feature": "gimpanum:slime_puddle",
+    "placement": [
+        {
+            "type": "minecraft:rarity_filter",
+            "chance": 2
+        },
+        {
+            "type": "minecraft:in_square"
+        },
+        {
+            "type": "minecraft:height_range",
+            "height": {
+                "type": "minecraft:uniform",
+                "min_inclusive": {
+                    "above_bottom": 8
+                },
+                "max_inclusive": {
+                    "absolute": 62
+                }
+            }
+        },
+        {
+            "type": "minecraft:biome"
+        }
+    ]
+}
