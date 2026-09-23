@@ -19,6 +19,7 @@ import com.kirbornu.gimpanum.recipe.ThawingRecipe;
 import com.kirbornu.gimpanum.worldgen.NebulaFruitBlock;
 import com.kirbornu.gimpanum.worldgen.NebulaGasFeature;
 import com.kirbornu.gimpanum.worldgen.VolatileGasFeature;
+import com.kirbornu.gimpanum.worldgen.GlowstoneClusterFeature;
 import com.kirbornu.gimpanum.worldgen.MeteorCraterFeature;
 import com.kirbornu.gimpanum.worldgen.CrystalGeodeFeature;
 import com.kirbornu.gimpanum.worldgen.QuartzCrackFeature;
@@ -433,6 +434,10 @@ public final class GimpanumContent {
     /** Карманы летучего газа: мелкие и частые. */
     public static final DeferredHolder<Feature<?>, VolatileGasFeature> VOLATILE_GAS =
             FEATURES.register("volatile_gas", () -> new VolatileGasFeature(NoneFeatureConfiguration.CODEC));
+
+    /** Гроздья светокамня под сводами лабиринта. */
+    public static final DeferredHolder<Feature<?>, GlowstoneClusterFeature> GLOWSTONE_CLUSTER =
+            FEATURES.register("glowstone_cluster", () -> new GlowstoneClusterFeature(NoneFeatureConfiguration.CODEC));
 
     /** Метеоритные воронки в барханах с железным ядром. */
     public static final DeferredHolder<Feature<?>, MeteorCraterFeature> METEOR_CRATER =
