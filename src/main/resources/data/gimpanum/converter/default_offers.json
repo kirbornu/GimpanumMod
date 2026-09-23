@@ -359,6 +359,54 @@
         "id": "opacbonusclaims:common_claim"
       },
       "label": "Маяки в прибавку к клейму"
+    },
+    {
+      "id": "elytra_to_radita_wings",
+      "weight": 10,
+      "input": {
+        "id": "minecraft:elytra"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:radita_wings"
+      },
+      "label": "Элитры в крылья Радитажа"
+    },
+    {
+      "id": "heart_of_the_sea_to_god_heartbeat",
+      "weight": 10,
+      "input": {
+        "id": "minecraft:heart_of_the_sea"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:god_heartbeat"
+      },
+      "label": "Сердца моря в Биение"
+    },
+    {
+      "id": "shulker_shell_to_sklav_carapace",
+      "weight": 10,
+      "input": {
+        "id": "minecraft:shulker_shell"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:sklav_carapace"
+      },
+      "label": "Панцири в панцирь Склава"
+    },
+    {
+      "id": "netherite_template_to_faceting",
+      "weight": 10,
+      "input": {
+        "id": "minecraft:netherite_upgrade_smithing_template"
+      },
+      "quota": 100,
+      "output": {
+        "id": "gimpanum:faceting_template"
+      },
+      "label": "Шаблоны в огранку"
     }
   ]
 }

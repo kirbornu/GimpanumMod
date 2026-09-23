@@ -266,5 +266,22 @@
     "gimpanum.emission.guilt": "Приступ Вины",
     "gimpanum.emission.guilt.hint": "Они были Веритами. Каждый удар вернётся к тебе",
     "block.gimpanum.phonos_clot": "Сгусток фоноса",
-    "gimpanum.command.structures_count": "Разделов в настройке структур: %s. Файл: %s"
+    "gimpanum.command.structures_count": "Разделов в настройке структур: %s. Файл: %s",
+    "item.gimpanum.radita_wings": "Крылья Радитажа",
+    "item.gimpanum.god_heartbeat": "Биение Сердца Бога",
+    "item.gimpanum.god_heartbeat.hint": "Съешь — и навсегда получишь ещё одно сердце",
+    "item.gimpanum.god_heartbeat.count": "Сердец от Биений: %s",
+    "item.gimpanum.god_heartbeat.full": "Сердце и так бьётся в полную силу",
+    "item.gimpanum.sklav_carapace": "Панцирь Склава",
+    "item.gimpanum.sklav_carapace.empty": "Пуст. Первая положенная вещь задаёт его вид",
+    "item.gimpanum.sklav_carapace.holds": "%s: %s из %s",
+    "item.gimpanum.sklav_carapace.hint": "ПКМ — стак, Shift+ПКМ — сколько влезет",
+    "item.gimpanum.faceting_template": "Огранка",
+    "upgrade.gimpanum.faceting": "Хрустальная огранка",
+    "item.gimpanum.faceting_template.applies_to": "Незеритовая броня, оружие и инструменты",
+    "item.gimpanum.faceting_template.ingredients": "Монолитный хрусталь",
+    "item.gimpanum.faceting_template.base_slot_description": "Положите незеритовую броню, оружие или инструмент",
+    "item.gimpanum.faceting_template.additions_slot_description": "Положите монолитный хрусталь",
+    "item.gimpanum.faceted": "Огранено хрусталём",
+    "gimpanum.command.items_count": "Разделов в настройке предметов: %s. Файл: %s"
 }

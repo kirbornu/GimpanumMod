@@ -1,0 +1,12 @@
+{
+    "type": "gimpanum:faceting",
+    "template": {
+        "item": "gimpanum:faceting_template"
+    },
+    "base": {
+        "tag": "gimpanum:faceting_base"
+    },
+    "addition": {
+        "item": "gimpanum:monolithic_crystal"
+    }
+}
