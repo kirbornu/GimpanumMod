@@ -99,13 +99,23 @@ public final class Emissions {
 
     /** Начать выброс сейчас же — по часам или по команде. Идущий прерывается. */
     public static void start(ServerLevel level, EmissionKind kind) {
+        start(level, kind, targets(level));
+    }
+
+    /**
+     * Начать выброс, направленный на этих игроков.
+     *
+     * <p>Так город Примо обрушивает Кошмар на того, кто разбудил крикунов, а
+     * не на случайного.
+     */
+    public static void start(ServerLevel level, EmissionKind kind, List<ServerPlayer> targets) {
         if (running != null) {
             stop(level);
         }
         announce(level, kind);
         Emission emission = kind.create();
         running = new Running(kind, emission);
-        emission.start(level, targets(level));
+        emission.start(level, targets);
         EmissionClock.get(level.getServer()).rewind(level.random);
         warned = false;
     }

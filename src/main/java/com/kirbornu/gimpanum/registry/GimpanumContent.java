@@ -11,6 +11,7 @@ import com.kirbornu.gimpanum.dimension.NebulaPortalBlock;
 import com.kirbornu.gimpanum.dimension.NebulaPortalBlockEntity;
 import com.kirbornu.gimpanum.dimension.ScorchingGasBlock;
 import com.kirbornu.gimpanum.dimension.VolatileGasBlock;
+import com.kirbornu.gimpanum.structure.PhonosClotBlock;
 import com.kirbornu.gimpanum.item.SealContents;
 import com.kirbornu.gimpanum.item.SealItem;
 import com.kirbornu.gimpanum.item.NebulaWoodItem;
@@ -260,6 +261,24 @@ public final class GimpanumContent {
     );
 
     public static final DeferredItem<?> CRYSTAL_CRUST_ITEM = ITEMS.registerSimpleBlockItem(CRYSTAL_CRUST);
+
+    /**
+     * Сгусток фоноса — награда структур: коснёшься, и он рассыпается
+     * диковинками, спуская ловушку. Не ломается — только касанием.
+     */
+    public static final DeferredBlock<PhonosClotBlock> PHONOS_CLOT = BLOCKS.registerBlock(
+            "phonos_clot",
+            PhonosClotBlock::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_PURPLE)
+                    .sound(SoundType.AMETHYST)
+                    .strength(-1.0F, 3600000.0F)
+                    .lightLevel(state -> 10)
+                    .noLootTable()
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)
+    );
+
+    public static final DeferredItem<?> PHONOS_CLOT_ITEM = ITEMS.registerSimpleBlockItem(PHONOS_CLOT);
 
     /**
      * Небула-бревно — ствол пещерной поросли Гимпанума.
@@ -665,6 +684,7 @@ public final class GimpanumContent {
                         output.accept(CRYSTAL_SHARD.get());
                         output.accept(MONOLITHIC_CRYSTAL_ITEM.get());
                         output.accept(CRYSTAL_CRUST_ITEM.get());
+                        output.accept(PHONOS_CLOT_ITEM.get());
                         output.accept(DARKNESS_CRYSTAL.get());
                         output.accept(FIRE_BAR.get());
                         output.accept(JADE_NUT.get());

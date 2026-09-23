@@ -1,0 +1,58 @@
+{
+    "_comment": [
+        "Структуры Гимпанума: награды и ловушки. Правится на ходу, перечитывается",
+        "командой /gimpanum config reload. Сами структуры генерирует мир; найти",
+        "ближайшую: /locate structure gimpanum:<имя>.",
+        "",
+        "Награда в каждой — Сгусток фоноса. Коснёшься — он рассыпается",
+        "диковинками (curios_min..max штук, любые из восьми) и спускает ловушку.",
+        "",
+        "frozen_memory — Застывшее воспоминание: лужайка в барханах, где можно",
+        "  дышать. Тронул сгусток — всё живое в wither_radius_blocks блоках волной",
+        "  осыпается пеплом, воздух уходит, и к тронувшему приходят",
+        "  visions_min..max видений на vision_life_seconds секунд.",
+        "glass_dreams — Грёзы: фигуры из разноцветного стекла. Тронул сгусток —",
+        "  грёза оборачивается кошмаром: доля shatter_share стекла бьётся, и",
+        "  вокруг раз в memory_gap_ticks тиков вспыхивают memories_min..max",
+        "  воспоминаний в spread_blocks блоках — искрят fuse_ticks тиков и",
+        "  взрываются: радиус radius_blocks, урон до damage.",
+        "radita_gallery — Галерея Радитажей: в каждой статуе свой сгусток. С",
+        "  шансом wraith_chance из статуи вырывается Призрак кометы, иначе — диковинки.",
+        "primo_city — город Примо: крикуны скалка. Каждый крик — Тьма на",
+        "  darkness_seconds секунд всем вокруг; shrieks_to_wake криков от одного",
+        "  игрока за shriek_memory_minutes минут будят Кошмар Спящего Бога прямо на",
+        "  него."
+    ],
+    "frozen_memory": {
+        "curios_min": 3,
+        "curios_max": 10,
+        "wither_radius_blocks": 12,
+        "visions_min": 2,
+        "visions_max": 3,
+        "vision_life_seconds": 30
+    },
+    "glass_dreams": {
+        "curios_min": 3,
+        "curios_max": 10,
+        "shatter_share": 0.4,
+        "memories_min": 3,
+        "memories_max": 6,
+        "memory_gap_ticks": 20,
+        "spread_blocks": 8,
+        "fuse_ticks": 40,
+        "radius_blocks": 7.0,
+        "damage": 20.0
+    },
+    "radita_gallery": {
+        "curios_min": 1,
+        "curios_max": 3,
+        "wraith_chance": 0.5
+    },
+    "primo_city": {
+        "curios_min": 3,
+        "curios_max": 10,
+        "shrieks_to_wake": 3,
+        "shriek_memory_minutes": 10,
+        "darkness_seconds": 12
+    }
+}
