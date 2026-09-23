@@ -37,7 +37,21 @@
         "  ванильное животное размером около size_blocks блоков; живёт",
         "  life_seconds_min..max секунд, плывёт сквозь блоки со скоростью",
         "  speed_blocks_per_second. Касание — damage урона мимо брони раз в",
-        "  damage_interval_ticks тиков."
+        "  damage_interval_ticks тиков.",
+        "fever — Лихорадка Хару: duration_seconds секунд Космический песок и пепел",
+        "  жгут, как магма, damage урона за удар. Спасают приседание, Ледоход,",
+        "  огнестойкость или любой другой блок под ногами.",
+        "accretion — Аккреция: duration_seconds секунд рядом с каждым игроком раз в",
+        "  interval_ticks_min..max тиков в distance_blocks_min..max блоках падает",
+        "  метеорит. Виден за fuse_ticks тиков: след с неба и кольцо на земле. Удар —",
+        "  взрыв силой power и обломок: сырое железо, магма, изредка древние",
+        "  обломки или хрустальная корка. Падают только на поверхность.",
+        "convulsions — Судороги: duration_seconds секунд раз в",
+        "  interval_seconds_min..max секунд толчок: за секунду гул, потом всех на",
+        "  земле подбрасывает со скоростью launch_speed_min..max (блоков за тик;",
+        "  0.9 — около восьми блоков вверх при здешней тяжести).",
+        "guilt — Приступ Вины: duration_seconds секунд удар по некрофагу",
+        "  возвращается ударившему долей reflected_share нанесённого урона, мимо брони."
     ],
     "schedule": {
         "interval_minutes_min": 10,
@@ -97,5 +111,33 @@
         "size_blocks": 10.0,
         "damage": 6.0,
         "damage_interval_ticks": 10
+    },
+    "fever": {
+        "weight": 1.0,
+        "duration_seconds": 120,
+        "damage": 1.0
+    },
+    "accretion": {
+        "weight": 1.0,
+        "duration_seconds": 180,
+        "interval_ticks_min": 40,
+        "interval_ticks_max": 120,
+        "distance_blocks_min": 6,
+        "distance_blocks_max": 40,
+        "fuse_ticks": 50,
+        "power": 3.0
+    },
+    "convulsions": {
+        "weight": 1.0,
+        "duration_seconds": 120,
+        "interval_seconds_min": 15,
+        "interval_seconds_max": 30,
+        "launch_speed_min": 0.8,
+        "launch_speed_max": 1.1
+    },
+    "guilt": {
+        "weight": 1.0,
+        "duration_seconds": 180,
+        "reflected_share": 0.5
     }
 }

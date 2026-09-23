@@ -256,5 +256,13 @@
     "gimpanum.command.emission_next": "Next emission in: %s",
     "gimpanum.command.emission_unknown": "No such emission: %s",
     "gimpanum.command.emission_no_dimension": "This world has no Gimpanum",
-    "gimpanum.command.emissions_count": "Emission config sections: %s. File: %s"
+    "gimpanum.command.emissions_count": "Emission config sections: %s. File: %s",
+    "gimpanum.emission.fever": "Haru's Fever",
+    "gimpanum.emission.fever.hint": "The sand is scorching. Don't stand on it",
+    "gimpanum.emission.accretion": "Accretion",
+    "gimpanum.emission.accretion.hint": "The disk strains to birth a sun. Beware the sky",
+    "gimpanum.emission.convulsions": "Convulsions",
+    "gimpanum.emission.convulsions.hint": "The god's body thrashes in agony",
+    "gimpanum.emission.guilt": "Fit of Guilt",
+    "gimpanum.emission.guilt.hint": "They were Verites. Every blow comes back to you"
 }

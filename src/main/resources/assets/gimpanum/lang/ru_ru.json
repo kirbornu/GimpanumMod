@@ -256,5 +256,13 @@
     "gimpanum.command.emission_next": "До следующего выброса: %s",
     "gimpanum.command.emission_unknown": "Нет такого выброса: %s",
     "gimpanum.command.emission_no_dimension": "Гимпанума в этом мире нет",
-    "gimpanum.command.emissions_count": "Разделов в настройке выбросов: %s. Файл: %s"
+    "gimpanum.command.emissions_count": "Разделов в настройке выбросов: %s. Файл: %s",
+    "gimpanum.emission.fever": "Лихорадка Хару",
+    "gimpanum.emission.fever.hint": "Песок раскалён. Не стой на нём",
+    "gimpanum.emission.accretion": "Аккреция",
+    "gimpanum.emission.accretion.hint": "Диск силится родить солнце. Берегись неба",
+    "gimpanum.emission.convulsions": "Судороги",
+    "gimpanum.emission.convulsions.hint": "Тело бога бьётся в агонии",
+    "gimpanum.emission.guilt": "Приступ Вины",
+    "gimpanum.emission.guilt.hint": "Они были Веритами. Каждый удар вернётся к тебе"
 }

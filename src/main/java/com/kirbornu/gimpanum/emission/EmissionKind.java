@@ -21,7 +21,11 @@ public enum EmissionKind {
     DESPONDENCY("despondency", Affliction::despondency, () -> SoundEvents.ELDER_GUARDIAN_CURSE),
     ENVY("envy", Affliction::envy, () -> SoundEvents.WITCH_CELEBRATE),
     BAD_MEMORIES("bad_memories", BadMemories::new, () -> SoundEvents.ENDERMAN_STARE),
-    NOSTALGIA("nostalgia", Nostalgia::new, () -> SoundEvents.NOTE_BLOCK_CHIME.value());
+    NOSTALGIA("nostalgia", Nostalgia::new, () -> SoundEvents.NOTE_BLOCK_CHIME.value()),
+    FEVER("fever", Fever::new, () -> SoundEvents.FIRE_EXTINGUISH),
+    ACCRETION("accretion", Accretion::new, () -> SoundEvents.LIGHTNING_BOLT_THUNDER),
+    CONVULSIONS("convulsions", Convulsions::new, () -> SoundEvents.WARDEN_EMERGE),
+    GUILT("guilt", Guilt::new, () -> SoundEvents.SOUL_ESCAPE.value());
 
     private final String id;
     private final Supplier<Emission> factory;
