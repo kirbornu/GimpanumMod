@@ -18,6 +18,11 @@
         "memory_ticks          — сколько тиков помнит потерянную жертву (20 = секунда)",
         "attack_interval_ticks — сколько тиков между ударами",
         "experience            — сколько опыта роняет",
+        "lore_chance           — шанс уронить книгу лора, от 0 до 1",
+        "drops                 — что роняет: item — предмет, chance — шанс от 0",
+        "                        до 1 (без него — всегда), min и max — сколько",
+        "                        штук (без max — ровно min, без обоих — одну).",
+        "                        Список берётся целиком: пустой [] — ничего",
         "spawn_per_chunk       — сколько таких мобов держать на чанк вокруг игрока.",
         "                        Дробное число — доля чанков: 0.25 — один на",
         "                        четыре чанка. 0 — сам не появляется вовсе",
@@ -69,7 +74,12 @@
         "memory_ticks": 12000,
         "attack_interval_ticks": 50,
         "experience": 6,
-        "spawn_per_chunk": 2.0
+        "spawn_per_chunk": 2.0,
+        "lore_chance": 0.002,
+        "drops": [
+            { "item": "gimpanum:crystal_shard", "chance": 0.025, "min": 1, "max": 1 },
+            { "item": "minecraft:echo_shard", "chance": 0.4, "min": 1, "max": 2 }
+        ]
     },
     "comet_wraith": {
         "health": 12.0,
@@ -82,7 +92,12 @@
         "memory_ticks": 400,
         "attack_interval_ticks": 24,
         "experience": 5,
-        "spawn_per_chunk": 0.25
+        "spawn_per_chunk": 0.25,
+        "lore_chance": 0.03,
+        "drops": [
+            { "item": "gimpanum:crystal_shard", "chance": 0.2, "min": 5, "max": 5 },
+            { "item": "minecraft:echo_shard", "chance": 0.9, "min": 5, "max": 15 }
+        ]
     },
     "space_devourer": {
         "health": 100.0,
@@ -95,7 +110,12 @@
         "memory_ticks": 3600,
         "attack_interval_ticks": 40,
         "experience": 20,
-        "spawn_per_chunk": 0.0
+        "spawn_per_chunk": 0.0,
+        "lore_chance": 0.03,
+        "drops": [
+            { "item": "gimpanum:crystal_shard", "chance": 0.5, "min": 10, "max": 10 },
+            { "item": "minecraft:echo_shard", "chance": 1.0, "min": 20, "max": 30 }
+        ]
     },
     "plasma_bolt": {
         "health": 60.0,
@@ -108,6 +128,11 @@
         "memory_ticks": 400,
         "attack_interval_ticks": 60,
         "experience": 8,
-        "spawn_per_chunk": 0.04
+        "spawn_per_chunk": 0.04,
+        "lore_chance": 0.03,
+        "drops": [
+            { "item": "gimpanum:crystal_shard", "chance": 0.3, "min": 5, "max": 5 },
+            { "item": "minecraft:echo_shard", "chance": 0.9, "min": 5, "max": 15 }
+        ]
     }
 }
