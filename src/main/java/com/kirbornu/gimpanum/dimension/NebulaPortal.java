@@ -14,6 +14,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
@@ -21,6 +22,7 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement;
+import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -43,9 +45,11 @@ import java.util.Set;
  * который возвращает <i>начало</i> структуры — угол её чанка на нулевой
  * высоте. Отсюда и брались переносы в коренную породу.
  *
- * <p>Границу мира проверяем отдельно и дважды — при выборе выхода и при
- * выборе площадки. Сетка размещения о границе не знает и спокойно предложит
- * ячейку за ней; выйти оттуда игрок уже не сможет.
+ * <p>Границу мира проверяем на каждом шаге: ячейки сетки берём только из-под
+ * неё, найденную арку сверяем отдельно (структура шире своего чанка и может
+ * заходить за черту), площадку — целым блоком, а не углом. Сетка размещения о
+ * границе не знает и спокойно предложит ячейку за ней; выйти оттуда игрок уже
+ * не сможет.
  */
 public final class NebulaPortal {
 
@@ -126,16 +130,24 @@ public final class NebulaPortal {
         Optional<Structure> structure = target.registryAccess()
                 .registryOrThrow(Registries.STRUCTURE).getOptional(STRUCTURE);
 
+        WorldBorder border = target.getWorldBorder();
+
         if (placement.isPresent() && structure.isPresent()) {
+            // Метод ждёт координаты чанка, а не номер ячейки, и сам делит их
+            // на шаг сетки. Раньше сюда шли номера ячеек как есть — от −24 до
+            // 24 чанков, — и после деления оставалось всего четыре ячейки у
+            // начала координат: «случайный» выход выбирал из четырёх арок.
+            int spacing = placement.get().spacing();
             for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
                 ChunkPos candidate = placement.get().getPotentialStructureChunk(
                         target.getSeed(),
-                        random.nextInt(REGION_RANGE * 2 + 1) - REGION_RANGE,
-                        random.nextInt(REGION_RANGE * 2 + 1) - REGION_RANGE);
-                if (!target.getWorldBorder().isWithinBounds(candidate)) {
+                        cellX(border, spacing, random) * spacing,
+                        cellZ(border, spacing, random) * spacing);
+                if (!border.isWithinBounds(candidate)) {
                     continue;
                 }
-                Optional<BlockPos> portal = portalAt(target, candidate, structure.get());
+                Optional<BlockPos> portal = portalAt(target, candidate, structure.get())
+                        .filter(pos -> inside(border, pos));
                 if (portal.isPresent()) {
                     return portal;
                 }
@@ -143,11 +155,55 @@ public final class NebulaPortal {
         }
 
         List<BlockPos> known = PortalIndex.in(server, target.dimension()).stream()
-                .filter(pos -> target.getWorldBorder().isWithinBounds(pos))
+                .filter(pos -> inside(border, pos))
                 .toList();
         return known.isEmpty()
                 ? Optional.empty()
                 : Optional.of(known.get(random.nextInt(known.size())));
+    }
+
+    /**
+     * Случайная ячейка сетки по X — из тех, что не дальше {@value #REGION_RANGE}
+     * от начала координат и хотя бы краем лежат под границей.
+     *
+     * <p>Без поправки на границу узкий мир почти целиком отбраковывался бы:
+     * при границе в десять тысяч блоков под неё попадает одна ячейка из сотни,
+     * и дюжина попыток уходила бы впустую.
+     */
+    private static int cellX(WorldBorder border, int spacing, RandomSource random) {
+        return cell(border.getMinX(), border.getMaxX(), spacing, random);
+    }
+
+    private static int cellZ(WorldBorder border, int spacing, RandomSource random) {
+        return cell(border.getMinZ(), border.getMaxZ(), spacing, random);
+    }
+
+    private static int cell(double min, double max, int spacing, RandomSource random) {
+        int low = Math.max(-REGION_RANGE, Math.floorDiv(Mth.floor(min) >> 4, spacing));
+        int high = Math.min(REGION_RANGE, Math.floorDiv((Mth.ceil(max) - 1) >> 4, spacing));
+        return high < low ? low : low + random.nextInt(high - low + 1);
+    }
+
+    /**
+     * Блок целиком под границей.
+     *
+     * <p>Не угол: граница проверяется по углу блока, а ставим мы в его
+     * середину, и у самой черты пришедший оказался бы на полблока снаружи.
+     */
+    private static boolean inside(WorldBorder border, BlockPos pos) {
+        return border.isWithinBounds(new AABB(pos));
+    }
+
+    /**
+     * Ближайший блок, целиком лежащий под границей.
+     *
+     * <p>Не ванильный {@code clampToBounds}: тот прижимает к самой черте, а она
+     * может проходить посреди блока.
+     */
+    private static BlockPos clampInside(WorldBorder border, BlockPos pos) {
+        int x = Mth.clamp(pos.getX(), Mth.ceil(border.getMinX()), Mth.floor(border.getMaxX()) - 1);
+        int z = Mth.clamp(pos.getZ(), Mth.ceil(border.getMinZ()), Mth.floor(border.getMaxZ()) - 1);
+        return new BlockPos(x, pos.getY(), z);
     }
 
     private static Optional<RandomSpreadStructurePlacement> placement(ServerLevel target) {
@@ -249,7 +305,7 @@ public final class NebulaPortal {
                                 continue;
                             }
                             if (standable(target, candidate)
-                                    && target.getWorldBorder().isWithinBounds(candidate)) {
+                                    && inside(target.getWorldBorder(), candidate)) {
                                 return candidate;
                             }
                         }
@@ -257,8 +313,10 @@ public final class NebulaPortal {
                 }
             }
         }
-        // Не нашлось вовсе — ставим над аркой: упасть лучше, чем застрять в плоскости.
-        return centre.above(3);
+        // Не нашлось вовсе — ставим над аркой: упасть лучше, чем застрять в
+        // плоскости. Но и тут под границей: арку она может резать пополам.
+        BlockPos above = centre.above(3);
+        return inside(target.getWorldBorder(), above) ? above : clampInside(target.getWorldBorder(), above);
     }
 
     /**
