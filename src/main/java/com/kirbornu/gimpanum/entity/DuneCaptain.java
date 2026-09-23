@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.entity;
 
+import com.kirbornu.gimpanum.config.JsonConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -178,7 +179,7 @@ public class DuneCaptain extends DuneWalker {
      * пересчёта, а солдат поднимается по его истечении.
      */
     private void reinforce() {
-        MobStats.Section stats = MobStats.of("dune_captain");
+        JsonConfig.Section stats = MobStats.of("dune_captain");
         int size = stats.integer("squad_size");
         squad = members().size();
         if (squad >= size) {

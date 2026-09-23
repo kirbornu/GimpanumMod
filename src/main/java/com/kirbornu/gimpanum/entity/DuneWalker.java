@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.entity;
 
+import com.kirbornu.gimpanum.config.JsonConfig;
 import com.kirbornu.gimpanum.entity.goal.AllAroundTargetGoal;
 import com.kirbornu.gimpanum.entity.goal.FollowCaptainGoal;
 import com.kirbornu.gimpanum.entity.goal.PacedMeleeAttackGoal;
@@ -192,7 +193,7 @@ public class DuneWalker extends Zombie {
      * смерть от сиротства видна безошибочно — см. {@link #withered()}.
      */
     private void wither() {
-        MobStats.Section stats = MobStats.of("dune_walker");
+        JsonConfig.Section stats = MobStats.of("dune_walker");
         int every = Math.max(1, stats.integer("orphan_damage_interval_ticks"));
         if (this.tickCount % every == 0) {
             this.hurt(this.damageSources().starve(), (float) stats.number("orphan_damage"));

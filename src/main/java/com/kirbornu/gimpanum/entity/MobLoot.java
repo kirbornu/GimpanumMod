@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.entity;
 
+import com.kirbornu.gimpanum.config.JsonConfig;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.kirbornu.gimpanum.Gimpanum;
@@ -44,7 +45,7 @@ public final class MobLoot {
      */
     public static void check() {
         for (String name : MobStats.sections()) {
-            MobStats.Section stats = MobStats.of(name);
+            JsonConfig.Section stats = MobStats.of(name);
             if (!stats.has("drops")) {
                 continue;
             }
@@ -71,7 +72,7 @@ public final class MobLoot {
             event.setCanceled(true);
             return;
         }
-        MobStats.Section stats = MobStats.of(name);
+        JsonConfig.Section stats = MobStats.of(name);
         RandomSource random = dead.getRandom();
         for (JsonElement entry : stats.list("drops")) {
             roll(entry, random).ifPresent(stack -> drop(event, dead, stack));
