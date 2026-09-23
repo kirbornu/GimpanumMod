@@ -19,6 +19,7 @@ import com.kirbornu.gimpanum.recipe.ThawingRecipe;
 import com.kirbornu.gimpanum.worldgen.NebulaFruitBlock;
 import com.kirbornu.gimpanum.worldgen.NebulaGasFeature;
 import com.kirbornu.gimpanum.worldgen.VolatileGasFeature;
+import com.kirbornu.gimpanum.worldgen.QuartzCrackFeature;
 import com.kirbornu.gimpanum.worldgen.NebulaTreeFeature;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.food.FoodProperties;
@@ -430,6 +431,10 @@ public final class GimpanumContent {
     /** Карманы летучего газа: мелкие и частые. */
     public static final DeferredHolder<Feature<?>, VolatileGasFeature> VOLATILE_GAS =
             FEATURES.register("volatile_gas", () -> new VolatileGasFeature(NoneFeatureConfiguration.CODEC));
+
+    /** Кварцевые трещины сквозь всю толщу, над барханами — травинками. */
+    public static final DeferredHolder<Feature<?>, QuartzCrackFeature> QUARTZ_CRACK =
+            FEATURES.register("quartz_crack", () -> new QuartzCrackFeature(NoneFeatureConfiguration.CODEC));
 
     /**
      * Сериализатор переплавки с непредсказуемым выходом.

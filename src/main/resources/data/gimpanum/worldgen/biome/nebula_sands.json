@@ -37,7 +37,9 @@
             "gimpanum:nebula_gas",
             "gimpanum:volatile_gas"
         ],
-        [],
+        [
+            "gimpanum:quartz_crack"
+        ],
         [],
         [
             "gimpanum:nebula_tree"
