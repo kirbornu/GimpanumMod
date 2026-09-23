@@ -330,7 +330,7 @@
       "input": {
         "id": "minecraft:heavy_core"
       },
-      "quota": 101,
+      "quota": 100,
       "output": {
         "id": "gimpanum:furious_shell"
       },

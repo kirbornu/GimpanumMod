@@ -4,7 +4,7 @@ import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.world.level.block.state.BlockState;
 
 /** Что в Гимпануме считается природной породой, которую жилам можно замещать. */
-final class Terrain {
+public final class Terrain {
 
     private Terrain() {
     }
@@ -15,7 +15,7 @@ final class Terrain {
      * <p>Всё прочее в толще либо уже чья-то жила, либо постройка: астероид,
      * портал, хранилище. Жила, прошедшая насквозь, порезала бы их.
      */
-    static boolean rock(BlockState state) {
+    public static boolean rock(BlockState state) {
         return state.is(GimpanumContent.COSMIC_SAND.get()) || state.is(GimpanumContent.COSMIC_ASH.get());
     }
 }

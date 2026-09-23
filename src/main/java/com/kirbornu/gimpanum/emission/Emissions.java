@@ -2,7 +2,9 @@ package com.kirbornu.gimpanum.emission;
 
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.dimension.NebulaPortal;
+import com.kirbornu.gimpanum.entity.NecrophageEvents;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
@@ -19,6 +21,7 @@ import net.minecraft.world.InteractionResult;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
@@ -201,6 +204,27 @@ public final class Emissions {
                 && NebulaPortal.GIMPANUM.equals(player.level().dimension())
                 && event.getSource().is(DamageTypes.ON_FIRE)) {
             event.setCanceled(true);
+        }
+    }
+
+    /**
+     * Во время Приступа Вины удар по некрофагу отзывается ударившему.
+     *
+     * <p>После того как урон прошёл, а не до: отзывается то, что действительно
+     * досталось некрофагу, с учётом его брони. Стрела считается ударом того,
+     * кто стрелял.
+     */
+    @SubscribeEvent
+    public static void onDamage(LivingDamageEvent.Post event) {
+        if (running != null && running.emission() instanceof Guilt
+                && event.getEntity().getType().is(NecrophageEvents.NECROPHAGE)
+                && event.getSource().getEntity() instanceof ServerPlayer player
+                && !player.isCreative() && event.getNewDamage() > 0.0F) {
+            player.hurt(player.damageSources().magic(), (float) (event.getNewDamage() * Guilt.share()));
+            if (player.level() instanceof ServerLevel level) {
+                level.sendParticles(ParticleTypes.SOUL, player.getX(), player.getY() + 1.0, player.getZ(),
+                        6, 0.3, 0.5, 0.3, 0.02);
+            }
         }
     }
 
