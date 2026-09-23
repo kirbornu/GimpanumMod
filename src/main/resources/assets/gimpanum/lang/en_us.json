@@ -226,5 +226,6 @@
     "gimpanum.command.offers_count": "Converter offers: %s. File: %s",
     "gimpanum.tooltip.thawing_hint": "Something alive inside: %s kinds. Shift for the list.",
     "gimpanum.tooltip.thawing_header": "Inside there may be:",
-    "gimpanum.tooltip.thawing_line": "  %s — %s%%"
+    "gimpanum.tooltip.thawing_line": "  %s — %s%%",
+    "gimpanum.command.mobs_count": "Mob stats: %s. File: %s"
 }

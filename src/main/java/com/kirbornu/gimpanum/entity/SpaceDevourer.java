@@ -41,18 +41,6 @@ import org.jetbrains.annotations.Nullable;
  */
 public class SpaceDevourer extends Monster {
 
-    /**
-     * Сколько тиков поглотитель помнит цель, потерянную из виду.
-     *
-     * <p>Три минуты — не круглое число ради красоты: обсидиановый блок он
-     * грызёт около минуты, и памяти должно хватать на несколько слоёв подряд.
-     * Иначе механика обещала бы больше, чем позволяет память.
-     */
-    private static final int MEMORY = 3600;
-
-    /** Раз в две секунды, как и просили: удар редкий, но тяжёлый. */
-    private static final int ATTACK_INTERVAL = 40;
-
     /** Как часто вопить, пока идёт погоня: раз в четыре секунды с разбросом. */
     private static final int CHASE_CRY = 80;
 
@@ -69,7 +57,7 @@ public class SpaceDevourer extends Monster {
 
     public SpaceDevourer(EntityType<? extends Monster> type, Level level) {
         super(type, level);
-        this.xpReward = 20;
+        this.xpReward = MobStats.of("space_devourer").experience();
         // hoversInPlace = true: управление полётом само отключает тяготение и
         // больше его не возвращает. Иначе поглотитель падал бы всякий раз,
         // когда цель достигнута и движение остановлено, — то есть посреди
@@ -115,20 +103,20 @@ public class SpaceDevourer extends Monster {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(3, new BoreChaseGoal(this, ATTACK_INTERVAL));
+        this.goalSelector.addGoal(3, new BoreChaseGoal(this, MobStats.of("space_devourer").attackTicks()));
         this.goalSelector.addGoal(4, new DevourBlocksGoal(this));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomFlyingGoal(this, 0.6));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 12.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
         this.targetSelector.addGoal(1, (HurtByTargetGoal) new HurtByTargetGoal(this)
-                .setUnseenMemoryTicks(MEMORY));
+                .setUnseenMemoryTicks(MobStats.of("space_devourer").memoryTicks()));
         // Предпоследний {@code false} — «видеть цель необязательно». Поглотитель
         // чует жертву сквозь любую толщу, и это не поблажка, а весь его смысл:
         // стена от него не спасает, она лишь откладывает встречу.
         this.targetSelector.addGoal(2,
                 new NearestAttackableTargetGoal<>(this, Player.class, 0, false, false, null)
-                        .setUnseenMemoryTicks(MEMORY));
+                        .setUnseenMemoryTicks(MobStats.of("space_devourer").memoryTicks()));
     }
 
     /**
