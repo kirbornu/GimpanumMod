@@ -17,13 +17,10 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.InteractionResult;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -225,33 +222,6 @@ public final class Emissions {
                 level.sendParticles(ParticleTypes.SOUL, player.getX(), player.getY() + 1.0, player.getZ(),
                         6, 0.3, 0.5, 0.3, 0.02);
             }
-        }
-    }
-
-    /** Видение, которое никто не ведёт, в мир не входит — см. {@link Nostalgia}. */
-    @SubscribeEvent
-    public static void onJoin(EntityJoinLevelEvent event) {
-        if (!event.getLevel().isClientSide && event.getEntity().getPersistentData().getBoolean(Nostalgia.MARK)
-                && !(running != null && running.emission() instanceof Nostalgia nostalgia
-                        && nostalgia.tracks(event.getEntity().getUUID()))) {
-            event.setCanceled(true);
-        }
-    }
-
-    /** С видениями не поговоришь, не покормишь и верхом не сядешь. */
-    @SubscribeEvent
-    public static void onInteract(PlayerInteractEvent.EntityInteract event) {
-        if (event.getTarget().getPersistentData().getBoolean(Nostalgia.MARK)) {
-            event.setCanceled(true);
-            event.setCancellationResult(InteractionResult.FAIL);
-        }
-    }
-
-    @SubscribeEvent
-    public static void onInteractAt(PlayerInteractEvent.EntityInteractSpecific event) {
-        if (event.getTarget().getPersistentData().getBoolean(Nostalgia.MARK)) {
-            event.setCanceled(true);
-            event.setCancellationResult(InteractionResult.FAIL);
         }
     }
 }
