@@ -1,0 +1,101 @@
+{
+    "_comment": [
+        "Выбросы Гимпанума — события на всё измерение, которые делают среду злее.",
+        "Правится на ходу, перечитывается командой /gimpanum config reload.",
+        "Для проверок: /gimpanum emission start <событие> | stop | status.",
+        "",
+        "Раздел schedule — расписание:",
+        "  interval_minutes_min/max — через сколько минут следующий выброс,",
+        "                             случайно между ними. Время идёт, только пока",
+        "                             в Гимпануме кто-то есть",
+        "  warning_seconds          — за сколько секунд до выброса предупредить",
+        "",
+        "У каждого события weight — вес при выборе, 0 — не выпадает никогда.",
+        "Действуют события на всех в Гимпануме, кроме творческого режима и",
+        "наблюдателей; кто зашёл посреди длящегося события, тоже его получает.",
+        "",
+        "frenzied_raid — Рейд Неистовых: каждому игроку captains_min..max",
+        "  капитанов в distance_blocks_min..max блоках, сразу на охоте; их отряд",
+        "  пополняется в reinforce_speedup раз быстрее обычного.",
+        "sleeping_god — Кошмар Спящего Бога: Поглотитель в distance_blocks от",
+        "  случайного игрока на его высоте. Охотится на него и не исчезает, пока",
+        "  не потеряет.",
+        "wrath — Приступ Злости: все горят duration_seconds_min..max секунд,",
+        "  damage урона раз в damage_interval_ticks тиков. Огонь не тушится;",
+        "  спасает огнестойкость.",
+        "despondency — Приступ Уныния: Утомление (amplifier 2 — третий уровень)",
+        "  на duration_seconds. Молоко снимает лишь на пару секунд.",
+        "envy — Приступ Зависти: Отравление (amplifier 2 — третий уровень) на",
+        "  duration_seconds. Само не убивает — оставляет 1 HP.",
+        "bad_memories — Плохие Воспоминания: duration_seconds секунд каждому",
+        "  игроку раз в interval_seconds_min..max секунд в distance_blocks_min..max",
+        "  блоках появляется воспоминание. fuse_ticks искрит, потом взрывается:",
+        "  радиус radius_blocks, урон до damage в центре. Блоки и некрофагов не",
+        "  трогает, стены прикрывают, защита от взрывов работает.",
+        "nostalgia — Ностальгия: duration_seconds секунд у каждого игрока",
+        "  visions_min..max видений в distance_blocks_min..max блоках. Видение —",
+        "  ванильное животное размером около size_blocks блоков; живёт",
+        "  life_seconds_min..max секунд, плывёт сквозь блоки со скоростью",
+        "  speed_blocks_per_second. Касание — damage урона мимо брони раз в",
+        "  damage_interval_ticks тиков."
+    ],
+    "schedule": {
+        "interval_minutes_min": 10,
+        "interval_minutes_max": 40,
+        "warning_seconds": 30
+    },
+    "frenzied_raid": {
+        "weight": 1.0,
+        "captains_min": 2,
+        "captains_max": 3,
+        "distance_blocks_min": 24,
+        "distance_blocks_max": 40,
+        "reinforce_speedup": 4.0
+    },
+    "sleeping_god": {
+        "weight": 1.0,
+        "distance_blocks": 60
+    },
+    "wrath": {
+        "weight": 1.0,
+        "duration_seconds_min": 60,
+        "duration_seconds_max": 180,
+        "damage": 1.0,
+        "damage_interval_ticks": 40
+    },
+    "despondency": {
+        "weight": 1.0,
+        "duration_seconds": 300,
+        "amplifier": 2
+    },
+    "envy": {
+        "weight": 1.0,
+        "duration_seconds": 120,
+        "amplifier": 2
+    },
+    "bad_memories": {
+        "weight": 1.0,
+        "duration_seconds": 180,
+        "interval_seconds_min": 15,
+        "interval_seconds_max": 40,
+        "distance_blocks_min": 2,
+        "distance_blocks_max": 4,
+        "fuse_ticks": 40,
+        "radius_blocks": 7.0,
+        "damage": 20.0
+    },
+    "nostalgia": {
+        "weight": 1.0,
+        "duration_seconds": 180,
+        "visions_min": 1,
+        "visions_max": 2,
+        "distance_blocks_min": 20,
+        "distance_blocks_max": 40,
+        "life_seconds_min": 20,
+        "life_seconds_max": 60,
+        "speed_blocks_per_second": 2.0,
+        "size_blocks": 10.0,
+        "damage": 6.0,
+        "damage_interval_ticks": 10
+    }
+}

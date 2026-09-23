@@ -7,6 +7,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerLevel;
@@ -88,6 +89,9 @@ public class DuneCaptain extends DuneWalker {
     /** Срок уже назначен, и по его истечении поднимется солдат. */
     private boolean due;
 
+    /** Во сколько раз быстрее обычного пополняется отряд — у капитанов Рейда Неистовых. */
+    private double hurry = 1.0;
+
     public DuneCaptain(EntityType<? extends Zombie> type, Level level) {
         super(type, level);
         // Предел обхода при поиске пути игра берёт как FOLLOW_RANGE * 16, а
@@ -148,6 +152,11 @@ public class DuneCaptain extends DuneWalker {
         return squad;
     }
 
+    /** Пополнять отряд в столько раз быстрее — до конца жизни этого капитана. */
+    public void hurry(double factor) {
+        hurry = Math.max(1.0, factor);
+    }
+
     /** По бойцу ударили — отряд спускается на обидчика, если другой жертвы нет. */
     void alarm(Player attacker) {
         if (this.getTarget() == null) {
@@ -191,7 +200,7 @@ public class DuneCaptain extends DuneWalker {
             due = true;
             int fastest = stats.integer("reinforce_fastest_ticks");
             int slowest = stats.integer("reinforce_slowest_ticks");
-            reinforceIn = fastest + (slowest - fastest) * squad / Math.max(1, size - 1);
+            reinforceIn = (int) Math.max(1, (fastest + (slowest - fastest) * squad / Math.max(1, size - 1)) / hurry);
             return;
         }
         due = false;
@@ -258,6 +267,20 @@ public class DuneCaptain extends DuneWalker {
             }
         }
         return this.position();
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        if (hurry > 1.0) {
+            tag.putDouble("Hurry", hurry);
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        hurry = tag.contains("Hurry") ? tag.getDouble("Hurry") : 1.0;
     }
 
     /** Погиб — отряд осиротел. */
