@@ -1,0 +1,14 @@
+{
+    "structures": [
+        {
+            "structure": "gimpanum:frozen_memory",
+            "weight": 1
+        }
+    ],
+    "placement": {
+        "type": "minecraft:random_spread",
+        "spacing": 24,
+        "separation": 10,
+        "salt": 73519402
+    }
+}

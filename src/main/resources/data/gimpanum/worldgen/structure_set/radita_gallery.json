@@ -1,0 +1,14 @@
+{
+    "structures": [
+        {
+            "structure": "gimpanum:radita_gallery",
+            "weight": 1
+        }
+    ],
+    "placement": {
+        "type": "minecraft:random_spread",
+        "spacing": 16,
+        "separation": 6,
+        "salt": 91827364
+    }
+}
