@@ -1,8 +1,164 @@
 {
   "offers": [
     {
+      "id": "chemical_turret_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "createdieselgenerators:chemical_turret"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Химические турели в Хрусталь",
+      "output_count": 4000
+    },
+    {
+      "id": "nitropowder_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "createbigcannons:nitropowder"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Бездымный порох в Хрусталь",
+      "output_count": 1500
+    },
+    {
+      "id": "stripped_nebula_wood_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "gimpanum:stripped_nebula_wood"
+      },
+      "quota": 64,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Небула-древесина в Хрусталь",
+      "output_count": 500
+    },
+    {
+      "id": "tesla_coil_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "createaddition:tesla_coil"
+      },
+      "quota": 320,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Катушки Тесла в Хрусталь",
+      "output_count": 3000
+    },
+    {
+      "id": "festive_spool_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "createaddition:festive_spool"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Гирлянды в Хрусталь",
+      "output_count": 600
+    },
+    {
+      "id": "biodiesel_bucket_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "createdieselgenerators:biodiesel_bucket"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Биодизель в Хрусталь",
+      "output_count": 2500
+    },
+    {
+      "id": "sturdy_sheet_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "create:sturdy_sheet"
+      },
+      "quota": 1280,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Прочные листы в Хрусталь",
+      "output_count": 500
+    },
+    {
+      "id": "electron_tube_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "create:electron_tube"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Электронные лампы в Хрусталь",
+      "output_count": 400
+    },
+    {
+      "id": "spicy_sausages_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "createfood:spicy_sausages"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Острые колбаски в Хрусталь",
+      "output_count": 2000
+    },
+    {
+      "id": "chorus_fruit_ice_cream_cone_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "createfood:chorus_fruit_ice_cream_cone"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Хорусовое мороженое в Хрусталь",
+      "output_count": 2500
+    },
+    {
+      "id": "apple_milkshake_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "createfood:apple_milkshake_bottle"
+      },
+      "quota": 160,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Яблочный молочный коктейль в Хрусталь",
+      "output_count": 400
+    },
+    {
+      "id": "white_chocolate_bar_to_shard",
+      "weight": 3,
+      "input": {
+        "id": "createfood:bar_of_white_chocolate"
+      },
+      "quota": 640,
+      "output": {
+        "id": "gimpanum:crystal_shard"
+      },
+      "label": "Белый шоколад в Хрусталь",
+      "output_count": 2000
+    },
+    {
       "id": "precision_mechanism_to_shard",
-      "weight": 10,
+      "weight": 3,
       "input": {
         "id": "create:precision_mechanism"
       },
@@ -15,20 +171,20 @@
     },
     {
       "id": "noodles_to_shard",
-      "weight": 10,
+      "weight": 3,
       "input": {
         "id": "farmersdelight:vegetable_noodles"
       },
-      "quota": 160,
+      "quota": 128,
       "output": {
         "id": "gimpanum:crystal_shard"
       },
       "label": "Овощная лапща в Хрусталь",
-      "output_count": 250
+      "output_count": 200
     },
     {
       "id": "experience_block_to_shard",
-      "weight": 10,
+      "weight": 3,
       "input": {
         "id": "create:experience_block"
       },
@@ -41,7 +197,7 @@
     },
     {
       "id": "electric_motor_to_shard",
-      "weight": 10,
+      "weight": 3,
       "input": {
         "id": "createaddition:electric_motor"
       },
