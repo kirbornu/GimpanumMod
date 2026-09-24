@@ -44,7 +44,7 @@ import java.util.Optional;
  * {@code "required": false} в теге.
  *
  * <p>Файл создаётся при первом запуске из образца в джарке и перечитывается по
- * {@code /gimpanum thawing reload}.
+ * {@code /gimpanum config reload}.
  */
 public final class ThawedOrganics {
 

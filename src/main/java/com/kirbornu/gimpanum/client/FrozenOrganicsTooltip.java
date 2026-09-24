@@ -6,6 +6,7 @@ import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -55,7 +56,15 @@ public final class FrozenOrganicsTooltip {
                 .withStyle(ChatFormatting.GRAY));
         List<ThawedOrganics.Find> sorted = new ArrayList<>(finds);
         sorted.sort(Comparator.comparingInt(ThawedOrganics.Find::weight).reversed());
+        // Шанс считается по предмету, а не по строке: один предмет может
+        // стоять в конфиге дважды (пригоршней и штукой). Такой печатаем один
+        // раз, иначе он вышел бы двумя строками с одним и тем же общим шансом.
+        List<ItemStack> printed = new ArrayList<>();
         for (ThawedOrganics.Find find : sorted) {
+            if (printed.stream().anyMatch(item -> ItemStack.isSameItemSameComponents(item, find.item()))) {
+                continue;
+            }
+            printed.add(find.item());
             String chance = String.format(Locale.ROOT, "%.1f",
                     ThawedOrganicsClient.chance(find.item()) * 100.0F);
             lines.add(Component.translatable("gimpanum.tooltip.thawing_line",

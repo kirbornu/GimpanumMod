@@ -8,10 +8,10 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Что записано в Печати: кто был привязан к породившему её Ядру.
@@ -60,13 +60,24 @@ public record SealContents(
 
     /**
      * Все затронутые ники без повторов: игрок, привязанный и лично, и в составе
-     * команды, не должен получить команду дважды.
+     * команды, не должен получить команду дважды. Повтором считается и тот же
+     * ник в другом регистре — игра их не различает.
      */
     public List<String> allPlayers() {
-        Set<String> unique = new LinkedHashSet<>(players);
-        for (BoundTeam team : teams) {
-            unique.addAll(team.members());
+        Set<String> seen = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        List<String> unique = new ArrayList<>();
+        for (String name : players) {
+            if (seen.add(name)) {
+                unique.add(name);
+            }
         }
-        return new ArrayList<>(unique);
+        for (BoundTeam team : teams) {
+            for (String name : team.members()) {
+                if (seen.add(name)) {
+                    unique.add(name);
+                }
+            }
+        }
+        return unique;
     }
 }

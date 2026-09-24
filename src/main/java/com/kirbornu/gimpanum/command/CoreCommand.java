@@ -65,6 +65,8 @@ public final class CoreCommand {
             new SimpleCommandExceptionType(Component.translatable("gimpanum.command.no_such_index"));
     private static final SimpleCommandExceptionType ERROR_NAME_TAKEN =
             new SimpleCommandExceptionType(Component.translatable("gimpanum.command.name_taken"));
+    private static final SimpleCommandExceptionType ERROR_NAME_INVALID =
+            new SimpleCommandExceptionType(Component.translatable("gimpanum.command.name_invalid"));
     private static final SimpleCommandExceptionType ERROR_NO_MATCH =
             new SimpleCommandExceptionType(Component.translatable("gimpanum.command.no_match"));
     private static final SimpleCommandExceptionType ERROR_PATTERN_NOT_ALLOWED =
@@ -263,7 +265,7 @@ public final class CoreCommand {
                                 .then(Commands.argument("value", BoolArgumentType.bool())
                                         .executes(context -> setExplosionEnabled(context, resolver))))
                         .then(Commands.literal("power")
-                                .then(Commands.argument("power", FloatArgumentType.floatArg(0.0F, 100.0F))
+                                .then(Commands.argument("power", FloatArgumentType.floatArg(0.0F, CoreConfig.MAX_POWER))
                                         .then(Commands.argument("fire", BoolArgumentType.bool())
                                                 .executes(context -> setExplosion(context, resolver))))));
     }
@@ -314,6 +316,7 @@ public final class CoreCommand {
 
     private static int list(CommandContext<CommandSourceStack> context) {
         List<String> names = CoreIndex.names(context.getSource().getServer());
+        names.sort(String.CASE_INSENSITIVE_ORDER);
         CommandSourceStack source = context.getSource();
         if (names.isEmpty()) {
             source.sendSuccess(() -> Component.translatable("gimpanum.command.no_cores"), false);
@@ -405,6 +408,9 @@ public final class CoreCommand {
         CoreBlockEntity core = requireSingle(resolver.resolve(context, true));
         String newName = StringArgumentType.getString(context, "new_name");
 
+        if (!CoreIndex.isValidName(newName)) {
+            throw ERROR_NAME_INVALID.create();
+        }
         if (CoreIndex.isNameTaken(context.getSource().getServer(), newName, core.coreId())) {
             throw ERROR_NAME_TAKEN.create();
         }
@@ -441,8 +447,12 @@ public final class CoreCommand {
         return count;
     }
 
-    private static int setDefaultName(CommandContext<CommandSourceStack> context) {
+    private static int setDefaultName(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         String prefix = StringArgumentType.getString(context, "prefix");
+        // Приставка становится началом имён новых Ядер, поэтому и правила у неё те же.
+        if (!CoreIndex.isValidName(prefix)) {
+            throw ERROR_NAME_INVALID.create();
+        }
         CoreIndex.setDefaultNamePrefix(context.getSource().getServer(), prefix);
         context.getSource().sendSuccess(
                 () -> Component.translatable("gimpanum.command.default_name_set", prefix), true);
@@ -476,7 +486,8 @@ public final class CoreCommand {
         return apply(context, resolver, config -> {
             // Повтор просто ничего не меняет: при массовом применении часть Ядер
             // уже может быть привязана, и это не повод считать команду неудачной.
-            if (config.boundPlayers().contains(name)) {
+            // Ники в игре не различают регистр: «Steve» и «steve» — один игрок.
+            if (config.boundPlayers().stream().anyMatch(bound -> bound.equalsIgnoreCase(name))) {
                 return config;
             }
             List<String> names = new ArrayList<>(config.boundPlayers());
@@ -490,7 +501,7 @@ public final class CoreCommand {
         String name = StringArgumentType.getString(context, "name");
         return apply(context, resolver, config -> {
             List<String> names = new ArrayList<>(config.boundPlayers());
-            return names.remove(name) ? config.withBoundPlayers(names) : config;
+            return names.removeIf(bound -> bound.equalsIgnoreCase(name)) ? config.withBoundPlayers(names) : config;
         }, count -> Component.translatable("gimpanum.command.player_removed", name, count));
     }
 

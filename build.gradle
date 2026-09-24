@@ -44,11 +44,18 @@ repositories {
     mavenCentral()
 }
 
-// --- Sable как локальная compileOnly-зависимость ---------------------------
+// --- Джарки модпака как compileOnly-зависимости ------------------------------
+// Sable, FTB Teams, Create Big Cannons, JEI и Xaero's Minimap в игре
+// необязательны: без любого из них мод запускается и просто отключает свою
+// часть. Но собрать мод без них нельзя — классы-мосты к этим модам ссылаются
+// на их типы напрямую, и javac без джарок их не скомпилирует. Джарок нет в
+// git (они весят под двести мегабайт, см. .gitignore): их кладут в
+// other_mods_in_modpack/ из сборки модпака. Чего не хватает, проверяет
+// compileJava — и называет файлы поимённо, а не сотней ошибок javac.
+
 // Sable не опубликован в публичном maven, поэтому берём джарку из модпака.
 // Часть API (Pose3d/Pose3dc) лежит во вложенных jarjar-джарках, их надо
-// распаковать. Если джарки нет — сборка обязана всё равно проходить, просто
-// без поддержки sublevel'ов.
+// распаковать.
 def sableJar = file("other_mods_in_modpack/sable-neoforge-1.21.1-${sable_version}.jar")
 def sableDepsDir = layout.buildDirectory.dir('sable-deps')
 
@@ -65,64 +72,54 @@ def extractSableNestedJars = tasks.register('extractSableNestedJars', Copy) {
     into sableDepsDir
 }
 
-// FTB Teams — тоже необязательная зависимость, тоже из модпака. ftb-library и
-// architectury нужны лишь для того, чтобы javac разрешил сигнатуры TeamManager.
-def ftbJars = files(
-        "other_mods_in_modpack/ftb-teams-neoforge-${ftb_teams_version}.jar",
-        "other_mods_in_modpack/ftb-library-neoforge-${ftb_library_version}.jar",
-        "other_mods_in_modpack/architectury-${architectury_version}-neoforge.jar"
-).filter { it.exists() }
+// FTB Teams. ftb-library и architectury нужны лишь для того, чтобы javac
+// разрешил сигнатуры TeamManager.
+def ftbJarFiles = [
+        file("other_mods_in_modpack/ftb-teams-neoforge-${ftb_teams_version}.jar"),
+        file("other_mods_in_modpack/ftb-library-neoforge-${ftb_library_version}.jar"),
+        file("other_mods_in_modpack/architectury-${architectury_version}-neoforge.jar"),
+]
 
 // Xaero's Minimap — метки конвертеров на карте. Публичного API у мода нет,
 // поэтому мост ходит по внутренним классам и обязан переживать их исчезновение.
 def xaeroJar = file("other_mods_in_modpack/xaerominimap-neoforge-${minecraft_version}-${xaero_minimap_version}.jar")
 
 // Create Big Cannons — Яростный снаряд наследует их снаряд, поэтому это
-// единственная зависимость мода, без которой часть содержимого не появится.
-// Create и Ritchie's Projectile Library нужны лишь затем, чтобы javac
+// единственная зависимость мода, без которой в игре часть содержимого не
+// появится. Create и Ritchie's Projectile Library нужны лишь затем, чтобы javac
 // разрешил сигнатуры, унаследованные снарядом.
-def cbcJars = files(
-        "other_mods_in_modpack/createbigcannons-${cbc_version}.jar",
-        "other_mods_in_modpack/create-${minecraft_version}-${create_version}.jar",
-        "other_mods_in_modpack/ritchiesprojectilelib-${rpl_version}-neoforge.jar"
-).filter { it.exists() }
+def cbcJarFiles = [
+        file("other_mods_in_modpack/createbigcannons-${cbc_version}.jar"),
+        file("other_mods_in_modpack/create-${minecraft_version}-${create_version}.jar"),
+        file("other_mods_in_modpack/ritchiesprojectilelib-${rpl_version}-neoforge.jar"),
+]
 
-// JEI — просмотрщик рецептов. Нужен только затем, чтобы показать все возможные
+// JEI — просмотрщик рецептов. Нужен затем, чтобы показать все возможные
 // находки Замороженной органики: у неё случайный выход, и обычная запись
-// рецепта врала бы одним предметом. Без JEI мод работает полностью, просто
-// показывать находки негде.
+// рецепта врала бы одним предметом.
 def jeiJar = file("other_mods_in_modpack/jei-${minecraft_version}-neoforge-${jei_version}.jar")
 
+def modpackJars = [sableJar] + ftbJarFiles + cbcJarFiles + [jeiJar, xaeroJar]
+
 dependencies {
+    modpackJars.each { jar ->
+        if (jar.exists()) {
+            compileOnly files(jar)
+        }
+    }
     if (sableJar.exists()) {
-        compileOnly files(sableJar)
         compileOnly fileTree(dir: sableDepsDir, include: '*.jar').builtBy(extractSableNestedJars)
-    } else {
-        logger.lifecycle("Sable jar not found at ${sableJar} — building without sublevel support.")
     }
+}
 
-    if (!ftbJars.isEmpty()) {
-        compileOnly ftbJars
-    } else {
-        logger.lifecycle("FTB Teams jars not found — building without team support.")
-    }
-
-    if (!cbcJars.isEmpty()) {
-        compileOnly cbcJars
-    } else {
-        logger.lifecycle("Create Big Cannons jars not found — building without the Furious Shell.")
-    }
-
-    if (jeiJar.exists()) {
-        compileOnly files(jeiJar)
-    } else {
-        logger.lifecycle("JEI jar not found at ${jeiJar} — building without the thawing recipe screen.")
-    }
-
-    if (xaeroJar.exists()) {
-        compileOnly files(xaeroJar)
-    } else {
-        logger.lifecycle("Xaero's Minimap jar not found at ${xaeroJar} — building without map markers.")
+tasks.named('compileJava', JavaCompile).configure {
+    doFirst {
+        def missing = modpackJars.findAll { !it.exists() }
+        if (!missing.isEmpty()) {
+            throw new GradleException("Modpack jars are required to compile the mod's bridges to optional mods. "
+                    + "Put them into other_mods_in_modpack/. Missing:\n"
+                    + missing.collect { " - ${it.name}" }.join('\n'))
+        }
     }
 }
 

@@ -48,6 +48,9 @@ public class ConverterBlockEntity extends BlockEntity {
      */
     private static final int ABSORB_INTERVAL_TICKS = 5;
 
+    /** Сколько обменов выдаётся за один осмотр, не больше: при потолке выдачи это 64 стопки. */
+    private static final int MAX_PAYOUTS_PER_CHECK = 16;
+
     /** С какой долей обменов конвертер отдаёт вместе с наградой чужую книгу. */
     private static final float LORE_CHANCE = 0.02F;
 
@@ -85,7 +88,7 @@ public class ConverterBlockEntity extends BlockEntity {
      *
      * <p>У привязанного конвертера читаются из файла предложений при каждом
      * обращении, а не из блока. Поэтому правка файла и
-     * {@code /gimpanum converter offers reload} доходят и до конвертеров в
+     * {@code /gimpanum config reload} доходят и до конвертеров в
      * выгруженных чанках: обходить мир незачем, они возьмут новое сами, как
      * только их спросят.
      */
@@ -123,12 +126,16 @@ public class ConverterBlockEntity extends BlockEntity {
         super.onLoad();
         if (level instanceof ServerLevel serverLevel) {
             if (rollPending) {
-                rollPending = false;
+                // Метку снимаем, только когда предложение действительно выпало.
+                // Файл предложений читается на ServerStartedEvent, а чанки у
+                // запуска грузятся раньше: сними мы метку при пустом списке —
+                // найденный конвертер навсегда остался бы пустым.
                 ConverterOffers.roll(serverLevel.getRandom()).ifPresent(offer -> {
+                    rollPending = false;
                     offerId = offer.id();
                     stored = offer.toConfig();
+                    setChanged();
                 });
-                setChanged();
             }
             ConverterIndex.put(serverLevel.getServer(), level.dimension(), worldPosition);
             GimpanumNetwork.broadcastMarkers(serverLevel.getServer());
@@ -196,13 +203,17 @@ public class ConverterBlockEntity extends BlockEntity {
     }
 
     /**
-     * Выдаёт столько раз, сколько квот набралось.
+     * Выдаёт столько раз, сколько квот набралось, но не больше
+     * {@link #MAX_PAYOUTS_PER_CHECK} за осмотр.
      *
      * <p>Принесённое сверх квоты не пропадает: остаток переходит к следующей.
+     * Потолок нужен на случай огромной копилки — скажем, после того как квоту
+     * в файле снизили до единицы: выдать всё разом значило бы вывалить в
+     * один чанк тысячи сущностей. Остаток выйдет следующими осмотрами.
      */
     private void payOut(ServerLevel serverLevel, ConverterConfig config) {
         int quota = config.effectiveQuota();
-        int completed = progress / quota;
+        int completed = Math.min(progress / quota, MAX_PAYOUTS_PER_CHECK);
         if (completed <= 0) {
             return;
         }
@@ -270,7 +281,7 @@ public class ConverterBlockEntity extends BlockEntity {
                         describeItem(config.output()), config.outputCount())
                 .withStyle(ChatFormatting.GREEN));
         sink.accept(Component.translatable("gimpanum.converter.progress",
-                        progress, config.effectiveQuota(), config.effectiveQuota() - progress)
+                        progress, config.effectiveQuota(), Math.max(0, config.effectiveQuota() - progress))
                 .withStyle(ChatFormatting.GRAY));
     }
 

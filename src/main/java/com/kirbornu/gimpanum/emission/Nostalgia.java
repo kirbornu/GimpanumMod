@@ -6,8 +6,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -28,6 +30,9 @@ final class Nostalgia extends LastingEmission {
     /** Тик, раньше которого игроку не показывают нового видения. */
     private final Map<UUID, Integer> cooldown = new HashMap<>();
 
+    /** Видения, которые позвал этот выброс, — только их он и развеет. */
+    private final Set<UUID> summoned = new HashSet<>();
+
     @Override
     protected int duration(ServerLevel level) {
         return EmissionConfig.of("nostalgia").integer("duration_seconds") * 20;
@@ -43,13 +48,14 @@ final class Nostalgia extends LastingEmission {
             if (Visions.of(player) < want && elapsed >= cooldown.getOrDefault(id, 0)) {
                 cooldown.put(id, elapsed + SPAWN_GAP);
                 Visions.summon(level, player, config.between("distance_blocks", random),
-                        config.between("life_seconds", random) * 20);
+                        config.between("life_seconds", random) * 20).ifPresent(summoned::add);
             }
         }
     }
 
     @Override
     public void stop(ServerLevel level) {
-        Visions.dispelAll(level);
+        Visions.dispel(level, summoned);
+        summoned.clear();
     }
 }

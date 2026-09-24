@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Единственный класс мода, который напрямую ссылается на типы Xaero's Minimap.
  *
- * <p>Изоляция та же, что у мостов к Sable, FTB Teams и OPAC: JVM загружает
+ * <p>Изоляция та же, что у мостов к Sable и FTB Teams: JVM загружает
  * класс лениво, поэтому пока {@link ConverterMarkers} не вызовет отсюда метод,
  * отсутствие Xaero ничем не грозит. Не обращаться к этому классу, минуя
  * {@link ConverterMarkers}.

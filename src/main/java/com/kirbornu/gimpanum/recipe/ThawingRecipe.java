@@ -2,6 +2,7 @@ package com.kirbornu.gimpanum.recipe;
 
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CookingBookCategory;
@@ -9,6 +10,10 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
+
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * Переплавка с непредсказуемым выходом.
@@ -36,21 +41,43 @@ public class ThawingRecipe extends SmeltingRecipe {
     private static final ThreadLocal<RandomSource> RANDOM = ThreadLocal.withInitial(RandomSource::create);
 
     /**
-     * Последняя выданная находка — чтобы два вопроса об одной и той же порции
-     * получили один ответ.
-     *
-     * <p>Ванильная печь спрашивает {@code assemble} дважды за такт: сперва в
-     * {@code canBurn} («поместится ли результат»), потом в {@code burn} («что
-     * положить»). Отвечай мы разное, случалось бы худшее: проверка одобряет
-     * выход, совпавший с содержимым выходного слота, а выдача бросает жребий
-     * заново, не совпадает — и {@code burn} молча съедает вход, ничего не
-     * положив. Ключ — порция вместе с её остатком, поэтому в пределах одной
-     * переплавки ответ один, а на следующей единице сырья жребий бросается
-     * заново.
+     * Сколько раз печь NeoForge спрашивает {@code assemble} в тот такт, когда
+     * порция готова: {@code canBurn} в тике печи, затем {@code canBurn} внутри
+     * {@code burn} и сам {@code assemble} внутри {@code burn}. В обычный такт
+     * вопрос один, в такт, когда печь разжигается заново, — два.
      */
-    private static final ThreadLocal<Roll> LAST_ROLL = new ThreadLocal<>();
+    private static final int CALLS_WHEN_BURNED = 3;
 
-    private record Roll(int stackIdentity, int count, ItemStack result) {
+    /**
+     * Находка текущей порции — по стопке во входной ячейке печи.
+     *
+     * <p>Ответ обязан быть одним и тем же, пока порция не готова: печь каждый
+     * такт сверяет его с выходной ячейкой, и ответ, меняющийся от такта к
+     * такту, то пропускал бы порцию, то нет, а на последнем такте проверка
+     * одобрила бы одно, а выдача положила бы другое. И обязан меняться, когда
+     * порция готова, — иначе все порции были бы одинаковыми.
+     *
+     * <p>Раньше порцию отличали по числу предметов во входной ячейке. Этого
+     * мало: воронка доливает органику сразу после переплавки, число
+     * возвращается прежним, и печь на автоматической подаче выдавала одну и
+     * ту же находку без конца. Поэтому готовность порции определяется по
+     * самому признаку переплавки — по трём вопросам за один такт.
+     *
+     * <p>Ключ — сама стопка: у {@link ItemStack} нет равенства по значению,
+     * поэтому карта сравнивает по тождеству, а слабые ссылки отпускают стопки,
+     * которых больше нет ни в одной печи.
+     */
+    private static final ThreadLocal<Map<ItemStack, Portion>> PORTIONS = ThreadLocal.withInitial(WeakHashMap::new);
+
+    private static final class Portion {
+        final ItemStack result;
+        long tick;
+        int calls;
+
+        Portion(ItemStack result, long tick) {
+            this.result = result;
+            this.tick = tick;
+        }
     }
 
     public ThawingRecipe(String group, CookingBookCategory category, Ingredient ingredient,
@@ -60,18 +87,29 @@ public class ThawingRecipe extends SmeltingRecipe {
 
     @Override
     public ItemStack assemble(SingleRecipeInput input, HolderLookup.Provider registries) {
-        ItemStack sample = input.item();
-        int identity = System.identityHashCode(sample);
-        int count = sample.getCount();
-
-        Roll cached = LAST_ROLL.get();
-        if (cached != null && cached.stackIdentity() == identity && cached.count() == count) {
-            return cached.result().copy();
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) {
+            // Без сервера печей нет — спрашивает разве что просмотрщик.
+            return roll(input, registries);
         }
-        ItemStack rolled = ThawedOrganics.roll(RANDOM.get())
-                .orElseGet(() -> super.assemble(input, registries));
-        LAST_ROLL.set(new Roll(identity, count, rolled));
-        return rolled.copy();
+        long now = server.getTickCount();
+        ItemStack sample = input.item();
+        Map<ItemStack, Portion> portions = PORTIONS.get();
+        Portion portion = portions.get(sample);
+        if (portion == null || portion.tick != now && portion.calls >= CALLS_WHEN_BURNED) {
+            portion = new Portion(roll(input, registries), now);
+            portions.put(sample, portion);
+        }
+        if (portion.tick != now) {
+            portion.tick = now;
+            portion.calls = 0;
+        }
+        portion.calls++;
+        return portion.result.copy();
+    }
+
+    private ItemStack roll(SingleRecipeInput input, HolderLookup.Provider registries) {
+        return ThawedOrganics.roll(RANDOM.get()).orElseGet(() -> super.assemble(input, registries));
     }
 
     @Override

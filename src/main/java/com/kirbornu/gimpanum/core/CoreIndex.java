@@ -1,6 +1,7 @@
 package com.kirbornu.gimpanum.core;
 
 import com.kirbornu.gimpanum.Gimpanum;
+import com.mojang.brigadier.StringReader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.SectionPos;
@@ -166,7 +167,9 @@ public final class CoreIndex extends SavedData {
         CoreIndex index = get(server);
         Entry previous = index.byId.get(coreId);
         if (previous != null && !previous.name().equals(name)) {
-            index.byName.remove(previous.name());
+            // Только если имя всё ещё за этим Ядром: его могло занять другое,
+            // и тогда стирать чужую запись нельзя.
+            index.byName.remove(previous.name(), coreId);
         }
         index.byId.put(coreId, new Entry(name, dimension, pos.immutable(), config));
         index.byName.put(name, coreId);
@@ -177,8 +180,25 @@ public final class CoreIndex extends SavedData {
         CoreIndex index = get(server);
         Entry removed = index.byId.remove(coreId);
         if (removed != null) {
-            index.byName.remove(removed.name());
+            index.byName.remove(removed.name(), coreId);
             index.setDirty();
+        }
+    }
+
+    /**
+     * Снимает запись, только если она всё ещё указывает на это место.
+     *
+     * <p>Нужно для удаления Ядра на предохранителе: оно не идёт через арбитр, а
+     * при сборке конструкции копия может объявиться раньше, чем исчезнет
+     * оригинал (см. {@link com.kirbornu.gimpanum.destruction.DestructionArbiter}).
+     * Тогда запись уже переписана на новое место, и безусловное удаление
+     * стёрло бы из указателя переехавшее Ядро.
+     */
+    public static void removeAt(MinecraftServer server, UUID coreId,
+                                ResourceKey<Level> dimension, BlockPos pos) {
+        Entry entry = get(server).byId.get(coreId);
+        if (entry != null && entry.dimension().equals(dimension) && entry.pos().equals(pos)) {
+            remove(server, coreId);
         }
     }
 
@@ -242,7 +262,7 @@ public final class CoreIndex extends SavedData {
 
         Gimpanum.LOGGER.debug("Указатель: запись '{}' устарела, удалена", entry.name());
         index.byId.remove(coreId);
-        index.byName.remove(entry.name());
+        index.byName.remove(entry.name(), coreId);
         index.setDirty();
         return Optional.empty();
     }
@@ -402,6 +422,25 @@ public final class CoreIndex extends SavedData {
     /** Содержит ли строка подстановку, то есть задаёт ли она сразу много Ядер. */
     public static boolean isPattern(String selector) {
         return selector.contains(WILDCARD);
+    }
+
+    /**
+     * Годится ли строка в имя Ядра (или в приставку имён).
+     *
+     * <p>Имя обязано набираться в команде как одно слово — те же символы, что
+     * пропускает Brigadier без кавычек, — и не содержать {@link #WILDCARD}:
+     * Ядро с плюсом в имени команда поняла бы как образец и задела бы соседей.
+     */
+    public static boolean isValidName(String name) {
+        if (name.isEmpty() || isPattern(name)) {
+            return false;
+        }
+        for (int i = 0; i < name.length(); i++) {
+            if (!StringReader.isAllowedInUnquotedString(name.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static Pattern toPattern(String selector) {

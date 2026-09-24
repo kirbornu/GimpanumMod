@@ -154,12 +154,20 @@ public final class NebulaPortal {
             }
         }
 
-        List<BlockPos> known = PortalIndex.in(server, target.dimension()).stream()
+        List<BlockPos> known = new ArrayList<>(PortalIndex.in(server, target.dimension()).stream()
                 .filter(pos -> inside(border, pos))
-                .toList();
-        return known.isEmpty()
-                ? Optional.empty()
-                : Optional.of(known.get(random.nextInt(known.size())));
+                .toList());
+        // Запись могла пережить сам портал — его снесли командой или в
+        // творческом режиме. Такую вычёркиваем и пробуем следующую, а не
+        // высаживаем игрока туда, где выхода уже нет.
+        for (int attempt = 0; attempt < ATTEMPTS && !known.isEmpty(); attempt++) {
+            BlockPos pos = known.remove(random.nextInt(known.size()));
+            if (target.getBlockState(pos).is(GimpanumContent.NEBULA_PORTAL.get())) {
+                return Optional.of(pos);
+            }
+            PortalIndex.remove(server, target.dimension(), pos);
+        }
+        return Optional.empty();
     }
 
     /**
@@ -342,7 +350,9 @@ public final class NebulaPortal {
                 count++;
             }
         }
-        return new BlockPos((int) (x / count), floor, (int) (z / count));
+        // Деление с округлением вниз, а не к нулю: иначе на отрицательных
+        // координатах середина съезжала бы на блок.
+        return new BlockPos((int) Math.floorDiv(x, count), floor, (int) Math.floorDiv(z, count));
     }
 
     /** Расстояние по клеткам до ближайшей клетки плоскости. */

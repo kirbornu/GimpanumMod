@@ -111,6 +111,11 @@ public final class CoreDashboard {
                                    CoreAction action, String argument) {
         switch (action) {
             case LOCK -> {
+                // Замок ставится только известному Ядру: пакет может прислать
+                // любой идентификатор, и список замков рос бы мусором.
+                if (CoreIndex.snapshot(server, coreId).isEmpty()) {
+                    return false;
+                }
                 CoreLocks.setLocked(server, coreId, true);
                 return true;
             }
@@ -205,6 +210,9 @@ public final class CoreDashboard {
         }
         MinecraftServer server = player.server;
         int mask = sections;
+        // Числа из пакета — не из команды: пределы команд сюда не дошли, и
+        // сверять их приходится заново.
+        CoreConfig safe = source.clamped();
 
         if (!player.hasPermissions(COMMAND_PERMISSION)) {
             mask &= ~ConfigSection.COMMANDS.bit();
@@ -226,13 +234,18 @@ public final class CoreDashboard {
             }
             CoreBlockEntity core = found.get();
             int effective = mask;
-            if (ConfigSection.NAME.in(effective)
-                    && CoreIndex.isNameTaken(server, source.name(), coreId)) {
-                effective &= ~ConfigSection.NAME.bit();
-                player.sendSystemMessage(Component.translatable("gimpanum.command.name_taken")
-                        .withStyle(ChatFormatting.RED));
+            // Имя проверяем, только если его действительно меняют: сохранение
+            // прочих полей не должно спотыкаться о старое имя.
+            if (ConfigSection.NAME.in(effective) && !safe.name().equals(core.config().name())) {
+                String problem = !CoreIndex.isValidName(safe.name()) ? "gimpanum.command.name_invalid"
+                        : CoreIndex.isNameTaken(server, safe.name(), coreId) ? "gimpanum.command.name_taken"
+                        : null;
+                if (problem != null) {
+                    effective &= ~ConfigSection.NAME.bit();
+                    player.sendSystemMessage(Component.translatable(problem).withStyle(ChatFormatting.RED));
+                }
             }
-            core.setConfig(ConfigSection.merge(core.config(), source, effective));
+            core.setConfig(ConfigSection.merge(core.config(), safe, effective));
             done++;
         }
 

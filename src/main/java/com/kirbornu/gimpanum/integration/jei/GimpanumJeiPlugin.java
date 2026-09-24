@@ -20,10 +20,8 @@ import net.minecraft.world.item.crafting.SmeltingRecipe;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Подключение к JEI.
@@ -54,14 +52,29 @@ public class GimpanumJeiPlugin implements IModPlugin {
     private static final ResourceLocation FAN_BLASTING =
             ResourceLocation.fromNamespaceAndPath("create", "fan_blasting");
 
-    /** Уже показанные находки — чтобы досылка не наплодила повторов. */
-    private final Set<ResourceLocation> shown = new HashSet<>();
+    /**
+     * Рецепты находок, добавленные в категорию печи, — чтобы при новом списке
+     * спрятать прежние, а не оставлять их рядом с новыми.
+     */
+    private final List<RecipeHolder<SmeltingRecipe>> inSmelting = new ArrayList<>();
+
+    /** То же для «Обдува» Create. */
+    private final List<RecipeHolder<SmeltingRecipe>> inFan = new ArrayList<>();
+
+    /** Список, по которому собраны {@link #inSmelting}: с ним сверяется пришедший. */
+    private List<ThawedOrganics.Find> shownFinds = List.of();
+
+    /**
+     * Номер сборки в именах рецептов. Спрятанный рецепт JEI помнит, поэтому
+     * новые получают новые имена, а не повторяют старые.
+     */
+    private int generation;
 
     @Nullable
     private IJeiRuntime runtime;
 
     public GimpanumJeiPlugin() {
-        ThawedOrganicsClient.onUpdate(this::pushLate);
+        ThawedOrganicsClient.onUpdate(this::sync);
     }
 
     @Override
@@ -71,9 +84,13 @@ public class GimpanumJeiPlugin implements IModPlugin {
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
-        List<RecipeHolder<SmeltingRecipe>> recipes = build();
+        inSmelting.clear();
+        inFan.clear();
+        shownFinds = ThawedOrganicsClient.finds();
+        List<RecipeHolder<SmeltingRecipe>> recipes = build(shownFinds);
         if (!recipes.isEmpty()) {
             registration.addRecipes(RecipeTypes.SMELTING, recipes);
+            inSmelting.addAll(recipes);
         }
     }
 
@@ -81,27 +98,67 @@ public class GimpanumJeiPlugin implements IModPlugin {
     public void onRuntimeAvailable(IJeiRuntime value) {
         this.runtime = value;
         hideStub();
-        pushLate();
+        sync();
     }
 
     @Override
     public void onRuntimeUnavailable() {
         this.runtime = null;
         // Перечень строится заново — значит и добавлять придётся заново.
-        shown.clear();
+        inSmelting.clear();
+        inFan.clear();
+        shownFinds = List.of();
     }
 
-    /** Досылает то, что пришло уже после составления перечня. */
-    private void pushLate() {
+    /**
+     * Приводит показанное к текущему списку находок.
+     *
+     * <p>Список может прийти и после составления перечня JEI, и заново — после
+     * {@code /gimpanum config reload}. Тогда прежние рецепты прячутся, а
+     * новые встают на их место: правка файла обязана быть видна сразу, и
+     * убранная из файла находка не должна висеть в JEI до перезахода. В
+     * «Обдув» рецепты попадают здесь же: при регистрации эта категория ещё
+     * не доступна.
+     */
+    private void sync() {
         if (runtime == null) {
             return;
         }
-        List<RecipeHolder<SmeltingRecipe>> recipes = build();
-        if (recipes.isEmpty()) {
-            return;
+        Optional<RecipeType<RecipeHolder<SmeltingRecipe>>> fan = fanBlasting();
+        List<ThawedOrganics.Find> finds = ThawedOrganicsClient.finds();
+        if (!sameFinds(finds, shownFinds)) {
+            if (!inSmelting.isEmpty()) {
+                runtime.getRecipeManager().hideRecipes(RecipeTypes.SMELTING, List.copyOf(inSmelting));
+                inSmelting.clear();
+            }
+            if (!inFan.isEmpty()) {
+                fan.ifPresent(type -> runtime.getRecipeManager().hideRecipes(type, List.copyOf(inFan)));
+                inFan.clear();
+            }
+            shownFinds = finds;
+            List<RecipeHolder<SmeltingRecipe>> recipes = build(finds);
+            if (!recipes.isEmpty()) {
+                runtime.getRecipeManager().addRecipes(RecipeTypes.SMELTING, recipes);
+                inSmelting.addAll(recipes);
+            }
         }
-        runtime.getRecipeManager().addRecipes(RecipeTypes.SMELTING, recipes);
-        fanBlasting().ifPresent(type -> runtime.getRecipeManager().addRecipes(type, recipes));
+        if (fan.isPresent() && inFan.isEmpty() && !inSmelting.isEmpty()) {
+            runtime.getRecipeManager().addRecipes(fan.get(), List.copyOf(inSmelting));
+            inFan.addAll(inSmelting);
+        }
+    }
+
+    /** Совпадают ли два списка находок строка в строку: и вес, и предмет. */
+    private static boolean sameFinds(List<ThawedOrganics.Find> a, List<ThawedOrganics.Find> b) {
+        if (a.size() != b.size()) {
+            return false;
+        }
+        for (int i = 0; i < a.size(); i++) {
+            if (a.get(i).weight() != b.get(i).weight() || !ItemStack.matches(a.get(i).item(), b.get(i).item())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -148,17 +205,13 @@ public class GimpanumJeiPlugin implements IModPlugin {
         }
     }
 
-    /** Собирает по рецепту печи на каждую ещё не показанную находку. */
-    private List<RecipeHolder<SmeltingRecipe>> build() {
+    /** Собирает по рецепту печи на каждую находку списка. */
+    private List<RecipeHolder<SmeltingRecipe>> build(List<ThawedOrganics.Find> finds) {
         Ingredient input = Ingredient.of(GimpanumContent.FROZEN_ORGANICS_ITEM.get());
         List<RecipeHolder<SmeltingRecipe>> recipes = new ArrayList<>();
-        List<ThawedOrganics.Find> finds = ThawedOrganicsClient.finds();
-
+        int batch = generation++;
         for (int i = 0; i < finds.size(); i++) {
-            ResourceLocation id = Gimpanum.id("thawing/" + i);
-            if (!shown.add(id)) {
-                continue;
-            }
+            ResourceLocation id = Gimpanum.id("thawing/" + batch + "/" + i);
             ItemStack result = finds.get(i).item().copy();
             recipes.add(new RecipeHolder<>(id, new SmeltingRecipe(
                     "", CookingBookCategory.MISC, input, result, 0.7F, 200)));

@@ -9,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
@@ -34,8 +35,8 @@ import net.minecraft.world.phys.Vec3;
  *
  * <p>Выдаётся только в креативе и никогда не выпадает предметом: обычному
  * игроку его можно лишь уничтожить. При подтверждённом уничтожении роняет
- * Печать, выполняет настроенные команды для привязанных игроков и взрывается —
- * но только если снят предохранитель.
+ * Печать, выполняет настроенные команды для привязанных игроков и, если взрыв
+ * включён, взрывается — но только если снят предохранитель.
  *
  * <p>По умолчанию Ядро предельно хрупкое: ломается мгновенно и не держит
  * никакого взрыва. Тег неразрушимости превращает его в подобие бедрока — это
@@ -134,6 +135,18 @@ public class CoreBlock extends Block implements EntityBlock {
     @Override
     public PushReaction getPistonPushReaction(BlockState state) {
         return state.getValue(INVULNERABLE) ? PushReaction.BLOCK : PushReaction.NORMAL;
+    }
+
+    /**
+     * Мобы, которые ломают блоки сами, — Поглотитель, Иссушитель, Дракон.
+     *
+     * <p>Прочности в свойствах у Ядра нет вовсе (она ноль), поэтому проверка
+     * «прочность отрицательная — не трогать» его не отсеивает, и неразрушимое
+     * Ядро съедалось бы как песок. Спрашивают же такие мобы именно здесь.
+     */
+    @Override
+    public boolean canEntityDestroy(BlockState state, BlockGetter level, BlockPos pos, Entity entity) {
+        return !state.getValue(INVULNERABLE) && super.canEntityDestroy(state, level, pos, entity);
     }
 
     // --- Настройка -----------------------------------------------------------
@@ -241,9 +254,11 @@ public class CoreBlock extends Block implements EntityBlock {
 
         CoreConfig config = core.config();
         if (!config.armed()) {
-            // Предохранитель на месте — Ядро ведёт себя как обычный блок.
+            // Предохранитель на месте — Ядро ведёт себя как обычный блок. Запись
+            // снимаем, только если она про это место: при сборке конструкции
+            // копия могла объявиться раньше и уже переписать её на себя.
             if (level.getServer() != null) {
-                CoreIndex.remove(level.getServer(), core.coreId());
+                CoreIndex.removeAt(level.getServer(), core.coreId(), level.dimension(), pos);
             }
             return;
         }

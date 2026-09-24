@@ -69,6 +69,9 @@ public record ConverterConfig(
     public ConverterConfig {
         input = input.map(stack -> stack.copyWithCount(1));
         output = output.map(stack -> stack.copyWithCount(1));
+        // Тот же предел, что у команды: условия приходят ещё и из файла
+        // предложений и из NBT, а там его никто не проверял.
+        outputCount = Math.max(1, Math.min(outputCount, MAX_OUTPUT_COUNT));
     }
 
     /** Настроен ли обмен целиком: без любой из сторон конвертер бездействует. */

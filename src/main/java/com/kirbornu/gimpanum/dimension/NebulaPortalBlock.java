@@ -63,7 +63,9 @@ public class NebulaPortalBlock extends Block implements EntityBlock {
             entity.setPortalCooldown();
             return;
         }
-        if (entity.canChangeDimensions(level, serverLevel)) {
+        // Спрашивать надо про тот мир, куда существо уйдёт, а не про этот.
+        ServerLevel target = serverLevel.getServer().getLevel(NebulaPortal.other(serverLevel.dimension()));
+        if (target != null && entity.canChangeDimensions(serverLevel, target)) {
             NebulaPortal.teleport(serverLevel, entity);
         }
     }

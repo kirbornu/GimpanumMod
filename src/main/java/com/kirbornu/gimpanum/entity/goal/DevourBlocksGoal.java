@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.event.EventHooks;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -37,8 +38,15 @@ import java.util.List;
  * считается по самому твёрдому блоку в сфере, и даже обсидиан — это треть
  * секунды, а не преграда.
  *
- * <p>Блоки с отрицательной прочностью (коренная порода, Ядро, врата) не
+ * <p>Блоки с отрицательной прочностью (коренная порода, врата, конвертер) не
  * трогаются вовсе: это не «крепко», это «нельзя», и вокруг них он обгрызает.
+ * То же — блоки, которые сами запрещают себя ломать мобам
+ * ({@code canEntityDestroy}): так защищено неразрушимое Ядро, у которого
+ * прочность в свойствах нулевая.
+ *
+ * <p>Как и всякий моб, ломающий блоки, он спрашивает разрешения у правила
+ * {@code mobGriefing} и у модов защиты территорий — теми же событиями
+ * NeoForge, что и Иссушитель.
  */
 public class DevourBlocksGoal extends Goal {
 
@@ -82,7 +90,10 @@ public class DevourBlocksGoal extends Goal {
     @Override
     public boolean canUse() {
         LivingEntity target = mob.getTarget();
-        return target != null && target.isAlive() && mob.distanceToSqr(target) >= GIVE_UP * GIVE_UP;
+        // Правило mobGriefing и моды защиты территорий решают за него так же,
+        // как за Иссушителя: выключено — Поглотитель гонится, но не грызёт.
+        return target != null && target.isAlive() && mob.distanceToSqr(target) >= GIVE_UP * GIVE_UP
+                && EventHooks.canEntityGrief(mob.level(), mob);
     }
 
     @Override
@@ -123,12 +134,14 @@ public class DevourBlocksGoal extends Goal {
                 continue;
             }
             float hardness = state.getDestroySpeed(level, pos);
-            if (hardness < 0.0F) {
-                // Неразрушимое не считается и во время укуса: иначе врата
-                // рядом со стеной делали бы стену вечной.
+            BlockPos cell = pos.immutable();
+            if (hardness < 0.0F || !state.canEntityDestroy(level, cell, mob)
+                    || !EventHooks.onEntityDestroyBlock(mob, cell, state)) {
+                // Неразрушимое и защищённое не считается и во время укуса:
+                // иначе врата рядом со стеной делали бы стену вечной.
                 continue;
             }
-            mouthful.add(pos.immutable());
+            mouthful.add(cell);
             if (hardness > hardest) {
                 hardest = hardness;
             }

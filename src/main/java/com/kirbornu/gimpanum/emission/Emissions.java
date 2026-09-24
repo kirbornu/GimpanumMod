@@ -93,7 +93,12 @@ public final class Emissions {
             warn(level);
         }
         if (left <= 0) {
-            pick(level).ifPresentOrElse(kind -> start(level, kind), () -> clock.rewind(level.random));
+            pick(level).ifPresentOrElse(kind -> start(level, kind), () -> {
+                // Все веса нулевые — выброса не будет, но и предупреждение к
+                // следующему сроку обязано прозвучать заново, как после start.
+                clock.rewind(level.random);
+                warned = false;
+            });
         }
     }
 

@@ -48,4 +48,19 @@ public class AllAroundTargetGoal extends NearestAttackableTargetGoal<Player> {
                 .ignoreLineOfSight()
                 .ignoreInvisibilityTesting();
     }
+
+    /**
+     * Дальность чутья берётся заново перед каждым поиском.
+     *
+     * <p>Предок запоминает её один раз, в конструкторе, — а цели моба
+     * строятся раньше, чем {@link com.kirbornu.gimpanum.entity.MobStats}
+     * назначит ему числа из файла. Без этого правка {@code detection_blocks}
+     * меняла бы только то, как долго моб держит цель, но не то, с какого
+     * расстояния он её замечает.
+     */
+    @Override
+    public boolean canUse() {
+        this.targetConditions.range(this.getFollowDistance());
+        return super.canUse();
+    }
 }

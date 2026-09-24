@@ -145,9 +145,17 @@ public class CoreBlockEntity extends BlockEntity {
 
         MinecraftServer server = level.getServer();
         if (server != null) {
-            if (config.name().isEmpty()) {
+            // Имя обязано быть уникальным. Занятым оно оказывается, если
+            // другое Ядро получило его, пока это стояло выгруженным и выпало
+            // из указателя; тогда имя остаётся за тем, кто уже в указателе.
+            if (config.name().isEmpty() || CoreIndex.isNameTaken(server, config.name(), coreId())) {
+                String taken = config.name();
                 config = config.withName(CoreIndex.nextFreeName(server));
                 setChanged();
+                if (!taken.isEmpty()) {
+                    Gimpanum.LOGGER.warn("Ядро {}: имя '{}' занято другим Ядром, новое имя '{}'",
+                            coreId(), taken, config.name());
+                }
             }
             CoreIndex.put(server, config.name(), coreId(), level.dimension(), worldPosition, config);
         }

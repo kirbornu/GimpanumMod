@@ -83,6 +83,14 @@ public final class PortalIndex extends SavedData {
         }
     }
 
+    /** Вычёркивает портал, которого больше нет. */
+    public static void remove(MinecraftServer server, ResourceKey<Level> dimension, BlockPos pos) {
+        PortalIndex index = get(server);
+        if (index.entries.remove(new Entry(dimension, pos.immutable()))) {
+            index.setDirty();
+        }
+    }
+
     /** Все известные порталы указанного измерения. */
     public static List<BlockPos> in(MinecraftServer server, ResourceKey<Level> dimension) {
         List<BlockPos> found = new ArrayList<>();

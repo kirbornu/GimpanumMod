@@ -412,8 +412,15 @@ public class CoreDashboardScreen extends Screen {
                 addRenderableWidget(nameBox);
             }
             case FLAGS -> {
+                // Снятие предохранителя заодно снимает неразрушимость (если
+                // включено автоснятие), поэтому соседние галочки надо
+                // перерисовать: иначе окно показывало бы «неразрушимо», а
+                // «Сохранить» отправило бы обратное.
                 addCheck(x, y, "gimpanum.dashboard.armed", draft().armed(),
-                        value -> setDraft(draft().withArmed(value)));
+                        value -> {
+                            setDraft(draft().withArmed(value));
+                            refresh();
+                        });
                 addCheck(x, y + 22, "gimpanum.dashboard.invulnerable", draft().invulnerable(),
                         value -> setDraft(draft().withInvulnerable(value)));
                 addCheck(x, y + 44, "gimpanum.dashboard.autofragile", draft().autoDisableInvulnerable(),
@@ -423,7 +430,8 @@ public class CoreDashboardScreen extends Screen {
                     "gimpanum.dashboard.add_player",
                     value -> {
                         List<String> next = new ArrayList<>(draft().boundPlayers());
-                        if (!next.contains(value)) {
+                        // Ники не различают регистр — как и в команде привязки.
+                        if (next.stream().noneMatch(bound -> bound.equalsIgnoreCase(value))) {
                             next.add(value);
                         }
                         setDraft(draft().withBoundPlayers(next));
@@ -653,7 +661,7 @@ public class CoreDashboardScreen extends Screen {
                     value.isEmpty() ? Optional.empty() : Optional.ofNullable(ResourceLocation.tryParse(value)))));
         }
         if (powerBox != null) {
-            parseFloat(powerBox.getValue()).filter(value -> value >= 0.0F && value <= 100.0F)
+            parseFloat(powerBox.getValue()).filter(value -> value >= 0.0F && value <= CoreConfig.MAX_POWER)
                     .ifPresent(value -> setDraft(draft().withExplosion(value, draft().explosionFire())));
         }
     }

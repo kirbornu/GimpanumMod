@@ -4,16 +4,17 @@ import com.kirbornu.gimpanum.entity.goal.AllAroundTargetGoal;
 import com.kirbornu.gimpanum.entity.goal.PhaseChaseGoal;
 import com.kirbornu.gimpanum.entity.goal.SinkToDepthsGoal;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.allay.Allay;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
@@ -34,8 +35,11 @@ import net.minecraft.world.level.Level;
  * кончаются пещеры, а барханы начинаются не ниже 72-го блока. Мерить именно
  * высотой, а не открытым небом: игрок, прокопавший шахту в лабиринт, должен
  * оставаться добычей, хотя над ним и видно небо.
+ *
+ * <p>{@link Enemy} — метка враждебного моба. Аллай ею не помечен, и без неё
+ * призрака можно было бы водить на поводке, а големы не видели бы в нём врага.
  */
-public class CometWraith extends Allay {
+public class CometWraith extends Allay implements Enemy {
 
     /** Куда он возвращается, оставшись без жертвы: к самому дну лабиринта. */
     private static final int HOME_DEPTH = 12;
@@ -138,6 +142,19 @@ public class CometWraith extends Allay {
             this.setPos(this.getX(), ceiling(), this.getZ());
             this.setDeltaMovement(this.getDeltaMovement().multiply(1.0, 0.0, 1.0));
         }
+    }
+
+    /**
+     * Предметов призрак не берёт.
+     *
+     * <p>У Аллая правая кнопка с предметом в руке отдаёт ему этот предмет и
+     * делает дарителя «любимым игроком», а любимый игрок Аллаю урона не
+     * наносит вовсе. Для призрака это значило бы: ткнул в него факелом — и
+     * больше не можешь его ранить, хотя он продолжает на тебя охотиться.
+     */
+    @Override
+    protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        return InteractionResult.PASS;
     }
 
     /**

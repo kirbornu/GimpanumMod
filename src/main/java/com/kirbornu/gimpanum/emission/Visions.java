@@ -25,10 +25,12 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -97,12 +99,12 @@ public final class Visions {
      * @param distance как далеко от игрока оно возникает
      * @param life     сколько тиков живёт
      */
-    public static void summon(ServerLevel level, ServerPlayer owner, double distance, int life) {
+    public static Optional<UUID> summon(ServerLevel level, ServerPlayer owner, double distance, int life) {
         RandomSource random = level.random;
         EntityType<? extends Mob> type = ANIMALS.get(random.nextInt(ANIMALS.size()));
         Mob mob = type.create(level);
         if (mob == null) {
-            return;
+            return Optional.empty();
         }
         double angle = random.nextDouble() * Math.PI * 2.0;
         double y = Mth.clamp(owner.getY() + 2.0 + random.nextDouble() * 6.0,
@@ -129,19 +131,28 @@ public final class Visions {
                 around(owner.position(), random)));
         if (level.addFreshEntity(mob)) {
             puff(level, mob);
-        } else {
-            ACTIVE.remove(mob.getUUID());
+            return Optional.of(mob.getUUID());
         }
+        ACTIVE.remove(mob.getUUID());
+        return Optional.empty();
     }
 
-    /** Развеять все видения разом — по окончании Ностальгии. */
-    static void dispelAll(ServerLevel level) {
-        for (UUID id : ACTIVE.keySet()) {
-            if (level.getEntity(id) instanceof Mob mob) {
+    /**
+     * Развеять эти видения разом — по окончании Ностальгии.
+     *
+     * <p>Именно эти, а не все: видения зовёт и рушащееся Застывшее
+     * воспоминание, и конец выброса не должен обрывать чужую ловушку. Видение
+     * в выгруженном чанке просто снимается с учёта — при загрузке его не
+     * пустит в мир {@link #onJoin}.
+     */
+    static void dispel(ServerLevel level, Collection<UUID> ids) {
+        for (UUID id : ids) {
+            Vision vision = ACTIVE.remove(id);
+            if (vision != null && vision.dimension.equals(level.dimension())
+                    && level.getEntity(id) instanceof Mob mob) {
                 vanish(level, mob);
             }
         }
-        ACTIVE.clear();
     }
 
     private static JsonConfig.Section settings() {
