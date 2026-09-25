@@ -9,6 +9,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import java.util.ArrayList;
@@ -47,6 +48,19 @@ public final class ConverterMarkers {
     public static void accept(List<ConverterMarkersPayload.Marker> received) {
         markers = List.copyOf(received);
         timer = APPLY_INTERVAL_TICKS;
+    }
+
+    /**
+     * С сервера ушли — его метки забываем.
+     *
+     * <p>Иначе на следующем сервере, где мода нет и новый список не придёт,
+     * миникарта показывала бы конвертеры прежнего. Находки Замороженной
+     * органики забываются по той же причине: JEI показывал бы чужой список.
+     */
+    @SubscribeEvent
+    public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
+        markers = List.of();
+        ThawedOrganicsClient.accept(List.of());
     }
 
     @SubscribeEvent

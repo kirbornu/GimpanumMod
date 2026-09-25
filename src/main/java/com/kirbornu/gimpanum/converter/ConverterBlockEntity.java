@@ -125,21 +125,35 @@ public class ConverterBlockEntity extends BlockEntity {
     public void onLoad() {
         super.onLoad();
         if (level instanceof ServerLevel serverLevel) {
-            if (rollPending) {
-                // Метку снимаем, только когда предложение действительно выпало.
-                // Файл предложений читается на ServerStartedEvent, а чанки у
-                // запуска грузятся раньше: сними мы метку при пустом списке —
-                // найденный конвертер навсегда остался бы пустым.
-                ConverterOffers.roll(serverLevel.getRandom()).ifPresent(offer -> {
-                    rollPending = false;
-                    offerId = offer.id();
-                    stored = offer.toConfig();
-                    setChanged();
-                });
-            }
+            tryRoll(serverLevel);
             ConverterIndex.put(serverLevel.getServer(), level.dimension(), worldPosition);
             GimpanumNetwork.broadcastMarkers(serverLevel.getServer());
         }
+    }
+
+    /**
+     * Бросает жребий на предложение, если он ещё не брошен.
+     *
+     * <p>Метка снимается, только когда предложение действительно выпало. Файл
+     * предложений читается на {@code ServerStartedEvent}, а чанки у запуска
+     * грузятся раньше, и первая попытка из {@link #onLoad} приходится на
+     * пустой список. Поэтому попытка повторяется и в тике: иначе конвертер в
+     * чанке, который не выгружается (у точки появления, в принудительно
+     * загруженном), так и стоял бы пустым.
+     */
+    private boolean tryRoll(ServerLevel serverLevel) {
+        if (!rollPending) {
+            return false;
+        }
+        Optional<ConverterOffers.Offer> offer = ConverterOffers.roll(serverLevel.getRandom());
+        if (offer.isEmpty()) {
+            return false;
+        }
+        rollPending = false;
+        offerId = offer.get().id();
+        stored = offer.get().toConfig();
+        setChanged();
+        return true;
     }
 
     // --- Приём и выдача ------------------------------------------------------
@@ -158,8 +172,15 @@ public class ConverterBlockEntity extends BlockEntity {
     private void tickInternal() {
         // Условия берутся один раз на осмотр: у привязанного конвертера каждое
         // обращение лезет в файл предложений, и незачем делать это на предмет.
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        if (tryRoll(serverLevel)) {
+            // Подпись выпавшего предложения видна на карте.
+            GimpanumNetwork.broadcastMarkers(serverLevel.getServer());
+        }
         ConverterConfig config = config();
-        if (!(level instanceof ServerLevel serverLevel) || !config.isOperational()) {
+        if (!config.isOperational()) {
             return;
         }
         if (++absorbTimer < ABSORB_INTERVAL_TICKS) {

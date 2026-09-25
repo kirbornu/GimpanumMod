@@ -51,6 +51,11 @@ final class XaeroWaypointBridge {
 
         xaero.hud.minimap.waypoint.set.WaypointSet set = world.getWaypointSet(SET_ID);
         if (set == null) {
+            // Пустой набор не заводим: в мире, где конвертеров нет (или мода
+            // на сервере нет вовсе), он остался бы в списке наборов Xaero.
+            if (markers.isEmpty()) {
+                return;
+            }
             set = world.addWaypointSet(new WaypointSet(SET_ID));
         }
 
