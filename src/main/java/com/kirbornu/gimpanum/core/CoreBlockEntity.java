@@ -1,10 +1,12 @@
 package com.kirbornu.gimpanum.core;
 
 import com.kirbornu.gimpanum.Gimpanum;
+import com.kirbornu.gimpanum.dashboard.CoreDashboard;
 import com.kirbornu.gimpanum.destruction.DestructionArbiter;
 import com.kirbornu.gimpanum.item.SealItem;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import com.kirbornu.gimpanum.sublevel.SubLevelSupport;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
@@ -12,19 +14,24 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -174,8 +181,43 @@ public class CoreBlockEntity extends BlockEntity {
         super.applyImplicitComponents(input);
         CoreConfig stored = input.get(GimpanumContent.CORE_CONFIG.get());
         if (stored != null) {
-            config = stored.asTemplate();
+            // Числа в предмете никто не проверял: он мог прийти и не из
+            // консоли, а собранным вручную.
+            config = stored.asTemplate().clamped();
             setChanged();
+        }
+    }
+
+    /**
+     * Снимает список команд, пришедший из предмета, если поставивший не вправе
+     * его задавать.
+     *
+     * <p>Команды Ядра выполняются с четвёртым уровнем прав, и задавать их может
+     * только тот, у кого этот уровень есть, — так устроены и команды
+     * {@code /gimpanum}, и консоль. Но предмет с настройкой можно собрать и в
+     * обход них: творческий инвентарь принимает от клиента предмет с любыми
+     * компонентами, а {@code /give} доступна со второго уровня. Без этой
+     * проверки такой предмет позволял бы выполнить что угодно от имени
+     * сервера. Тот же порядок у ванильного командного блока: его данные из
+     * предмета принимаются только от оператора.
+     */
+    public void dropCommandsUnlessAllowed(@Nullable LivingEntity placer) {
+        boolean allowed = placer instanceof Player player
+                && player.hasPermissions(CoreDashboard.COMMAND_PERMISSION);
+        if (allowed || config.commands().isEmpty()) {
+            return;
+        }
+        config = config.withCommands(List.of());
+        setChanged();
+        // Обычно onLoad ещё впереди, и в указатель Ядро попадёт уже без команд.
+        // Если же имя уже выдано, запись в указателе надо поправить.
+        if (level != null && level.getServer() != null && !config.name().isEmpty()) {
+            CoreIndex.put(level.getServer(), config.name(), coreId(), level.dimension(), worldPosition, config);
+        }
+        sendToClients();
+        if (placer instanceof Player player) {
+            player.displayClientMessage(Component.translatable("gimpanum.core.commands_dropped")
+                    .withStyle(ChatFormatting.YELLOW), false);
         }
     }
 
@@ -301,7 +343,10 @@ public class CoreBlockEntity extends BlockEntity {
                     .parse(NbtOps.INSTANCE, tag.get(KEY_CONFIG))
                     .resultOrPartial(error -> Gimpanum.LOGGER.error(
                             "Настройка Ядра в {} повреждена: {}", getBlockPos().toShortString(), error))
-                    .orElse(CoreConfig.EMPTY);
+                    .orElse(CoreConfig.EMPTY)
+                    // Сохранённое тоже могло прийти извне — например, из
+                    // правленого файла мира, — поэтому пределы те же, что у команд.
+                    .clamped();
         }
     }
 

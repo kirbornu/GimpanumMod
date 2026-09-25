@@ -18,6 +18,7 @@
     "gimpanum.core.no_players": "Привязок нет",
     "gimpanum.core.no_commands": "Команды не заданы",
     "gimpanum.core.postfix": "Приставка Печати: %s",
+    "gimpanum.core.commands_dropped": "Команды Ядра не перенесены: задавать их может только игрок с правами 4-го уровня.",
     "gimpanum.core.seal": "Печать: %s, цена %s",
     "gimpanum.core.explosion": "Взрыв: включён %s, мощность %s, огонь %s",
     "gimpanum.core.invulnerable": "Неразрушимость: %s",

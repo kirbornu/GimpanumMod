@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
@@ -29,6 +30,7 @@ import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Ядро фоносомики — цель для боёв на физических конструкциях.
@@ -83,6 +85,21 @@ public class CoreBlock extends Block implements EntityBlock {
             stack.set(GimpanumContent.CORE_CONFIG.get(), core.config().asTemplate());
         }
         return stack;
+    }
+
+    /**
+     * Настройка из предмета проверяется по тому, кто ставит Ядро.
+     *
+     * <p>Предмет с настройкой можно получить в обход консоли и команд — см.
+     * {@link CoreBlockEntity#dropCommandsUnlessAllowed}.
+     */
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer,
+                            ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof CoreBlockEntity core) {
+            core.dropCommandsUnlessAllowed(placer);
+        }
     }
 
     @Override

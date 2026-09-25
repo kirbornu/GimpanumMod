@@ -11,6 +11,7 @@
     "gimpanum.core.no_players": "Nothing bound",
     "gimpanum.core.no_commands": "No commands set",
     "gimpanum.core.postfix": "Seal postfix: %s",
+    "gimpanum.core.commands_dropped": "Core commands were not copied: only a player with permission level 4 can set them.",
     "gimpanum.core.explosion": "Explosion: enabled %s, power %s, fire %s",
     "gimpanum.core.invulnerable": "Invulnerable: %s",
     "gimpanum.core.on_sublevel": "On a physical contraption: %s",
