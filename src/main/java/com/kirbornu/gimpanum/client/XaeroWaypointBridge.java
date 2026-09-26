@@ -2,12 +2,12 @@ package com.kirbornu.gimpanum.client;
 
 import com.kirbornu.gimpanum.network.ConverterMarkersPayload;
 import xaero.common.minimap.waypoints.Waypoint;
-import xaero.common.minimap.waypoints.WaypointSet;
 import xaero.hud.HudSession;
 import xaero.hud.minimap.BuiltInHudModules;
 import xaero.hud.minimap.module.MinimapSession;
 import xaero.hud.minimap.waypoint.WaypointColor;
 import xaero.hud.minimap.waypoint.WaypointPurpose;
+import xaero.hud.minimap.waypoint.set.WaypointSet;
 import xaero.hud.minimap.world.MinimapWorld;
 
 import java.util.List;
@@ -49,14 +49,17 @@ final class XaeroWaypointBridge {
             return;
         }
 
-        xaero.hud.minimap.waypoint.set.WaypointSet set = world.getWaypointSet(SET_ID);
+        WaypointSet set = world.getWaypointSet(SET_ID);
         if (set == null) {
             // Пустой набор не заводим: в мире, где конвертеров нет (или мода
             // на сервере нет вовсе), он остался бы в списке наборов Xaero.
             if (markers.isEmpty()) {
                 return;
             }
-            set = world.addWaypointSet(new WaypointSet(SET_ID));
+            // addWaypointSet возвращает не добавленный набор, а прежний с тем же
+            // именем (это Map.put) — для нового это null. Работаем с созданным.
+            set = WaypointSet.Builder.begin().setName(SET_ID).build();
+            world.addWaypointSet(set);
         }
 
         // Набор перекладывается целиком: так снятый конвертер исчезает с карты
