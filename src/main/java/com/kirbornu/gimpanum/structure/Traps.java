@@ -65,6 +65,12 @@ final class Traps {
         int visions = config.between("visions", level.random);
         int life = config.integer("vision_life_seconds") * 20;
         Later.run(level, radius * WAVE_STEP, now -> {
+            // За время волны тронувший мог погибнуть, выйти или уйти в портал:
+            // звать видения к тому, кого здесь нет, значило бы повесить их по
+            // его координатам из другого измерения.
+            if (player.isRemoved() || player.level() != now) {
+                return;
+            }
             for (int i = 0; i < visions; i++) {
                 Visions.summon(now, player, 10.0 + now.random.nextDouble() * 10.0, life);
             }

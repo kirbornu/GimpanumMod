@@ -1,7 +1,7 @@
 package com.kirbornu.gimpanum.dimension;
 
 import com.kirbornu.gimpanum.Gimpanum;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import com.kirbornu.gimpanum.sublevel.SubLevelSupport;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -11,6 +11,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -86,8 +87,7 @@ public final class VacuumMachinery {
             return;
         }
 
-        LongSet chunks = LoadedBlockEntities.candidates(level);
-        if (chunks.isEmpty()) {
+        if (LoadedBlockEntities.isEmpty()) {
             if (!lastSeen.isEmpty()) {
                 lastSeen = new HashMap<>();
             }
@@ -95,7 +95,7 @@ public final class VacuumMachinery {
         }
 
         Map<BlockPos, Integer> current = new HashMap<>();
-        LoadedBlockEntities.forEach(level, chunks, blockEntity -> {
+        LoadedBlockEntities.forEach(level, blockEntity -> {
             if (blockEntity.getType() == backtankType) {
                 holdBacktank(level, blockEntity, current);
             } else if (blockEntity.getType() == fanType) {
@@ -160,10 +160,12 @@ public final class VacuumMachinery {
         if (level.getGameTime() % 40 >= SCAN_INTERVAL) {
             return;
         }
-        level.sendParticles(ParticleTypes.SMOKE,
-                pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
+        // Мировая позиция, а не BlockPos: баллон на корабле стоит в служебном
+        // регионе, и шипение там никто бы не услышал.
+        Vec3 at = SubLevelSupport.worldCenter(level, pos);
+        level.sendParticles(ParticleTypes.SMOKE, at.x, at.y + 0.5, at.z,
                 3, 0.15, 0.05, 0.15, 0.01);
-        level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.25F, 1.6F);
+        level.playSound(null, at.x, at.y, at.z, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.25F, 1.6F);
     }
 
     // ── Вентилятор ──────────────────────────────────────────────────────

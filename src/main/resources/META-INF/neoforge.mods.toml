@@ -7,7 +7,7 @@ modId = "${mod_id}"
 version = "${mod_version}"
 displayName = "${mod_name}"
 authors = "${mod_authors}"
-description = '''Ядро и Печать — блок-цель для боёв на физических конструкциях Sable / Create Aeronautics.'''
+description = '''Измерение Гимпанум с его обитателями, выбросами и структурами, Фонос-конвертеры и Ядро с Печатью — блок-цель для боёв на физических конструкциях Sable / Create Aeronautics.'''
 
 [[dependencies.${mod_id}]]
 modId = "neoforge"

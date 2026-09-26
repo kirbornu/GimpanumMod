@@ -49,9 +49,15 @@ public record SpawnSettings(boolean enabled, int intervalSeconds, int count,
             ResourceLocation.CODEC.optionalFieldOf("spawn_item").forGetter(SpawnSettings::item)
     ).apply(instance, SpawnSettings::new));
 
-    /** Промежуток между выдачами в тиках; не меньше одной секунды. */
+    /**
+     * Промежуток между выдачами в тиках; не меньше одной секунды.
+     *
+     * <p>Считается в {@code long}: секунд можно задать больше, чем влезает в
+     * {@code int} после умножения на двадцать, и переполнение дало бы
+     * отрицательный промежуток — то есть выдачу каждый тик.
+     */
     public int intervalTicks() {
-        return Math.max(1, intervalSeconds) * 20;
+        return (int) Math.min(Integer.MAX_VALUE, Math.max(1, intervalSeconds) * 20L);
     }
 
     public SpawnSettings withEnabled(boolean value) {

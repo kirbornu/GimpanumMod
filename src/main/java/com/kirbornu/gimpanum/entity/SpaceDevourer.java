@@ -1,5 +1,6 @@
 package com.kirbornu.gimpanum.entity;
 
+import com.kirbornu.gimpanum.entity.goal.AllAroundTargetGoal;
 import com.kirbornu.gimpanum.entity.goal.BoreChaseGoal;
 import com.kirbornu.gimpanum.entity.goal.DevourBlocksGoal;
 import net.minecraft.core.BlockPos;
@@ -21,7 +22,6 @@ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomFlyingGoal;
 import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -134,12 +134,13 @@ public class SpaceDevourer extends Monster {
 
         this.targetSelector.addGoal(1, (HurtByTargetGoal) new HurtByTargetGoal(this)
                 .setUnseenMemoryTicks(MobStats.of("space_devourer").integer("memory_ticks")));
-        // Предпоследний {@code false} — «видеть цель необязательно». Поглотитель
-        // чует жертву сквозь любую толщу, и это не поблажка, а весь его смысл:
-        // стена от него не спасает, она лишь откладывает встречу.
+        // Чутьё некрофага: сквозь стены и без поправки на приседание.
+        // Поглотитель чует жертву сквозь любую толщу, и это не поблажка, а весь
+        // его смысл: стена от него не спасает, она лишь откладывает встречу.
+        // Обычная цель выбора здесь не годится — она требует прямой видимости,
+        // даже когда «видеть цель необязательно».
         this.targetSelector.addGoal(2,
-                new NearestAttackableTargetGoal<>(this, Player.class, 0, false, false, null)
-                        .setUnseenMemoryTicks(MobStats.of("space_devourer").integer("memory_ticks")));
+                new AllAroundTargetGoal(this, MobStats.of("space_devourer").integer("memory_ticks")));
     }
 
     /**

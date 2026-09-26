@@ -17,12 +17,12 @@ import net.minecraft.network.chat.Component;
  * {@code /gimpanum config} — что мод прочитал из своей папки настроек и
  * {@code /gimpanum config reload}, чтобы прочитать заново.
  *
- * <p>Одна команда на все файлы, а не по команде на файл. Файлов у мода три —
- * предложения конвертеров, содержимое Замороженной органики, книги лора, — и
- * правят их обычно за один заход: открыл папку, поправил, перечитал. Три
- * разные ветки означали бы, что оператор должен помнить, какая из них к
- * какому файлу относится, и после правки двух файлов вызывать две команды,
- * гадая, не забыл ли третью.
+ * <p>Одна команда на все файлы, а не по команде на файл. Файлов у мода семь —
+ * предложения конвертеров, содержимое Замороженной органики, книги лора, мобы,
+ * выбросы, структуры, предметы, — и правят их обычно за один заход: открыл
+ * папку, поправил, перечитал. Отдельные ветки означали бы, что оператор
+ * должен помнить, какая из них к какому файлу относится, и после правки
+ * нескольких файлов вызывать несколько команд, гадая, не забыл ли ещё одну.
  *
  * <p>Показ без {@code reload} — не украшение: чаще всего вопрос звучит «а мой
  * файл вообще подхватился?», и ответом служит число прочитанных строк рядом с
@@ -80,6 +80,7 @@ public final class ConfigCommand {
                 StructureConfig.count(), StructureConfig.path().toString()), false);
         source.sendSuccess(() -> Component.translatable("gimpanum.command.items_count",
                 ItemConfig.count(), ItemConfig.path().toString()), false);
-        return ConverterOffers.count() + ThawedOrganics.count() + LoreBooks.count();
+        return ConverterOffers.count() + ThawedOrganics.count() + LoreBooks.count() + MobStats.count()
+                + EmissionConfig.count() + StructureConfig.count() + ItemConfig.count();
     }
 }

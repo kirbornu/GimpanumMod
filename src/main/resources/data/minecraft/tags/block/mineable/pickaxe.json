@@ -3,6 +3,10 @@
     "values": [
         "gimpanum:frozen_organics",
         "gimpanum:monolithic_crystal",
-        "gimpanum:crystal_crust"
+        "gimpanum:crystal_crust",
+        {
+            "id": "gimpanum:furious_shell",
+            "required": false
+        }
     ]
 }

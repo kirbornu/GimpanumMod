@@ -43,7 +43,12 @@ public final class BarrenEvents {
         }
     }
 
-    /** Костная мука тратится, но ничего не даёт. */
+    /**
+     * Костная мука не действует — и потому не тратится.
+     *
+     * <p>{@code setSuccessful(false)} отменяет событие: игра не применяет муку
+     * и не списывает её, как по блоку, которому она не подходит.
+     */
     @SubscribeEvent
     public static void onBonemeal(BonemealEvent event) {
         if (inGimpanum(event.getLevel())) {

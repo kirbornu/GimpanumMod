@@ -41,8 +41,11 @@ final class SleepingGod implements Emission {
         double angle = level.random.nextDouble() * Math.PI * 2.0;
         double y = Mth.clamp(prey.getY(), level.getMinBuildHeight() + 1,
                 level.getMaxBuildHeight() - Math.ceil(devourer.getBbHeight()) - 1);
-        for (int distance = EmissionConfig.of("sleeping_god").integer("distance_blocks");
-             distance >= CLOSEST; distance -= 8) {
+        // Настройка может просить и ближе CLOSEST — тогда это и есть ближайшая
+        // точка, и одна попытка на ней всё равно делается.
+        int farthest = Math.max(1, EmissionConfig.of("sleeping_god").integer("distance_blocks"));
+        int closest = Math.min(CLOSEST, farthest);
+        for (int distance = farthest; distance >= closest; distance -= 8) {
             double x = prey.getX() + Math.cos(angle) * distance;
             double z = prey.getZ() + Math.sin(angle) * distance;
             if (!level.hasChunkAt(BlockPos.containing(x, y, z))) {

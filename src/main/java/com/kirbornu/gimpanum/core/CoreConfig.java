@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
 import java.util.List;
 import java.util.Optional;
@@ -74,6 +75,9 @@ public record CoreConfig(
 ) {
 
     public static final float DEFAULT_POWER = 4.0F;
+
+    /** Потолок мощности взрыва — тот же для команды, консоли и сервера. */
+    public static final float MAX_POWER = 100.0F;
 
     public static final CoreConfig EMPTY = new CoreConfig(
             "", List.of(), List.of(), List.of(), Optional.empty(),
@@ -211,6 +215,26 @@ public record CoreConfig(
      */
     public CoreConfig asTemplate() {
         return withName("");
+    }
+
+    /**
+     * Та же настройка, но с числами в допустимых пределах.
+     *
+     * <p>Команды проверяют числа сами, а консоль присылает настройку целиком,
+     * и доверять клиенту сервер не вправе: мощность взрыва в миллион или
+     * тысячи Печатей за раз ложили бы сервер одним пакетом. Пределы те же,
+     * что у команд.
+     */
+    public CoreConfig clamped() {
+        float power = Float.isFinite(explosionPower)
+                ? Mth.clamp(explosionPower, 0.0F, MAX_POWER)
+                : DEFAULT_POWER;
+        SpawnSettings safeSpawn = spawn
+                .withIntervalSeconds(Math.max(1, spawn.intervalSeconds()))
+                .withCount(Mth.clamp(spawn.count(), 1, SpawnSettings.MAX_COUNT));
+        return new CoreConfig(name, boundPlayers, boundTeams, commands, sealPostfix, armed,
+                invulnerable, autoDisableInvulnerable, deathCommands, sealEnabled, Math.max(0, sealPrice),
+                explosionEnabled, power, explosionFire, safeSpawn);
     }
 
     /** Есть ли что переносить: пустой шаблон в предмет класть незачем. */

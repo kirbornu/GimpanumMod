@@ -252,7 +252,7 @@ public final class GimpanumSpawner {
         return whole + (random.nextDouble() < part ? 1 : 0);
     }
 
-    /** Кромка барханов: Ходоки. */
+    /** Кромка барханов: Капитаны ходоков (солдат они приводят сами). */
     @Nullable
     private static Vec3 dunes(ServerLevel level, int chunkX, int chunkZ, EntityType<?> type, RandomSource random) {
         int x = (chunkX << 4) + random.nextInt(16);

@@ -52,6 +52,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SignItem;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SimpleCookingSerializer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ButtonBlock;
@@ -80,6 +81,7 @@ import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
@@ -441,11 +443,21 @@ public final class GimpanumContent {
             properties -> new WallSignBlock(NEBULA_WOOD_TYPE, properties),
             signProperties());
 
-    /** Предмет один на оба блока: игра сама решает, ставить стоячую или настенную. */
+    /**
+     * Предмет один на оба блока: игра сама решает, ставить стоячую или настенную.
+     *
+     * <p>Табличка лежит в ванильном теге {@code minecraft:signs}, а тот означает
+     * топливо — поэтому, как и у {@link NebulaWoodItem}, горение снято явно.
+     */
     public static final DeferredItem<SignItem> NEBULA_SIGN_ITEM = ITEMS.registerItem(
             "nebula_sign",
             properties -> new SignItem(properties.stacksTo(16),
-                    NEBULA_SIGN.get(), NEBULA_WALL_SIGN.get()));
+                    NEBULA_SIGN.get(), NEBULA_WALL_SIGN.get()) {
+                @Override
+                public int getBurnTime(ItemStack stack, @Nullable RecipeType<?> recipeType) {
+                    return 0;
+                }
+            });
 
     private static BlockBehaviour.Properties signProperties() {
         return BlockBehaviour.Properties.of()
@@ -556,8 +568,8 @@ public final class GimpanumContent {
     /**
      * Фонос-конвертер — обменник, на котором держится экономика карты.
      *
-     * <p>Прочность и сопротивление те же, что у Фонос-конвертера, и по тем же
-     * причинам: {@code -1} отсеивает блок из сборки конструкций и делает его
+     * <p>Прочность и сопротивление те же, что у рамы портальной арки, и по тем
+     * же причинам: {@code -1} отсеивает блок из сборки конструкций и делает его
      * неломаемым, а 3 600 000 останавливает снаряды Create Big Cannons. Обменник
      * обязан пережить бой, который идёт вокруг него.
      */
@@ -606,7 +618,7 @@ public final class GimpanumContent {
     /**
      * Восемь диковин, которые Фонос-конвертеры выдают за Осколки хрусталя.
      *
-     * <p>Ни свойств, ни применений, кроме четырёх рецептов Create: это сырьё и
+     * <p>Ни свойств, ни применений, кроме восьми рецептов Create: это сырьё и
      * только сырьё. Смысл у них общий — превратить накопленные осколки в то,
      * что иначе не достать, и цена у всех восьми одинаковая.
      */
@@ -622,8 +634,9 @@ public final class GimpanumContent {
     /**
      * Дар друидов — то же зачарованное золотое яблоко, доведённое до предела.
      *
-     * <p>Ставка на живучесть, а не на убойность: поглощение на тридцать два
-     * сердца поверх восьми добавленных, сопротивление III и регенерация IV.
+     * <p>Ставка на живучесть, а не на убойность: поглощение VIII — тридцать два
+     * очка, то есть шестнадцать сердец, — поверх восьми добавленных сердец,
+     * сопротивление III и регенерация IV.
      * Съевшего трудно убить и нечем поторопить — он не бьёт сильнее, он просто
      * не умирает.
      *

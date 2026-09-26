@@ -56,6 +56,7 @@ public final class BreathingGear {
         }
         Integer air = air(tank);
         // null — баллон не от Create и запаса не хранит: считаем бездонным.
+        // Незаправленный баллон Create сюда не попадает: у него ноль, см. air().
         return air == null || air > 0;
     }
 
@@ -74,7 +75,18 @@ public final class BreathingGear {
             return null;
         }
         Object value = stack.get(type);
-        return value instanceof Integer number ? number : null;
+        if (value instanceof Integer number) {
+            return number;
+        }
+        // У баллона Create компонента нет, пока его ни разу не заправляли, и
+        // сам Create читает это как ноль. Бездонным считаем только чужой баллон,
+        // который запаса не хранит вовсе, — иначе незаправленный баллон Create
+        // давал бы дышать вечно.
+        return isCreateItem(stack) ? 0 : null;
+    }
+
+    private static boolean isCreateItem(ItemStack stack) {
+        return BuiltInRegistries.ITEM.getKey(stack.getItem()).getNamespace().equals(BACKTANK_AIR.getNamespace());
     }
 
     @SuppressWarnings("unchecked")

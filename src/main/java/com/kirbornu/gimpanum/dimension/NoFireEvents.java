@@ -4,6 +4,7 @@ import com.kirbornu.gimpanum.Gimpanum;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -26,8 +27,14 @@ import net.neoforged.neoforge.event.level.BlockEvent;
  * ничего не давал. Список зажигалок вынесен в тег, чтобы сборка могла добавить
  * туда свои.
  *
- * <p>Второй источник — молнии от разрядов Плазменной молнии — закрыт в самом
- * снаряде: он вызывает показную молнию и наносит её урон сам.
+ * <p>Молнии от разрядов Плазменной молнии закрыты в самом снаряде: он вызывает
+ * показную молнию и наносит её урон сам.
+ *
+ * <p>Остальные источники огня — взрыв с огнём (так взрывается и Ядро по
+ * умолчанию), раздатчик с огнивом, лава рядом с деревом, огненные шары,
+ * распространение уже горящего — ставят огонь напрямую, без всякого события
+ * установки. Зато любая такая установка оповещает соседей, и это оповещение
+ * у NeoForge — событие. Им и ловим: огонь гаснет в тот же миг, как появился.
  */
 @EventBusSubscriber(modid = Gimpanum.MOD_ID)
 public final class NoFireEvents {
@@ -57,6 +64,23 @@ public final class NoFireEvents {
     public static void onPlace(BlockEvent.EntityPlaceEvent event) {
         if (event.getPlacedBlock().getBlock() instanceof BaseFireBlock && inGimpanum(event.getLevel())) {
             event.setCanceled(true);
+        }
+    }
+
+    /**
+     * Огонь, поставленный в обход событий установки, гасится сразу.
+     *
+     * <p>Оповещение соседей приходит, когда блок уже стоит, поэтому огонь
+     * просто убирается. Проверка блока идёт первой: событие приходит на
+     * каждое изменение мира во всех измерениях, и дешёвое сравнение должно
+     * отсеять почти всё.
+     */
+    @SubscribeEvent
+    public static void onNeighborNotify(BlockEvent.NeighborNotifyEvent event) {
+        if (event.getState().getBlock() instanceof BaseFireBlock
+                && event.getLevel() instanceof ServerLevel level
+                && NebulaPortal.GIMPANUM.equals(level.dimension())) {
+            level.removeBlock(event.getPos(), false);
         }
     }
 

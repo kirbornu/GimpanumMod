@@ -9,6 +9,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
@@ -28,14 +30,15 @@ import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Ядро фоносомики — цель для боёв на физических конструкциях.
  *
  * <p>Выдаётся только в креативе и никогда не выпадает предметом: обычному
  * игроку его можно лишь уничтожить. При подтверждённом уничтожении роняет
- * Печать, выполняет настроенные команды для привязанных игроков и взрывается —
- * но только если снят предохранитель.
+ * Печать, выполняет настроенные команды для привязанных игроков и, если взрыв
+ * включён, взрывается — но только если снят предохранитель.
  *
  * <p>По умолчанию Ядро предельно хрупкое: ломается мгновенно и не держит
  * никакого взрыва. Тег неразрушимости превращает его в подобие бедрока — это
@@ -44,6 +47,12 @@ import net.minecraft.world.phys.Vec3;
  * <p>Уничтожение подтверждается не сразу: сборка физической конструкции
  * удаляет блок из мира, и без арбитража Ядро срабатывало бы при каждой сборке
  * корабля. Подробности — в {@link DestructionArbiter}.
+ *
+ * <p>Арбитр ждёт переезда считанные тики, поэтому переносить Ядро можно только
+ * тем, что ставит копию сразу, — сборкой корабля Sable. Контрапции Create и
+ * прочие перевозчики держат блок вне мира долго, и Ядро засчитывалось бы
+ * погибшим; им перенос запрещён тегами {@code create:non_movable} и
+ * {@code c:relocation_not_supported}.
  */
 public class CoreBlock extends Block implements EntityBlock {
 
@@ -82,6 +91,21 @@ public class CoreBlock extends Block implements EntityBlock {
             stack.set(GimpanumContent.CORE_CONFIG.get(), core.config().asTemplate());
         }
         return stack;
+    }
+
+    /**
+     * Настройка из предмета проверяется по тому, кто ставит Ядро.
+     *
+     * <p>Предмет с настройкой можно получить в обход консоли и команд — см.
+     * {@link CoreBlockEntity#dropCommandsUnlessAllowed}.
+     */
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer,
+                            ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof CoreBlockEntity core) {
+            core.dropCommandsUnlessAllowed(placer);
+        }
     }
 
     @Override
@@ -134,6 +158,18 @@ public class CoreBlock extends Block implements EntityBlock {
     @Override
     public PushReaction getPistonPushReaction(BlockState state) {
         return state.getValue(INVULNERABLE) ? PushReaction.BLOCK : PushReaction.NORMAL;
+    }
+
+    /**
+     * Мобы, которые ломают блоки сами, — Поглотитель, Иссушитель, Дракон.
+     *
+     * <p>Прочности в свойствах у Ядра нет вовсе (она ноль), поэтому проверка
+     * «прочность отрицательная — не трогать» его не отсеивает, и неразрушимое
+     * Ядро съедалось бы как песок. Спрашивают же такие мобы именно здесь.
+     */
+    @Override
+    public boolean canEntityDestroy(BlockState state, BlockGetter level, BlockPos pos, Entity entity) {
+        return !state.getValue(INVULNERABLE) && super.canEntityDestroy(state, level, pos, entity);
     }
 
     // --- Настройка -----------------------------------------------------------
@@ -241,9 +277,11 @@ public class CoreBlock extends Block implements EntityBlock {
 
         CoreConfig config = core.config();
         if (!config.armed()) {
-            // Предохранитель на месте — Ядро ведёт себя как обычный блок.
+            // Предохранитель на месте — Ядро ведёт себя как обычный блок. Запись
+            // снимаем, только если она про это место: при сборке конструкции
+            // копия могла объявиться раньше и уже переписать её на себя.
             if (level.getServer() != null) {
-                CoreIndex.remove(level.getServer(), core.coreId());
+                CoreIndex.removeAt(level.getServer(), core.coreId(), level.dimension(), pos);
             }
             return;
         }

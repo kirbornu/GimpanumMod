@@ -169,12 +169,11 @@ public class SklavCarapaceItem extends Item {
         if (!level.isClientSide) {
             Inventory inventory = player.getInventory();
             if (player.isShiftKeyDown()) {
-                // Сколько влезет: стак за стаком, пока есть место. Место
-                // проверяем заранее: в творческом режиме инвентарь «берёт»
-                // и то, что не влезло, — просто стирает его.
-                while (contents(carapace) != null && hasRoom(inventory, contents(carapace).kind())) {
+                // Сколько влезет: стак за стаком, пока есть место. Что не
+                // влезло — обратно в панцирь.
+                while (contents(carapace) != null) {
                     ItemStack out = extract(carapace, Integer.MAX_VALUE);
-                    inventory.add(out);
+                    place(inventory, out);
                     if (!out.isEmpty()) {
                         insert(carapace, out);
                         break;
@@ -182,9 +181,7 @@ public class SklavCarapaceItem extends Item {
                 }
             } else {
                 ItemStack out = extract(carapace, Integer.MAX_VALUE);
-                if (hasRoom(inventory, out)) {
-                    inventory.add(out);
-                }
+                place(inventory, out);
                 // Что не влезло — под ноги, а не в пустоту.
                 if (!out.isEmpty()) {
                     player.drop(out, false);
@@ -196,8 +193,34 @@ public class SklavCarapaceItem extends Item {
         return InteractionResultHolder.sidedSuccess(carapace, level.isClientSide);
     }
 
-    private static boolean hasRoom(Inventory inventory, ItemStack stack) {
-        return inventory.getFreeSlot() >= 0 || inventory.getSlotWithRemainingSpace(stack) >= 0;
+    /**
+     * Раскладывает вещь по инвентарю, уменьшая {@code stack} на положенное.
+     *
+     * <p>Своя раскладка, а не {@code Inventory.add}: тот в творческом режиме
+     * «берёт» и то, что не влезло, — просто стирает остаток. Здесь остаток
+     * всегда остаётся в {@code stack}, и вызывающий решает, куда его деть.
+     */
+    private static void place(Inventory inventory, ItemStack stack) {
+        while (!stack.isEmpty()) {
+            int slot = inventory.getSlotWithRemainingSpace(stack);
+            if (slot >= 0) {
+                ItemStack there = inventory.getItem(slot);
+                int limit = Math.min(inventory.getMaxStackSize(), there.getMaxStackSize());
+                int moved = Math.min(stack.getCount(), limit - there.getCount());
+                if (moved <= 0) {
+                    break;
+                }
+                there.grow(moved);
+                stack.shrink(moved);
+                continue;
+            }
+            slot = inventory.getFreeSlot();
+            if (slot < 0) {
+                break;
+            }
+            inventory.setItem(slot, stack.split(Math.min(stack.getCount(), stack.getMaxStackSize())));
+        }
+        inventory.setChanged();
     }
 
     @Override
@@ -275,6 +298,10 @@ public class SklavCarapaceItem extends Item {
         if (loot.isEmpty()) {
             entity.discard();
             event.setCanPickup(TriState.FALSE);
+        } else {
+            // Стопку уменьшили на месте; копия — чтобы игра заметила перемену
+            // и показала клиентам новое количество, а не прежнее.
+            entity.setItem(loot.copy());
         }
     }
 }

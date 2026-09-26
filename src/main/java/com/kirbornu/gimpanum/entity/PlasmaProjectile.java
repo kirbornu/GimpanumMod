@@ -26,7 +26,10 @@ import net.minecraft.world.phys.Vec3;
  */
 public class PlasmaProjectile extends Fireball {
 
-    /** Урон от самой молнии — столько же, сколько у настоящей. */
+    /**
+     * Урон от самой молнии. Ванильная молния бьёт на 5
+     * ({@code Entity.thunderHit}); разряд — вдвое сильнее.
+     */
     private static final float LIGHTNING_DAMAGE = 10.0F;
 
     public PlasmaProjectile(EntityType<? extends PlasmaProjectile> type, Level level) {
