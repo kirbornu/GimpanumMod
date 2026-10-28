@@ -3,10 +3,14 @@ package com.kirbornu.gimpanum.magic.behavior;
 import com.kirbornu.gimpanum.magic.config.BehaviorSpec;
 import com.kirbornu.gimpanum.magic.config.Json;
 import com.kirbornu.gimpanum.magic.core.Role;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.commands.arguments.blocks.BlockStateParser;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -124,6 +128,36 @@ public final class BehaviorLibrary {
         register("drain", Behavior.Kind.ACTION, Set.of("amount"),
                 p -> build(p.number("amount", 0.0, MAX_AMOUNT), Actions.Drain::new));
 
+        register("place_block", Behavior.Kind.ACTION, Set.of("block", "seconds", "onlyAir"), p -> {
+            BlockState block = blockState(p, "block");
+            Double seconds = foreverOrPositive(p, "seconds");
+            Boolean onlyAir = p.bool("onlyAir");
+            return block == null || seconds == null || onlyAir == null ? null
+                    : new Actions.PlaceBlock(block, seconds, onlyAir);
+        });
+        register("freeze_water", Behavior.Kind.ACTION, Set.of("seconds"),
+                p -> build(foreverOrPositive(p, "seconds"), Actions.FreezeWater::new));
+        register("grow", Behavior.Kind.ACTION, Set.of(), p -> new Actions.Grow());
+        register("break_blocks", Behavior.Kind.ACTION, Set.of("maxHardness", "drop"), p -> {
+            Double hardness = p.number("maxHardness", 0.0, 1000.0);
+            Boolean drop = p.bool("drop");
+            return hardness == null || drop == null ? null : new Actions.BreakBlocks(hardness, drop);
+        });
+        register("summon", Behavior.Kind.ACTION, Set.of("entity", "seconds"), p -> {
+            EntityType<?> type = entityType(p, "entity");
+            if (type != null && (!type.canSummon() || type == EntityType.PLAYER)) {
+                p.errors().add(p.path("entity"), "это существо нельзя призвать");
+                type = null;
+            }
+            Double seconds = foreverOrPositive(p, "seconds");
+            return type == null || seconds == null ? null : new Actions.Summon(type, seconds);
+        });
+        register("spawn_projectile", Behavior.Kind.ACTION, Set.of("entity", "speed"), p -> {
+            EntityType<?> type = entityType(p, "entity");
+            Double speed = p.number("speed", 0.0, 10.0);
+            return type == null || speed == null ? null : new Actions.SpawnProjectile(type, speed);
+        });
+
         // --- процессы интерфикса ---
         register("wait", Behavior.Kind.PROCESS, Set.of("seconds"),
                 p -> build(p.number("seconds", 0.0, MAX_SECONDS), Processes.Wait::new));
@@ -183,6 +217,35 @@ public final class BehaviorLibrary {
             return null;
         }
         return effect.get();
+    }
+
+    /** Состояние блока в записи команды {@code /setblock}: {@code minecraft:oak_log[axis=x]}. */
+    private static BlockState blockState(Json p, String field) {
+        String id = p.string(field);
+        if (id == null) {
+            return null;
+        }
+        try {
+            return BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(), id, false).blockState();
+        } catch (CommandSyntaxException failure) {
+            p.errors().add(p.path(field), "не разобрать блок «" + id + "»: " + failure.getRawMessage().getString());
+            return null;
+        }
+    }
+
+    private static EntityType<?> entityType(Json p, String field) {
+        String id = p.string(field);
+        if (id == null) {
+            return null;
+        }
+        ResourceLocation location = ResourceLocation.tryParse(id);
+        Optional<EntityType<?>> type = location == null ? Optional.empty()
+                : BuiltInRegistries.ENTITY_TYPE.getOptional(location);
+        if (type.isEmpty()) {
+            p.errors().add(p.path(field), "нет такого существа: " + id);
+            return null;
+        }
+        return type.get();
     }
 
     public static Collection<BehaviorType> types() {

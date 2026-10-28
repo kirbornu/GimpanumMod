@@ -1,9 +1,12 @@
 package com.kirbornu.gimpanum.magic.behavior;
 
+import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.magic.spell.BlockEdits;
 import com.kirbornu.gimpanum.magic.spell.SpellContext;
+import com.kirbornu.gimpanum.magic.spell.SpellSpawns;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -15,17 +18,28 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.food.FoodData;
+import net.minecraft.world.item.BoneMealItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.BonemealableBlock;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.LightBlock;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 
@@ -823,6 +837,266 @@ final class Actions {
             if (drained > 0 && caster != null && caster.isAlive()) {
                 caster.heal(drained);
             }
+        }
+    }
+
+    // --- блоки ------------------------------------------------------------
+
+    /**
+     * {@code place_block}: поставить блок {@code block} в выделенные блоки.
+     * {@code onlyAir}: только в воздух или ещё и в заменяемое (трава, снежный
+     * слой, вода). Блок ставится, только если может там стоять — иначе игра
+     * тут же сломала бы его и выронила предмет из ничего. {@code seconds} —
+     * срок (−1 — навсегда); по сроку возвращается то, что было, если блок
+     * всё ещё тот же. Длительное при {@code seconds} > 0.
+     */
+    static final class PlaceBlock extends Behavior {
+        private final BlockState block;
+        private final double seconds;
+        private final boolean onlyAir;
+
+        PlaceBlock(BlockState block, double seconds, boolean onlyAir) {
+            this.block = block;
+            this.seconds = seconds;
+            this.onlyAir = onlyAir;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public boolean lasting() {
+            return seconds > 0;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            ServerLevel level = context.level();
+            long ticks = ticks(seconds > 0 ? context.duration(seconds, root) : seconds);
+            for (BlockPos pos : context.blockTargets()) {
+                BlockState state = level.getBlockState(pos);
+                boolean free = onlyAir ? state.isAir() : state.canBeReplaced();
+                if (free && !state.is(block.getBlock()) && block.canSurvive(level, pos)) {
+                    BlockEdits.place(context.session(), pos, block, state, ticks, true);
+                }
+            }
+        }
+    }
+
+    /**
+     * {@code freeze_water}: источники воды в выделении становятся льдом;
+     * текущая вода и обводнённые блоки не трогаются. {@code seconds} — срок
+     * (−1 — навсегда): по сроку лёд, если он ещё лёд, снова становится водой.
+     * Лёд тает и сам, по ванильным правилам, от яркого света. Длительное при
+     * {@code seconds} > 0.
+     */
+    static final class FreezeWater extends Behavior {
+        private final double seconds;
+
+        FreezeWater(double seconds) {
+            this.seconds = seconds;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public boolean lasting() {
+            return seconds > 0;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            ServerLevel level = context.level();
+            long ticks = ticks(seconds > 0 ? context.duration(seconds, root) : seconds);
+            for (BlockPos pos : context.blockTargets()) {
+                BlockState state = level.getBlockState(pos);
+                if (state.is(Blocks.WATER) && state.getFluidState().isSource()) {
+                    BlockEdits.place(context.session(), pos, Blocks.ICE.defaultBlockState(), state, ticks, true);
+                }
+            }
+        }
+    }
+
+    /**
+     * {@code grow}: костная мука на каждый выделенный блок — то же, что
+     * сделал бы игрок: растения растут, на траве появляются цветы. Каждый
+     * удачный рост — одно место из предела блоков заклинания.
+     */
+    static final class Grow extends Behavior {
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            ServerLevel level = context.level();
+            Player player = context.session().caster() instanceof Player p ? p : null;
+            for (BlockPos pos : context.blockTargets()) {
+                if (!(level.getBlockState(pos).getBlock() instanceof BonemealableBlock)
+                        || !BlockEdits.mayEdit(context.session(), pos)) {
+                    continue;
+                }
+                if (!context.session().takeBlock()) {
+                    return;
+                }
+                if (BoneMealItem.applyBonemeal(new ItemStack(Items.BONE_MEAL), level, pos, player)) {
+                    level.levelEvent(LevelEvent.PARTICLES_AND_SOUND_PLANT_GROWTH, pos, 15);
+                }
+            }
+        }
+    }
+
+    /**
+     * {@code break_blocks}: сломать выделенные блоки прочностью не выше
+     * {@code maxHardness} (земля — 0.5, камень — 1.5, обсидиан — 50;
+     * неразрушимые не ломаются никогда). {@code drop}: ронять ли добычу — её
+     * даёт таблица добычи блока, как при подходящем инструменте без
+     * чар. Жидкости не трогаются. Только там, где кастеру можно ломать.
+     */
+    static final class BreakBlocks extends Behavior {
+        private final double maxHardness;
+        private final boolean drop;
+
+        BreakBlocks(double maxHardness, boolean drop) {
+            this.maxHardness = maxHardness;
+            this.drop = drop;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            ServerLevel level = context.level();
+            LivingEntity caster = context.session().caster();
+            for (BlockPos pos : context.blockTargets()) {
+                BlockState state = level.getBlockState(pos);
+                float hardness = state.getDestroySpeed(level, pos);
+                if (state.isAir() || state.getBlock() instanceof LiquidBlock || hardness < 0 || hardness > maxHardness
+                        || !BlockEdits.mayBreak(context.session(), pos)) {
+                    continue;
+                }
+                if (!context.session().takeBlock()) {
+                    return;
+                }
+                level.destroyBlock(pos, drop, caster);
+            }
+        }
+    }
+
+    // --- порождения -----------------------------------------------------------
+
+    /**
+     * {@code summon}: призвать существо {@code entity} в каждой цели (ногами
+     * в её точку; без живых целей — в каждом блоке действия). {@code seconds}
+     * — срок (−1 — навсегда); по сроку существо исчезает. Призванные ничего
+     * не роняют и не дают опыта. Каждое — одно место из предела сущностей
+     * заклинания. Длительное при {@code seconds} > 0.
+     */
+    static final class Summon extends Behavior {
+        private final EntityType<?> type;
+        private final double seconds;
+
+        Summon(EntityType<?> type, double seconds) {
+            this.type = type;
+            this.seconds = seconds;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public boolean lasting() {
+            return seconds > 0;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            ServerLevel level = context.level();
+            long ticks = ticks(seconds > 0 ? context.duration(seconds, root) : seconds);
+            List<LivingEntity> targets = context.targets();
+            List<Vec3> points = !targets.isEmpty()
+                    ? targets.stream().map(Entity::position).toList()
+                    : context.blockTargets().stream().map(Vec3::atBottomCenterOf).toList();
+            for (Vec3 at : points) {
+                if (!context.session().takeEntity()) {
+                    return;
+                }
+                Entity entity = type.create(level);
+                if (entity == null) {
+                    return;
+                }
+                entity.moveTo(at.x, at.y, at.z, level.random.nextFloat() * 360F, 0F);
+                if (entity instanceof Mob mob) {
+                    EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(mob.blockPosition()),
+                            MobSpawnType.MOB_SUMMONED, null);
+                }
+                SpellSpawns.markSummoned(entity, ticks > 0 ? level.getServer().overworld().getGameTime() + ticks : 0);
+                level.addFreshEntity(entity);
+            }
+        }
+    }
+
+    /**
+     * {@code spawn_projectile}: выпустить снаряд {@code entity} из
+     * сущности-заклинания по взгляду кастера в момент каста со скоростью
+     * {@code speed} блоков за тик (стрела из полностью натянутого лука — 3).
+     * Хозяин снаряда — кастер. Стрелы нельзя подобрать: иначе заклинание
+     * печатало бы их из ничего. Взрывы снарядов блоков не ломают. Один снаряд
+     * на применение; каждый — одно место из предела сущностей заклинания.
+     */
+    static final class SpawnProjectile extends Behavior {
+        private final EntityType<?> type;
+        private final double speed;
+
+        SpawnProjectile(EntityType<?> type, double speed) {
+            this.type = type;
+            this.speed = speed;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            ServerLevel level = context.level();
+            if (!context.session().takeEntity()) {
+                return;
+            }
+            Entity entity = type.create(level);
+            if (!(entity instanceof Projectile projectile)) {
+                if (entity != null) {
+                    entity.discard();
+                }
+                Gimpanum.LOGGER.warn("Магия: {} — не снаряд, spawn_projectile его не выпустит",
+                        BuiltInRegistries.ENTITY_TYPE.getKey(type));
+                return;
+            }
+            Vec3 at = context.entity().position();
+            Vec3 dir = context.direction();
+            projectile.moveTo(at.x, at.y, at.z);
+            LivingEntity caster = context.session().caster();
+            if (caster != null && !caster.isRemoved()) {
+                projectile.setOwner(caster);
+            }
+            if (projectile instanceof AbstractArrow arrow) {
+                arrow.pickup = AbstractArrow.Pickup.DISALLOWED;
+            }
+            projectile.shoot(dir.x, dir.y, dir.z, (float) speed, 0F);
+            SpellSpawns.markProjectile(projectile);
+            level.addFreshEntity(projectile);
         }
     }
 }

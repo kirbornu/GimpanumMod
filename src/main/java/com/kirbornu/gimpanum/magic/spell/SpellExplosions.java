@@ -13,6 +13,8 @@ import net.neoforged.neoforge.event.level.ExplosionEvent;
  * блоков заклинания. Поэтому список блоков, которые он собрался снести,
  * просеивается здесь — тем же {@link BlockEdits#mayBreak}, что и у
  * ломающего поведения, — и каждый оставленный блок занимает место в пределе.
+ *
+ * <p>Взрывы снарядов, выпущенных заклинанием, блоков не ломают вовсе.
  */
 @EventBusSubscriber(modid = Gimpanum.MOD_ID)
 public final class SpellExplosions {
@@ -22,7 +24,14 @@ public final class SpellExplosions {
 
     @SubscribeEvent
     public static void onDetonate(ExplosionEvent.Detonate event) {
-        if (!(event.getExplosion().getDirectSourceEntity() instanceof SpellEntity spell) || spell.session() == null) {
+        net.minecraft.world.entity.Entity source = event.getExplosion().getDirectSourceEntity();
+        if (source != null && SpellSpawns.isSpellSpawned(source)) {
+            // Снаряд заклинания взрывается, когда заклинания уже нет, и
+            // спросить, можно ли кастеру ломать здесь, не у кого.
+            event.getAffectedBlocks().clear();
+            return;
+        }
+        if (!(source instanceof SpellEntity spell) || spell.session() == null) {
             return;
         }
         SpellSession session = spell.session();
