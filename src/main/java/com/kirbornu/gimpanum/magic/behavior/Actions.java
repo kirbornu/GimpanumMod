@@ -5,14 +5,21 @@ import com.kirbornu.gimpanum.magic.spell.SpellContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,11 +30,38 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /** Поведения-действия: что заклинание делает с целями и блоками. */
 final class Actions {
 
     private Actions() {
+    }
+
+    /**
+     * Магический урон от заклинания.
+     *
+     * <p>В обход ванильной неуязвимости после удара: у заклинания свои
+     * ритмы — копия огня бьёт в тот же тик, что и корень, повтор бьёт
+     * несколько раз подряд, — и без этого второй удар в пределах полсекунды
+     * просто пропадал бы. Неуязвимость после самого удара игра ставит как
+     * обычно, поэтому удар мечом сразу следом урежется, как всегда.
+     *
+     * @return сколько здоровья (с поглощением) цель потеряла на самом деле
+     */
+    static float hurt(SpellContext context, LivingEntity target, float amount) {
+        LivingEntity caster = context.session().caster();
+        float before = target.getHealth() + target.getAbsorptionAmount();
+        target.invulnerableTime = 0;
+        target.hurt(context.level().damageSources().indirectMagic(context.entity(),
+                caster != null && !caster.isRemoved() ? caster : null), amount);
+        return Math.max(0, before - target.getHealth() - target.getAbsorptionAmount());
+    }
+
+    /** Цели, кроме самого кастера, — для действий, где кастер по ту сторону. */
+    static List<LivingEntity> othersThanCaster(SpellContext context) {
+        LivingEntity caster = context.session().caster();
+        return context.targets().stream().filter(t -> t != caster).toList();
     }
 
     /** Секунды в тики; отрицательное — «навсегда», ноль тиков. */
@@ -50,11 +84,9 @@ final class Actions {
 
         @Override
         public void act(SpellContext context, boolean root) {
-            LivingEntity caster = context.session().caster();
             float damage = (float) context.primary(amount, root);
             for (LivingEntity target : context.targets()) {
-                target.hurt(context.level().damageSources().indirectMagic(context.entity(),
-                        caster != null && !caster.isRemoved() ? caster : null), damage);
+                hurt(context, target, damage);
             }
         }
     }
@@ -529,6 +561,267 @@ final class Actions {
         public void act(SpellContext context, boolean root) {
             for (LivingEntity target : context.targets()) {
                 target.clearFire();
+            }
+        }
+    }
+
+    // --- огонь, взрыв, молния -------------------------------------------
+
+    /**
+     * {@code set_fire_blocks}: поджечь выделенные блоки — огонь там, где он
+     * может гореть по ванильным правилам (воздух с опорой). На песке душ —
+     * огонь душ. {@code seconds} — сколько продержится поставленный огонь
+     * (−1 — пока не погаснет сам); дальше огонь распространяется и гаснет
+     * по ванильным правилам, и то, что он поджёг сам, заклинанию уже не
+     * принадлежит. Длительное при {@code seconds} > 0.
+     */
+    static final class SetFireBlocks extends Behavior {
+        private final double seconds;
+
+        SetFireBlocks(double seconds) {
+            this.seconds = seconds;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public boolean lasting() {
+            return seconds > 0;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            ServerLevel level = context.level();
+            long ticks = ticks(seconds > 0 ? context.duration(seconds, root) : seconds);
+            for (BlockPos pos : context.blockTargets()) {
+                BlockState state = level.getBlockState(pos);
+                BlockState fire = BaseFireBlock.getState(level, pos);
+                if (state.isAir() && fire.canSurvive(level, pos)) {
+                    // У огня растёт возраст, поэтому свой он, пока это огонь.
+                    BlockEdits.place(context.session(), pos, fire, state, ticks, true);
+                }
+            }
+        }
+    }
+
+    /**
+     * {@code explode}: ванильный взрыв силы {@code power} (4 — как у
+     * динамита) в каждой цели, а без живых целей — в каждом блоке действия.
+     * {@code breakBlocks}: ломать ли блоки. Если ломать, то только там, где
+     * заклинателю можно ломать, и не больше предела блоков заклинания;
+     * выпадение — по игровому правилу взрывов блоков. Каждый взрыв — одно
+     * место из предела сущностей заклинания. Основной параметр — {@code power}.
+     */
+    static final class Explode extends Behavior {
+        private final double power;
+        private final boolean breakBlocks;
+
+        Explode(double power, boolean breakBlocks) {
+            this.power = power;
+            this.breakBlocks = breakBlocks;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            float force = (float) Math.min(MAX_EXPLOSION, context.primary(power, root));
+            LivingEntity caster = context.session().caster();
+            DamageSource source = context.level().damageSources().explosion(context.entity(),
+                    caster != null && !caster.isRemoved() ? caster : null);
+            for (Vec3 at : points(context)) {
+                if (!context.session().takeEntity()) {
+                    return;
+                }
+                context.level().explode(context.entity(), source, null, at, force, false,
+                        breakBlocks ? Level.ExplosionInteraction.BLOCK : Level.ExplosionInteraction.NONE);
+            }
+        }
+    }
+
+    /** Больше этого взрыв уже не взрыв, а снос чанка; та же планка, что у параметра. */
+    static final double MAX_EXPLOSION = 16.0;
+
+    /** Точки действия: центры живых целей, а без них — центры блоков действия. */
+    private static List<Vec3> points(SpellContext context) {
+        List<LivingEntity> targets = context.targets();
+        if (!targets.isEmpty()) {
+            return targets.stream().map(t -> t.getBoundingBox().getCenter()).toList();
+        }
+        return context.blockTargets().stream().map(Vec3::atCenterOf).toList();
+    }
+
+    /**
+     * {@code lightning}: ванильная молния в каждую цель (без живых целей — в
+     * каждый блок действия). Всё как у настоящей: урон, поджог, превращения
+     * (свинья станет зомбифицированным пиглином), огонь вокруг по игровому
+     * правилу распространения огня. Каждая молния — одно место из предела
+     * сущностей заклинания.
+     */
+    static final class Lightning extends Behavior {
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            List<LivingEntity> targets = context.targets();
+            List<Vec3> points = !targets.isEmpty()
+                    ? targets.stream().map(Entity::position).toList()
+                    : context.blockTargets().stream().map(Vec3::atBottomCenterOf).toList();
+            LivingEntity caster = context.session().caster();
+            for (Vec3 at : points) {
+                if (!context.session().takeEntity()) {
+                    return;
+                }
+                LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(context.level());
+                if (bolt == null) {
+                    return;
+                }
+                bolt.moveTo(at);
+                if (caster instanceof ServerPlayer player) {
+                    bolt.setCause(player);
+                }
+                context.level().addFreshEntity(bolt);
+            }
+        }
+    }
+
+    // --- перемещения ---------------------------------------------------------
+
+    /**
+     * {@code teleport_to_origin}: перенести цели туда, где сейчас
+     * сущность-заклинание (ногами в её точку). Набранная высота падения
+     * сбрасывается. Цели из другого измерения не переносятся.
+     */
+    static final class TeleportToOrigin extends Behavior {
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            Vec3 to = context.entity().position();
+            for (LivingEntity target : context.targets()) {
+                if (target.level() == context.level()) {
+                    target.teleportTo(to.x, to.y, to.z);
+                    target.resetFallDistance();
+                }
+            }
+        }
+    }
+
+    /**
+     * {@code swap_caster}: кастер и первая из целей (не он сам) меняются
+     * местами. Взгляд у каждого остаётся свой.
+     */
+    static final class SwapCaster extends Behavior {
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            LivingEntity caster = context.session().caster();
+            if (caster == null || !caster.isAlive() || caster.level() != context.level()) {
+                return;
+            }
+            othersThanCaster(context).stream().filter(t -> t.level() == context.level()).findFirst()
+                    .ifPresent(target -> {
+                        Vec3 a = caster.position();
+                        Vec3 b = target.position();
+                        caster.teleportTo(b.x, b.y, b.z);
+                        target.teleportTo(a.x, a.y, a.z);
+                        caster.resetFallDistance();
+                        target.resetFallDistance();
+                    });
+        }
+    }
+
+    // --- эффекты ----------------------------------------------------------
+
+    /** {@code remove_effect}: снять с целей один эффект {@code effect}, чей бы он ни был. */
+    static final class RemoveEffect extends Behavior {
+        private final Holder<MobEffect> effect;
+
+        RemoveEffect(Holder<MobEffect> effect) {
+            this.effect = effect;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            for (LivingEntity target : context.targets()) {
+                target.removeEffect(effect);
+            }
+        }
+    }
+
+    /**
+     * {@code steal_effects}: все эффекты целей (кроме самого кастера)
+     * переходят на кастера — с тем же уровнем и оставшимся временем.
+     */
+    static final class StealEffects extends Behavior {
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            LivingEntity caster = context.session().caster();
+            if (caster == null || !caster.isAlive()) {
+                return;
+            }
+            for (LivingEntity target : othersThanCaster(context)) {
+                for (MobEffectInstance instance : new ArrayList<>(target.getActiveEffects())) {
+                    caster.addEffect(new MobEffectInstance(instance), caster);
+                    target.removeEffect(instance.getEffect());
+                }
+            }
+        }
+    }
+
+    /**
+     * {@code drain}: магический урон {@code amount} каждой цели, кроме самого
+     * кастера, — и кастер лечится на столько, сколько цели потеряли на самом
+     * деле (броня и защита это уменьшают). Основной параметр — {@code amount}.
+     */
+    static final class Drain extends Behavior {
+        private final double amount;
+
+        Drain(double amount) {
+            this.amount = amount;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            LivingEntity caster = context.session().caster();
+            float damage = (float) context.primary(amount, root);
+            float drained = 0;
+            for (LivingEntity target : othersThanCaster(context)) {
+                drained += hurt(context, target, damage);
+            }
+            if (drained > 0 && caster != null && caster.isAlive()) {
+                caster.heal(drained);
             }
         }
     }

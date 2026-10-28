@@ -45,8 +45,16 @@ public final class TempBlocks extends SavedData {
     /** Раз в секунду: точнее для света не нужно, а чаще — зря листать список. */
     private static final int CHECK_INTERVAL = 20;
 
+    /**
+     * @param sameBlock сравнивать только блок, а не состояние целиком — для
+     *                  блоков, которые меняют свойства сами (у огня растёт возраст)
+     */
     private record Entry(ResourceKey<Level> dimension, BlockPos pos, BlockState expected, BlockState restore,
-                         long expiresAt) {
+                         long expiresAt, boolean sameBlock) {
+
+        boolean matches(BlockState current) {
+            return sameBlock ? current.is(expected.getBlock()) : current.equals(expected);
+        }
     }
 
     private final List<Entry> entries = new ArrayList<>();
@@ -67,9 +75,15 @@ public final class TempBlocks extends SavedData {
      * Запомнить, что через {@code ticks} блок {@code expected} надо вернуть к {@code restore}.
      */
     public static void add(ServerLevel level, BlockPos pos, BlockState expected, BlockState restore, long ticks) {
+        add(level, pos, expected, restore, ticks, false);
+    }
+
+    /** То же, но блок считается своим, пока это тот же блок, в каком бы он ни был состоянии. */
+    public static void add(ServerLevel level, BlockPos pos, BlockState expected, BlockState restore, long ticks,
+                           boolean sameBlock) {
         TempBlocks data = get(level.getServer());
         data.entries.add(new Entry(level.dimension(), pos.immutable(), expected, restore,
-                now(level.getServer()) + ticks));
+                now(level.getServer()) + ticks, sameBlock));
         data.setDirty();
     }
 
@@ -124,7 +138,7 @@ public final class TempBlocks extends SavedData {
     }
 
     private static void restore(ServerLevel level, Entry entry) {
-        if (level.isLoaded(entry.pos()) && level.getBlockState(entry.pos()).equals(entry.expected())) {
+        if (level.isLoaded(entry.pos()) && entry.matches(level.getBlockState(entry.pos()))) {
             level.setBlock(entry.pos(), entry.restore(), Block.UPDATE_ALL);
         }
     }
@@ -144,7 +158,8 @@ public final class TempBlocks extends SavedData {
                     new BlockPos(pos[0], pos[1], pos[2]),
                     NbtUtils.readBlockState(blocks, stored.getCompound("Expected")),
                     NbtUtils.readBlockState(blocks, stored.getCompound("Restore")),
-                    stored.getLong("ExpiresAt")));
+                    stored.getLong("ExpiresAt"),
+                    stored.getBoolean("SameBlock")));
         }
         return data;
     }
@@ -159,6 +174,7 @@ public final class TempBlocks extends SavedData {
             stored.put("Expected", NbtUtils.writeBlockState(entry.expected()));
             stored.put("Restore", NbtUtils.writeBlockState(entry.restore()));
             stored.putLong("ExpiresAt", entry.expiresAt());
+            stored.putBoolean("SameBlock", entry.sameBlock());
             list.add(stored);
         }
         tag.put(KEY_LIST, list);

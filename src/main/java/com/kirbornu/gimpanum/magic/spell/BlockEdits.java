@@ -3,10 +3,12 @@ package com.kirbornu.gimpanum.magic.spell;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.event.EventHooks;
 
@@ -39,12 +41,37 @@ public final class BlockEdits {
     }
 
     /**
+     * Можно ли заклинанию сломать блок: те же запреты, что и на установку,
+     * только событие — ломания, как от руки заклинателя.
+     */
+    public static boolean mayBreak(SpellSession session, BlockPos pos) {
+        ServerLevel level = session.level();
+        if (!level.isInWorldBounds(pos) || !level.getWorldBorder().isWithinBounds(pos) || !level.isLoaded(pos)) {
+            return false;
+        }
+        if (session.caster() instanceof ServerPlayer player) {
+            if (!player.mayBuild() || !level.mayInteract(player, pos)) {
+                return false;
+            }
+            return !CommonHooks.fireBlockBreak(level, player.gameMode.getGameModeForPlayer(), player, pos,
+                    level.getBlockState(pos)).isCanceled();
+        }
+        return true;
+    }
+
+    /**
      * Ставит блок, если можно, и записывает его как временный, если есть срок.
      *
      * @param ticks срок жизни в тиках; не больше нуля — навсегда
      * @return поставлен ли блок
      */
     public static boolean place(SpellSession session, BlockPos pos, BlockState state, BlockState restore, long ticks) {
+        return place(session, pos, state, restore, ticks, false);
+    }
+
+    /** @param sameBlock временный блок свой, пока это тот же блок, в любом состоянии */
+    public static boolean place(SpellSession session, BlockPos pos, BlockState state, BlockState restore, long ticks,
+                                boolean sameBlock) {
         if (!mayEdit(session, pos) || !session.takeBlock()) {
             return false;
         }
@@ -53,7 +80,7 @@ public final class BlockEdits {
             return false;
         }
         if (ticks > 0) {
-            TempBlocks.add(level, pos, level.getBlockState(pos), restore, ticks);
+            TempBlocks.add(level, pos, level.getBlockState(pos), restore, ticks, sameBlock);
         }
         return true;
     }

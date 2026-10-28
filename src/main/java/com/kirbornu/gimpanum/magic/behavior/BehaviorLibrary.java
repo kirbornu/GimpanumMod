@@ -80,21 +80,11 @@ public final class BehaviorLibrary {
             Double duration = p.number("duration", 0.05, MAX_SECONDS);
             return interval == null || duration == null ? null : new Actions.EchoRoot(interval, duration);
         });
-        register("water", Behavior.Kind.ACTION, Set.of("seconds"), p -> {
-            Double seconds = p.number("seconds", -1.0, MAX_SECONDS);
-            if (seconds != null && seconds != -1.0 && seconds <= 0) {
-                p.errors().add(p.path("seconds"), "-1 — навсегда, иначе больше нуля");
-                return null;
-            }
-            return seconds == null ? null : new Actions.Water(seconds);
-        });
+        register("water", Behavior.Kind.ACTION, Set.of("seconds"),
+                p -> build(foreverOrPositive(p, "seconds"), Actions.Water::new));
         register("light", Behavior.Kind.ACTION, Set.of("level", "seconds"), p -> {
             Integer level = p.integer("level", 0, 15);
-            Double seconds = p.number("seconds", -1.0, MAX_SECONDS);
-            if (seconds != null && seconds != -1.0 && seconds <= 0) {
-                p.errors().add(p.path("seconds"), "-1 — навсегда, иначе больше нуля");
-                return null;
-            }
+            Double seconds = foreverOrPositive(p, "seconds");
             return level == null || seconds == null ? null : new Actions.Light(level, seconds);
         });
 
@@ -117,6 +107,22 @@ public final class BehaviorLibrary {
             return amount == null || seconds == null ? null : new Actions.Absorb(amount, seconds);
         });
         register("extinguish", Behavior.Kind.ACTION, Set.of(), p -> new Actions.Extinguish());
+
+        register("set_fire_blocks", Behavior.Kind.ACTION, Set.of("seconds"),
+                p -> build(foreverOrPositive(p, "seconds"), Actions.SetFireBlocks::new));
+        register("explode", Behavior.Kind.ACTION, Set.of("power", "breakBlocks"), p -> {
+            Double power = p.number("power", 0.0, Actions.MAX_EXPLOSION);
+            Boolean breakBlocks = p.bool("breakBlocks");
+            return power == null || breakBlocks == null ? null : new Actions.Explode(power, breakBlocks);
+        });
+        register("lightning", Behavior.Kind.ACTION, Set.of(), p -> new Actions.Lightning());
+        register("teleport_to_origin", Behavior.Kind.ACTION, Set.of(), p -> new Actions.TeleportToOrigin());
+        register("swap_caster", Behavior.Kind.ACTION, Set.of(), p -> new Actions.SwapCaster());
+        register("remove_effect", Behavior.Kind.ACTION, Set.of("effect"),
+                p -> build(effect(p), Actions.RemoveEffect::new));
+        register("steal_effects", Behavior.Kind.ACTION, Set.of(), p -> new Actions.StealEffects());
+        register("drain", Behavior.Kind.ACTION, Set.of("amount"),
+                p -> build(p.number("amount", 0.0, MAX_AMOUNT), Actions.Drain::new));
 
         // --- процессы интерфикса ---
         register("wait", Behavior.Kind.PROCESS, Set.of("seconds"),
@@ -148,6 +154,16 @@ public final class BehaviorLibrary {
 
     private static <T> Behavior build(T value, Function<T, Behavior> factory) {
         return value == null ? null : factory.apply(value);
+    }
+
+    /** Срок, где −1 значит «навсегда», а иначе он больше нуля. */
+    private static Double foreverOrPositive(Json p, String field) {
+        Double seconds = p.number(field, -1.0, MAX_SECONDS);
+        if (seconds != null && seconds != -1.0 && seconds <= 0) {
+            p.errors().add(p.path(field), "-1 — навсегда, иначе больше нуля");
+            return null;
+        }
+        return seconds;
     }
 
     private static int orZero(Integer value) {

@@ -25,6 +25,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.FakePlayer;
@@ -129,11 +130,20 @@ final class MagicTestKit {
      * @return сущность-заклинание или {@code null}
      */
     static SpellEntity castArcanes(ServerPlayer p, Arcane... arcanes) {
+        return castFrom(p, arcanes);
+    }
+
+    /**
+     * Каст от любой живой сущности. Нужен там, где поддельный игрок не годится:
+     * его сетевой обработчик глушит телепорт, и он не сдвинется с места.
+     */
+    static SpellEntity castFrom(LivingEntity caster, Arcane... arcanes) {
         int[] orders = Arrays.stream(arcanes).mapToInt(Arcane::order).toArray();
         Role[] roles = Grammar.roles(orders);
         Program<Arcane> program = Program.link(List.of(arcanes), roles, Grammar.collapsed(roles));
-        SpellSession session = new SpellSession(p.serverLevel(), p, p.getLookAngle(), MagicConfig.get());
-        return SpellEntity.cast(session, p.getEyePosition(), program);
+        SpellSession session = new SpellSession((net.minecraft.server.level.ServerLevel) caster.level(), caster,
+                caster.getLookAngle(), MagicConfig.get());
+        return SpellEntity.cast(session, caster.getEyePosition(), program);
     }
 
     /** Моб без ИИ: стоит на месте, но и сам не двигается — для проверок, где движение не важно. */
