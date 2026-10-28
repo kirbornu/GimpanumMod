@@ -40,3 +40,5 @@ Sable — **опциональная** зависимость: без неё м�
 - `docs/magic-config.md` — формат настроек рунной магии (`config/gimpanum/magic/`)
 - `src/main/java/.../magic/core/` — математика рунной магии без зависимостей от Minecraft;
   её модульные тесты — в `src/test/`, запуск: `./gradlew test`
+- `src/gametest/` — игровые тесты рунной магии (каждое поведение в живом сервере); в джарку мода
+  не попадают, запуск: `./gradlew runGameTestServer`
