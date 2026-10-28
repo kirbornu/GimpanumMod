@@ -98,6 +98,26 @@ public final class BehaviorLibrary {
             return level == null || seconds == null ? null : new Actions.Light(level, seconds);
         });
 
+        register("knockback", Behavior.Kind.ACTION, Set.of("strength"),
+                p -> build(p.number("strength", 0.0, 10.0), Actions.Knockback::new));
+        register("pull", Behavior.Kind.ACTION, Set.of("strength"),
+                p -> build(p.number("strength", 0.0, 10.0), Actions.Pull::new));
+        register("launch", Behavior.Kind.ACTION, Set.of("strength"),
+                p -> build(p.number("strength", 0.0, 10.0), Actions.Launch::new));
+        register("freeze", Behavior.Kind.ACTION, Set.of("seconds"),
+                p -> build(p.number("seconds", 0.0, MAX_SECONDS), Actions.Freeze::new));
+        register("feed", Behavior.Kind.ACTION, Set.of("food", "saturation"), p -> {
+            Integer food = p.integer("food", 0, 20);
+            Double saturation = p.number("saturation", 0.0, 20.0);
+            return food == null || saturation == null ? null : new Actions.Feed(food, saturation);
+        });
+        register("absorb", Behavior.Kind.ACTION, Set.of("amount", "seconds"), p -> {
+            Double amount = p.number("amount", 0.0, MAX_AMOUNT);
+            Double seconds = p.number("seconds", 0.0, MAX_SECONDS);
+            return amount == null || seconds == null ? null : new Actions.Absorb(amount, seconds);
+        });
+        register("extinguish", Behavior.Kind.ACTION, Set.of(), p -> new Actions.Extinguish());
+
         // --- процессы интерфикса ---
         register("wait", Behavior.Kind.PROCESS, Set.of("seconds"),
                 p -> build(p.number("seconds", 0.0, MAX_SECONDS), Processes.Wait::new));

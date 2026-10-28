@@ -8,12 +8,17 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodData;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 
@@ -279,6 +284,251 @@ final class Actions {
                 if (state.isAir()) {
                     BlockEdits.place(context.session(), pos, light, state, ticks);
                 }
+            }
+        }
+    }
+
+    // --- движение целей ---------------------------------------------------
+
+    /** Отправить скорость игроку сразу: без этого клиент игрока узнает о толчке с опозданием. */
+    private static void sync(LivingEntity target) {
+        target.hurtMarked = true;
+    }
+
+    /**
+     * {@code knockback}: отбросить цели от сущности-заклинания с силой
+     * {@code strength} — ванильным отбрасыванием, как от удара, с учётом
+     * сопротивления отбрасыванию. Цель, стоящая на одной вертикали с
+     * сущностью (обычно сам кастер), отбрасывается по взгляду кастера.
+     * Основной параметр — {@code strength}.
+     */
+    static final class Knockback extends Behavior {
+        private final double strength;
+
+        Knockback(double strength) {
+            this.strength = strength;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            double force = context.primary(strength, root);
+            Vec3 origin = context.entity().position();
+            for (LivingEntity target : context.targets()) {
+                double dx = target.getX() - origin.x;
+                double dz = target.getZ() - origin.z;
+                if (dx * dx + dz * dz < 1.0E-4) {
+                    dx = context.direction().x;
+                    dz = context.direction().z;
+                }
+                // Ванильное отбрасывание толкает против переданного вектора.
+                target.knockback(force, -dx, -dz);
+                sync(target);
+            }
+        }
+    }
+
+    /**
+     * {@code pull}: притянуть цели к сущности-заклинанию с силой
+     * {@code strength} — тем же ванильным отбрасыванием, но к ней. Цель на
+     * одной вертикали с сущностью не двигается. Основной параметр —
+     * {@code strength}.
+     */
+    static final class Pull extends Behavior {
+        private final double strength;
+
+        Pull(double strength) {
+            this.strength = strength;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            double force = context.primary(strength, root);
+            Vec3 origin = context.entity().position();
+            for (LivingEntity target : context.targets()) {
+                double dx = target.getX() - origin.x;
+                double dz = target.getZ() - origin.z;
+                if (dx * dx + dz * dz < 1.0E-4) {
+                    continue;
+                }
+                target.knockback(force, dx, dz);
+                sync(target);
+            }
+        }
+    }
+
+    /**
+     * {@code launch}: подбросить цели вверх, добавив вертикальную скорость
+     * {@code strength} блоков за тик (с учётом сопротивления отбрасыванию).
+     * Для понимания: 0.42 — обычный прыжок, 1.0 — примерно на пять блоков.
+     * Основной параметр — {@code strength}.
+     */
+    static final class Launch extends Behavior {
+        private final double strength;
+
+        Launch(double strength) {
+            this.strength = strength;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            double force = context.primary(strength, root);
+            for (LivingEntity target : context.targets()) {
+                double lift = force * (1.0 - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
+                if (lift <= 0) {
+                    continue;
+                }
+                Vec3 v = target.getDeltaMovement();
+                target.setDeltaMovement(v.x, Math.max(v.y, 0) + lift, v.z);
+                target.hasImpulse = true;
+                sync(target);
+            }
+        }
+    }
+
+    // --- состояние целей --------------------------------------------------
+
+    /**
+     * {@code freeze}: заморозить, как в порошковом снегу, на {@code seconds} с:
+     * замедление и урон от холода по ванильным правилам, затем оттаивание
+     * за 3,5 с. Кто не мёрзнет (зимогор, кожаная броня), тот не мёрзнет и
+     * здесь. Длительное.
+     */
+    static final class Freeze extends Behavior {
+        /** Вне снега игра снимает по два тика заморозки за тик. */
+        private static final int THAW_PER_TICK = 2;
+
+        private final double seconds;
+
+        Freeze(double seconds) {
+            this.seconds = seconds;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public boolean lasting() {
+            return true;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            long ticks = ticks(context.duration(seconds, root));
+            for (LivingEntity target : context.targets()) {
+                if (!target.canFreeze()) {
+                    continue;
+                }
+                int frozen = (int) Math.min(Integer.MAX_VALUE / 2,
+                        target.getTicksRequiredToFreeze() + THAW_PER_TICK * ticks);
+                target.setTicksFrozen(Math.max(target.getTicksFrozen(), frozen));
+            }
+        }
+    }
+
+    /**
+     * {@code feed}: накормить игроков — {@code food} к уровню еды и
+     * {@code saturation} к насыщенности, не выше ванильных пределов.
+     * Мобов не кормит. Основной параметр — {@code food}.
+     */
+    static final class Feed extends Behavior {
+        private final int food;
+        private final double saturation;
+
+        Feed(int food, double saturation) {
+            this.food = food;
+            this.saturation = saturation;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            int amount = (int) Math.round(context.primary(food, root));
+            for (LivingEntity target : context.targets()) {
+                if (target instanceof Player player) {
+                    FoodData data = player.getFoodData();
+                    data.setFoodLevel(Mth.clamp(data.getFoodLevel() + amount, 0, 20));
+                    // Насыщенность в игре не бывает больше уровня еды.
+                    data.setSaturation((float) Mth.clamp(data.getSaturationLevel() + saturation, 0,
+                            data.getFoodLevel()));
+                }
+            }
+        }
+    }
+
+    /**
+     * {@code absorb}: {@code amount} единиц поглощения (золотые сердца) на
+     * {@code seconds} с — через ванильный эффект «Поглощение», поэтому они
+     * исчезают вместе с ним. Больше, чем уже есть, не убавляет. Основной
+     * параметр — {@code amount}. Длительное.
+     */
+    static final class Absorb extends Behavior {
+        private final double amount;
+        private final double seconds;
+
+        Absorb(double amount, double seconds) {
+            this.amount = amount;
+            this.seconds = seconds;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public boolean lasting() {
+            return true;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            float value = (float) context.primary(amount, root);
+            int duration = (int) ticks(context.duration(seconds, root));
+            // Уровень эффекта задаёт потолок поглощения: по 4 единицы за уровень.
+            int amplifier = Mth.clamp((int) Math.ceil(value / 4.0) - 1, 0, 255);
+            LivingEntity caster = context.session().caster();
+            for (LivingEntity target : context.targets()) {
+                float before = target.getAbsorptionAmount();
+                if (target.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, duration, amplifier), caster)) {
+                    context.session().noteEffect(target, MobEffects.ABSORPTION);
+                }
+                target.setAbsorptionAmount(Math.max(before, value));
+            }
+        }
+    }
+
+    /** {@code extinguish}: потушить цели — и только, эффекты не трогает. */
+    static final class Extinguish extends Behavior {
+        @Override
+        public Kind kind() {
+            return Kind.ACTION;
+        }
+
+        @Override
+        public void act(SpellContext context, boolean root) {
+            for (LivingEntity target : context.targets()) {
+                target.clearFire();
             }
         }
     }
