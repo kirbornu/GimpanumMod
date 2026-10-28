@@ -37,3 +37,6 @@ Sable — **опциональная** зависимость: без неё м�
 
 - `other_mods_in_modpack/` — джарки модпака, используются как локальные dev-зависимости
   (не в git)
+- `docs/magic-config.md` — формат настроек рунной магии (`config/gimpanum/magic/`)
+- `src/main/java/.../magic/core/` — математика рунной магии без зависимостей от Minecraft;
+  её модульные тесты — в `src/test/`, запуск: `./gradlew test`
