@@ -127,7 +127,7 @@ public final class SpellParticles {
         if (layer == null) {
             return;
         }
-        int points = 16;
+        int points = 32;
         for (int i = 0; i < points; i++) {
             double t = (double) i / points;
             double a = Mth.TWO_PI * 2 * t;

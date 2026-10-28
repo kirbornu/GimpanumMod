@@ -20,8 +20,8 @@
       ],
       "particles": {
         "root":     {"particle": {"type": "minecraft:flame"}, "count": 24, "spread": 0.35, "speed": 0.03},
-        "prefix":   {"particle": {"type": "minecraft:dust", "color": [1.0, 0.45, 0.05], "scale": 1.0}, "count": 1},
-        "suffix":   {"particle": {"type": "minecraft:small_flame"}, "count": 12, "spread": 0.6, "speed": 0.0},
+        "prefix":   {"particle": {"type": "minecraft:dust", "color": [1.0, 0.45, 0.05], "scale": 0.6}, "count": 1},
+        "suffix":   {"particle": {"type": "minecraft:small_flame"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:smoke"}, "count": 2, "spread": 0.1, "speed": 0.01}
       }
     },
@@ -43,8 +43,8 @@
       ],
       "particles": {
         "root":     {"particle": {"type": "minecraft:splash"}, "count": 30, "spread": 0.4, "speed": 0.1},
-        "prefix":   {"particle": {"type": "minecraft:dust", "color": [0.2, 0.45, 1.0], "scale": 1.0}, "count": 1},
-        "suffix":   {"particle": {"type": "minecraft:bubble_pop"}, "count": 16, "spread": 0.6, "speed": 0.02},
+        "prefix":   {"particle": {"type": "minecraft:dust", "color": [0.2, 0.45, 1.0], "scale": 0.6}, "count": 1},
+        "suffix":   {"particle": {"type": "minecraft:bubble_pop"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:falling_water"}, "count": 3, "spread": 0.15, "speed": 0.0}
       }
     },
@@ -66,8 +66,8 @@
       ],
       "particles": {
         "root":     {"particle": {"type": "minecraft:heart"}, "count": 6, "spread": 0.5, "speed": 0.0},
-        "prefix":   {"particle": {"type": "minecraft:dust", "color": [0.3, 1.0, 0.4], "scale": 0.8}, "count": 1},
-        "suffix":   {"particle": {"type": "minecraft:happy_villager"}, "count": 12, "spread": 0.6, "speed": 0.0},
+        "prefix":   {"particle": {"type": "minecraft:dust", "color": [0.3, 1.0, 0.4], "scale": 0.6}, "count": 1},
+        "suffix":   {"particle": {"type": "minecraft:happy_villager"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:dust_color_transition", "from_color": [0.3, 1.0, 0.4], "to_color": [1.0, 1.0, 1.0], "scale": 1.0}, "count": 2, "spread": 0.1, "speed": 0.0}
       }
     },
@@ -90,8 +90,8 @@
       ],
       "particles": {
         "root":     {"particle": {"type": "minecraft:end_rod"}, "count": 2, "spread": 0.3, "speed": 0.01},
-        "prefix":   {"particle": {"type": "minecraft:dust", "color": [1.0, 0.95, 0.5], "scale": 0.8}, "count": 1},
-        "suffix":   {"particle": {"type": "minecraft:glow"}, "count": 12, "spread": 0.6, "speed": 0.0},
+        "prefix":   {"particle": {"type": "minecraft:dust", "color": [1.0, 0.95, 0.5], "scale": 0.6}, "count": 1},
+        "suffix":   {"particle": {"type": "minecraft:glow"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:end_rod"}, "count": 1, "spread": 0.05, "speed": 0.0}
       }
     }

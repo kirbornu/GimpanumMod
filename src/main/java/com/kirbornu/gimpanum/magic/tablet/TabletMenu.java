@@ -154,8 +154,10 @@ public class TabletMenu extends AbstractContainerMenu {
     @Override
     public void clicked(int slot, int button, ClickType type, Player player) {
         // Цифрой можно поменять местами любой слот и слот хотбара — в том
-        // числе тот, где лежит табличка; это запертый слот, и обходить его так нельзя.
-        if (type == ClickType.SWAP && hand == InteractionHand.MAIN_HAND && button == player.getInventory().selected) {
+        // числе тот, где лежит табличка, а клавишей F — со второй рукой. Это
+        // запертые места, и обходить их так нельзя.
+        if (type == ClickType.SWAP && (hand == InteractionHand.MAIN_HAND && button == player.getInventory().selected
+                || hand == InteractionHand.OFF_HAND && button == Inventory.SLOT_OFFHAND)) {
             return;
         }
         super.clicked(slot, button, type, player);
