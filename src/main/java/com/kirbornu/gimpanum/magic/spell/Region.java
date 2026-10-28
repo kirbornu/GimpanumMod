@@ -15,10 +15,16 @@ import java.util.function.Predicate;
  * блоков, и одна и та же форма в одном и том же месте всегда выделяет одно и
  * то же.
  */
-public record Region(AABB bounds, Predicate<Vec3> inside) {
+public record Region(AABB bounds, Predicate<Vec3> inside, Predicate<Vec3> entityInside) {
 
+    /** Область, где для блоков и для существ одно правило. */
+    public Region(AABB bounds, Predicate<Vec3> inside) {
+        this(bounds, inside, inside);
+    }
+
+    /** Попадает ли существо, если {@code point} — центр его рамки. */
     public boolean contains(Vec3 point) {
-        return inside.test(point);
+        return entityInside.test(point);
     }
 
     public List<BlockPos> blocks() {
@@ -34,6 +40,49 @@ public record Region(AABB bounds, Predicate<Vec3> inside) {
 
     public static Region sphere(Vec3 center, double radius) {
         return new Region(new AABB(center, center).inflate(radius), p -> p.distanceTo(center) <= radius);
+    }
+
+    /** Прямоугольник {@code x × y × z} блоков с центром в точке. */
+    public static Region box(Vec3 center, double x, double y, double z) {
+        return new Region(new AABB(center, center).inflate(x / 2, y / 2, z / 2),
+                p -> Math.abs(p.x - center.x) <= x / 2 && Math.abs(p.y - center.y) <= y / 2
+                        && Math.abs(p.z - center.z) <= z / 2);
+    }
+
+    /**
+     * Луч длиной {@code length} и шириной {@code width} от точки по направлению:
+     * всё, что не дальше {@code width / 2} от оси.
+     */
+    public static Region line(Vec3 start, Vec3 direction, double length, double width) {
+        Vec3 axis = direction.normalize();
+        double half = width / 2;
+        Vec3 end = start.add(axis.scale(length));
+        return new Region(new AABB(start, end).inflate(half), p -> {
+            Vec3 d = p.subtract(start);
+            double along = d.dot(axis);
+            return along >= 0 && along <= length && d.subtract(axis.scale(along)).length() <= half;
+        });
+    }
+
+    /**
+     * Кольцо на высоте {@code floorY}: блоки — один слой, чьё горизонтальное
+     * расстояние до центра от {@code radius − thickness/2} до
+     * {@code radius + thickness/2}. Существа — те, кто стоит в кольце, то
+     * есть их центр не ниже слоя и не выше роста человека над ним.
+     */
+    public static Region ring(Vec3 center, int floorY, double radius, double thickness) {
+        double inner = Math.max(0, radius - thickness / 2);
+        double outer = radius + thickness / 2;
+        Predicate<Vec3> flat = p -> {
+            double dx = p.x - center.x;
+            double dz = p.z - center.z;
+            double d = Math.sqrt(dx * dx + dz * dz);
+            return d >= inner && d <= outer;
+        };
+        return new Region(new AABB(center.x - outer, floorY, center.z - outer, center.x + outer, floorY + 3,
+                center.z + outer),
+                p -> flat.test(p) && p.y >= floorY && p.y < floorY + 1,
+                p -> flat.test(p) && p.y >= floorY - 0.5 && p.y <= floorY + 2.5);
     }
 
     /**

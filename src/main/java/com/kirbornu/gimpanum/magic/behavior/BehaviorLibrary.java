@@ -3,13 +3,20 @@ package com.kirbornu.gimpanum.magic.behavior;
 import com.kirbornu.gimpanum.magic.config.BehaviorSpec;
 import com.kirbornu.gimpanum.magic.config.Json;
 import com.kirbornu.gimpanum.magic.core.Role;
+import com.kirbornu.gimpanum.magic.spell.SpellContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Collection;
@@ -18,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 /**
@@ -64,6 +72,39 @@ public final class BehaviorLibrary {
         });
         register("shape_sphere", Behavior.Kind.MODIFIER, Set.of("radius"),
                 p -> build(p.number("radius", 0.0, MAX_REACH), Modifiers.ShapeSphere::new));
+
+        register("target_caster", Behavior.Kind.MODIFIER, Set.of(), p -> new Modifiers.TargetCaster());
+        register("target_nearest", Behavior.Kind.MODIFIER, Set.of("radius", "excludeCaster"), p -> {
+            Double radius = p.number("radius", 0.0, MAX_REACH);
+            Boolean exclude = p.bool("excludeCaster");
+            return radius == null || exclude == null ? null : new Modifiers.TargetNearest(radius, exclude);
+        });
+        register("target_filter", Behavior.Kind.MODIFIER, Set.of("filter"),
+                p -> build(targetFilter(p, "filter"), Modifiers.TargetFilter::new));
+        register("target_limit", Behavior.Kind.MODIFIER, Set.of("count"),
+                p -> build(p.integer("count", 0, 1000), Modifiers.TargetLimit::new));
+        register("shape_line", Behavior.Kind.MODIFIER, Set.of("length", "width"), p -> {
+            Double length = p.number("length", 0.0, MAX_REACH);
+            Double width = p.number("width", 0.0, MAX_REACH);
+            return length == null || width == null ? null : new Modifiers.ShapeLine(length, width);
+        });
+        register("shape_ring", Behavior.Kind.MODIFIER, Set.of("radius", "thickness"), p -> {
+            Double radius = p.number("radius", 0.0, MAX_REACH);
+            Double thickness = p.number("thickness", 0.0, MAX_REACH);
+            return radius == null || thickness == null ? null : new Modifiers.ShapeRing(radius, thickness);
+        });
+        register("shape_box", Behavior.Kind.MODIFIER, Set.of("x", "y", "z"), p -> {
+            Double x = p.number("x", 0.0, MAX_REACH);
+            Double y = p.number("y", 0.0, MAX_REACH);
+            Double z = p.number("z", 0.0, MAX_REACH);
+            return x == null || y == null || z == null ? null : new Modifiers.ShapeBox(x, y, z);
+        });
+        register("shape_ground", Behavior.Kind.MODIFIER, Set.of("maxDepth"),
+                p -> build(p.integer("maxDepth", 0, 64), Modifiers.ShapeGround::new));
+        register("repeat", Behavior.Kind.MODIFIER, Set.of("times"),
+                p -> build(p.integer("times", 1, SpellContext.MAX_REPEAT), Modifiers.Repeat::new));
+        register("delay", Behavior.Kind.MODIFIER, Set.of("seconds"),
+                p -> build(p.number("seconds", 0.0, MAX_SECONDS), Modifiers.Delay::new));
 
         // --- действия ---
         register("damage", Behavior.Kind.ACTION, Set.of("amount"),
@@ -233,11 +274,55 @@ public final class BehaviorLibrary {
         }
     }
 
-    private static EntityType<?> entityType(Json p, String field) {
-        String id = p.string(field);
-        if (id == null) {
+    /**
+     * Фильтр целей: {@code players}, {@code monsters}, {@code animals},
+     * {@code not_caster}, {@code type:<id существа>}, {@code tag:<тег типов
+     * существ>}; {@code !} в начале обращает любой из них.
+     */
+    private static BiPredicate<LivingEntity, LivingEntity> targetFilter(Json p, String field) {
+        String text = p.string(field);
+        if (text == null) {
             return null;
         }
+        boolean negate = text.startsWith("!");
+        String body = negate ? text.substring(1) : text;
+        BiPredicate<LivingEntity, LivingEntity> filter = switch (body) {
+            case "players" -> (e, caster) -> e instanceof Player;
+            case "monsters" -> (e, caster) -> e instanceof Enemy;
+            case "animals" -> (e, caster) -> e instanceof Animal;
+            case "not_caster" -> (e, caster) -> e != caster;
+            default -> null;
+        };
+        if (filter == null && body.startsWith("type:")) {
+            EntityType<?> type = entityType(p, field, body.substring("type:".length()));
+            if (type == null) {
+                return null;
+            }
+            filter = (e, caster) -> e.getType() == type;
+        } else if (filter == null && body.startsWith("tag:")) {
+            ResourceLocation location = ResourceLocation.tryParse(body.substring("tag:".length()));
+            if (location == null) {
+                p.errors().add(p.path(field), "не разобрать тег «" + body.substring(4) + "»");
+                return null;
+            }
+            TagKey<EntityType<?>> tag = TagKey.create(Registries.ENTITY_TYPE, location);
+            filter = (e, caster) -> e.getType().is(tag);
+        }
+        if (filter == null) {
+            p.errors().add(p.path(field), "нет такого фильтра «" + text + "»; есть: players, monsters, animals, "
+                    + "not_caster, type:<id>, tag:<тег>, и любой с ! в начале");
+            return null;
+        }
+        return negate ? filter.negate() : filter;
+    }
+
+    private static EntityType<?> entityType(Json p, String field) {
+        String id = p.string(field);
+        return id == null ? null : entityType(p, field, id);
+    }
+
+    /** Тип существа по id; ошибка записывается на поле {@code field}. */
+    private static EntityType<?> entityType(Json p, String field, String id) {
         ResourceLocation location = ResourceLocation.tryParse(id);
         Optional<EntityType<?>> type = location == null ? Optional.empty()
                 : BuiltInRegistries.ENTITY_TYPE.getOptional(location);

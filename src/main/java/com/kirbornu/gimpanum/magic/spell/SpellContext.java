@@ -45,6 +45,9 @@ import java.util.function.Function;
  */
 public final class SpellContext {
 
+    /** Сколько раз подряд можно повторить корень, как бы ни множились повторы. */
+    public static final int MAX_REPEAT = 100;
+
     private final SpellSession session;
     private final SpellEntity entity;
     private final Arcane root;
@@ -59,6 +62,8 @@ public final class SpellContext {
     private double durationMultiplier = 1.0;
     private double periodicInterval;
     private double periodicDuration;
+    private int repeat = 1;
+    private double delay;
 
     /** Чьё поведение сейчас исполняется — от этого зависят частицы. */
     private Arcane arcane;
@@ -168,6 +173,26 @@ public final class SpellContext {
     }
 
     /**
+     * Строгий выбор: ровно эти цели, даже если их нет. Так работают фильтры —
+     * «только чудовища» без чудовищ рядом не должны откатиться и ударить кастера.
+     */
+    public void selectStrictly(List<LivingEntity> targets) {
+        anchors = targets.stream().map(Anchor::of).toList();
+        targetsChosen = true;
+        resolvedTargets = null;
+    }
+
+    /** Выделенные формой блоки или {@code null}, если формы не было. */
+    public Set<BlockPos> blocks() {
+        return blocks;
+    }
+
+    /** Заменить выделение блоков — например, опустив его на землю. Цели не меняются. */
+    public void replaceBlocks(Set<BlockPos> blocks) {
+        this.blocks = blocks;
+    }
+
+    /**
      * Живые цели корня: выбранные префиксами или цель по умолчанию.
      *
      * <p>Список запоминается: периодический корень бьёт тех же, кого выбрал в
@@ -229,6 +254,24 @@ public final class SpellContext {
     /** Длительность с учётом продлений — только для поведений корня. */
     public double duration(double seconds, boolean root) {
         return root ? seconds * durationMultiplier : seconds;
+    }
+
+    /** Применять действия корня {@code times} раз подряд; повторы множатся. */
+    public void multiplyRepeat(int times) {
+        repeat = (int) Math.min(MAX_REPEAT, (long) repeat * times);
+    }
+
+    public int repeat() {
+        return repeat;
+    }
+
+    /** Отложить применение на {@code seconds}; задержки складываются. */
+    public void addDelay(double seconds) {
+        delay += seconds;
+    }
+
+    public double delay() {
+        return delay;
     }
 
     public void makePeriodic(double intervalSeconds, double durationSeconds) {

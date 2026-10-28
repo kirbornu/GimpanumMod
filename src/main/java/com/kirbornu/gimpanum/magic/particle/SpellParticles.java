@@ -146,4 +146,20 @@ public final class SpellParticles {
             burst(level, layer, center.add(Math.cos(a) * radius, 0, Math.sin(a) * radius));
         }
     }
+
+    /** Рёбра прямоугольника — так префикс показывает выделенную коробку. */
+    public static void box(ServerLevel level, ParticleLayer layer, net.minecraft.world.phys.AABB box) {
+        if (layer == null) {
+            return;
+        }
+        Vec3[] c = new Vec3[8];
+        for (int i = 0; i < 8; i++) {
+            c[i] = new Vec3((i & 1) == 0 ? box.minX : box.maxX, (i & 2) == 0 ? box.minY : box.maxY,
+                    (i & 4) == 0 ? box.minZ : box.maxZ);
+        }
+        int[][] edges = {{0, 1}, {2, 3}, {4, 5}, {6, 7}, {0, 2}, {1, 3}, {4, 6}, {5, 7}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
+        for (int[] e : edges) {
+            line(level, layer, c[e[0]], c[e[1]]);
+        }
+    }
 }

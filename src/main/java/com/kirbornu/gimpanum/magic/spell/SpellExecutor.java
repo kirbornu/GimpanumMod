@@ -36,6 +36,17 @@ public final class SpellExecutor {
         }
         modify(context, step.root(), Role.ROOT);
 
+        int delay = (int) Math.round(context.delay() * 20);
+        if (delay > 0) {
+            // Отложено всё применение — действия префиксов, корня и суффиксов;
+            // сама программа при этом идёт дальше, задержка её не держит.
+            entity.addRepeater(delay, 1, () -> actAll(entity, step, context));
+        } else {
+            actAll(entity, step, context);
+        }
+    }
+
+    private static void actAll(SpellEntity entity, Program.Step<Arcane> step, SpellContext context) {
         for (Arcane prefix : step.prefixes()) {
             act(context, prefix, Role.PREFIX);
         }
@@ -94,10 +105,12 @@ public final class SpellExecutor {
 
     private static void rootActions(SpellContext context) {
         Arcane root = context.root();
-        for (Behavior behavior : root.behaviors(Role.ROOT)) {
-            if (behavior.kind() == Behavior.Kind.ACTION) {
-                context.enter(root, Role.ROOT);
-                behavior.act(context, true);
+        for (int i = 0; i < context.repeat(); i++) {
+            for (Behavior behavior : root.behaviors(Role.ROOT)) {
+                if (behavior.kind() == Behavior.Kind.ACTION) {
+                    context.enter(root, Role.ROOT);
+                    behavior.act(context, true);
+                }
             }
         }
         bursts(context, root.particles(Role.ROOT));
