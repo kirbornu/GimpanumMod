@@ -94,6 +94,11 @@ def cbcJars = files(
 def jeiJar = file("other_mods_in_modpack/jei-${minecraft_version}-neoforge-${jei_version}.jar")
 
 dependencies {
+    // Модульные тесты математики рунной магии: она чистая Java и не требует
+    // запущенной игры, поэтому хватает обычного JUnit.
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
     if (sableJar.exists()) {
         compileOnly files(sableJar)
         compileOnly fileTree(dir: sableDepsDir, include: '*.jar').builtBy(extractSableNestedJars)
@@ -153,4 +158,8 @@ tasks.named('processResources', ProcessResources).configure {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = 21
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
 }
