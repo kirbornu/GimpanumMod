@@ -14,6 +14,15 @@ java {
     toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
+// Игровые тесты (GameTest) — отдельный набор исходников: они нужны только в
+// разработке и в джарку мода не попадают. Запуск: ./gradlew runGameTestServer.
+sourceSets {
+    gametest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
 neoForge {
     version = project.neo_version
 
@@ -29,6 +38,7 @@ neoForge {
         }
         gameTestServer {
             type = 'gameTestServer'
+            sourceSet = sourceSets.gametest
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
         }
     }
@@ -36,9 +46,12 @@ neoForge {
     mods {
         "${mod_id}" {
             sourceSet(sourceSets.main)
+            sourceSet(sourceSets.gametest)
         }
     }
 }
+
+neoForge.addModdingDependenciesTo(sourceSets.gametest)
 
 repositories {
     mavenCentral()
