@@ -1,0 +1,99 @@
+{
+  "arcanes": [
+    {
+      "id": "fire",
+      "name": "Огонь",
+      "order": 20,
+      "root": [
+        {"type": "damage", "amount": 2.0},
+        {"type": "ignite", "seconds": 3.0}
+      ],
+      "prefix": [
+        {"type": "extend_duration", "factor": 2.0},
+        {"type": "periodic_if_instant", "interval": 3.0, "duration": 9.0}
+      ],
+      "suffix": [
+        {"type": "echo_root", "interval": 1.0, "duration": 3.0}
+      ],
+      "interfix": [
+        {"type": "wait", "seconds": 4.0}
+      ],
+      "particles": {
+        "root":     {"particle": {"type": "minecraft:flame"}, "count": 24, "spread": 0.35, "speed": 0.03},
+        "prefix":   {"particle": {"type": "minecraft:dust", "color": [1.0, 0.45, 0.05], "scale": 1.0}, "count": 1},
+        "suffix":   {"particle": {"type": "minecraft:small_flame"}, "count": 12, "spread": 0.6, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:smoke"}, "count": 2, "spread": 0.1, "speed": 0.01}
+      }
+    },
+    {
+      "id": "water",
+      "name": "Вода",
+      "order": 60,
+      "root": [
+        {"type": "water", "seconds": -1}
+      ],
+      "prefix": [
+        {"type": "target_radius", "radius": 2.0, "includeCaster": true}
+      ],
+      "suffix": [
+        {"type": "cleanse"}
+      ],
+      "interfix": [
+        {"type": "descend", "maxDistance": 16.0, "speed": 0.5}
+      ],
+      "particles": {
+        "root":     {"particle": {"type": "minecraft:splash"}, "count": 30, "spread": 0.4, "speed": 0.1},
+        "prefix":   {"particle": {"type": "minecraft:dust", "color": [0.2, 0.45, 1.0], "scale": 1.0}, "count": 1},
+        "suffix":   {"particle": {"type": "minecraft:bubble_pop"}, "count": 16, "spread": 0.6, "speed": 0.02},
+        "interfix": {"particle": {"type": "minecraft:falling_water"}, "count": 3, "spread": 0.15, "speed": 0.0}
+      }
+    },
+    {
+      "id": "heal",
+      "name": "Исцеление",
+      "order": 70,
+      "root": [
+        {"type": "heal", "amount": 4.0}
+      ],
+      "prefix": [
+        {"type": "target_look", "range": 3.0}
+      ],
+      "suffix": [
+        {"type": "amplify", "percent": 25.0}
+      ],
+      "interfix": [
+        {"type": "home", "seconds": 3.0, "speed": 0.15, "excludeCaster": true}
+      ],
+      "particles": {
+        "root":     {"particle": {"type": "minecraft:heart"}, "count": 6, "spread": 0.5, "speed": 0.0},
+        "prefix":   {"particle": {"type": "minecraft:dust", "color": [0.3, 1.0, 0.4], "scale": 0.8}, "count": 1},
+        "suffix":   {"particle": {"type": "minecraft:happy_villager"}, "count": 12, "spread": 0.6, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:dust_color_transition", "from_color": [0.3, 1.0, 0.4], "to_color": [1.0, 1.0, 1.0], "scale": 1.0}, "count": 2, "spread": 0.1, "speed": 0.0}
+      }
+    },
+    {
+      "id": "light",
+      "name": "Свет",
+      "order": 90,
+      "root": [
+        {"type": "light", "level": 15, "seconds": 60.0}
+      ],
+      "prefix": [
+        {"type": "shape_cone", "angle": 90.0, "length": 4.0}
+      ],
+      "suffix": [
+        {"type": "effect", "effect": "minecraft:glowing", "seconds": 10.0}
+      ],
+      "interfix": [
+        {"type": "wait", "seconds": 4.0},
+        {"type": "emit_light", "level": 15}
+      ],
+      "particles": {
+        "root":     {"particle": {"type": "minecraft:end_rod"}, "count": 2, "spread": 0.3, "speed": 0.01},
+        "prefix":   {"particle": {"type": "minecraft:dust", "color": [1.0, 0.95, 0.5], "scale": 0.8}, "count": 1},
+        "suffix":   {"particle": {"type": "minecraft:glow"}, "count": 12, "spread": 0.6, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:end_rod"}, "count": 1, "spread": 0.05, "speed": 0.0}
+      }
+    }
+  ]
+}

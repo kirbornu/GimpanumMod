@@ -98,6 +98,9 @@ dependencies {
     // запущенной игры, поэтому хватает обычного JUnit.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Разбор настроек магии тоже тестируется без игры; Gson той же версии,
+    // что приезжает с Minecraft 1.21.1.
+    testImplementation 'com.google.code.gson:gson:2.10.1'
 
     if (sableJar.exists()) {
         compileOnly files(sableJar)

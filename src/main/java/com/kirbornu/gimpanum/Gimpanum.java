@@ -3,6 +3,7 @@ package com.kirbornu.gimpanum;
 import com.kirbornu.gimpanum.cannons.BigCannons;
 import com.kirbornu.gimpanum.entity.GimpanumEntities;
 import com.kirbornu.gimpanum.entity.GimpanumSounds;
+import com.kirbornu.gimpanum.magic.MagicContent;
 import com.kirbornu.gimpanum.registry.GimpanumContent;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
@@ -22,6 +23,7 @@ public class Gimpanum {
         GimpanumContent.register(modBus);
         GimpanumEntities.register(modBus);
         GimpanumSounds.register(modBus);
+        MagicContent.register(modBus);
         // Спрашиваем здесь, а не в самом BigCannons: тот ссылается на классы
         // Create Big Cannons, и любое обращение к нему без этого мода валит
         // запуск ещё до ответа. Вызов внутри ветки класс не грузит.
