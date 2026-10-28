@@ -218,6 +218,42 @@ public final class BehaviorLibrary {
             Integer level = p.integer("level", 0, 15);
             return level == null ? null : new Processes.EmitLight(level);
         });
+        register("move_forward", Behavior.Kind.PROCESS, Set.of("distance", "speed"), p -> {
+            Double distance = p.number("distance", 0.0, 256.0);
+            Double speed = p.number("speed", 0.01, 16.0);
+            return distance == null || speed == null ? null : new Processes.MoveForward(distance, speed);
+        });
+        register("rise", Behavior.Kind.PROCESS, Set.of("distance", "speed"), p -> {
+            Double distance = p.number("distance", 0.0, 256.0);
+            Double speed = p.number("speed", 0.01, 16.0);
+            return distance == null || speed == null ? null : new Processes.Rise(distance, speed);
+        });
+        register("teleport_forward", Behavior.Kind.PROCESS, Set.of("distance"),
+                p -> build(p.number("distance", 0.0, 256.0), Processes.TeleportForward::new));
+        register("follow_caster", Behavior.Kind.PROCESS, Set.of("seconds"),
+                p -> build(p.number("seconds", 0.0, MAX_SECONDS), Processes.FollowCaster::new));
+        register("orbit", Behavior.Kind.PROCESS, Set.of("radius", "seconds", "period"), p -> {
+            Double radius = p.number("radius", 0.0, MAX_REACH);
+            Double seconds = p.number("seconds", 0.0, MAX_SECONDS);
+            Double period = p.number("period", 0.05, MAX_SECONDS);
+            return radius == null || seconds == null || period == null ? null
+                    : new Processes.Orbit(radius, seconds, period);
+        });
+        register("wait_for_target", Behavior.Kind.PROCESS, Set.of("radius", "maxSeconds", "excludeCaster"), p -> {
+            Double radius = p.number("radius", 0.0, MAX_REACH);
+            Double seconds = p.number("maxSeconds", 0.0, MAX_SECONDS);
+            Boolean exclude = p.bool("excludeCaster");
+            return radius == null || seconds == null || exclude == null ? null
+                    : new Processes.WaitForTarget(radius, seconds, exclude);
+        });
+        register("aura", Behavior.Kind.PROCESS, Set.of("radius", "every", "excludeCaster", "action"), p -> {
+            Double radius = p.number("radius", 0.0, MAX_REACH);
+            Double every = p.number("every", 0.05, MAX_SECONDS);
+            Boolean exclude = p.bool("excludeCaster");
+            Behavior action = nestedAction(p, "action");
+            return radius == null || every == null || exclude == null || action == null ? null
+                    : new Processes.Aura(radius, every, exclude, action);
+        });
     }
 
     private BehaviorLibrary() {
@@ -258,6 +294,28 @@ public final class BehaviorLibrary {
             return null;
         }
         return effect.get();
+    }
+
+    /**
+     * Действие, вложенное в другое поведение (у {@code aura}). Только
+     * действие, и не {@code echo_root}: у ауры нет своего корня, и копировать
+     * было бы нечего.
+     */
+    private static Behavior nestedAction(Json p, String field) {
+        Json nested = p.object(field);
+        if (nested == null) {
+            return null;
+        }
+        String type = nested.string("type");
+        if (type == null) {
+            return null;
+        }
+        BehaviorType kind = TYPES.get(type);
+        if (kind != null && kind.kind() != Behavior.Kind.ACTION || "echo_root".equals(type)) {
+            nested.errors().add(nested.path("type"), "здесь нужно действие (не echo_root), а «" + type + "» — нет");
+            return null;
+        }
+        return compile(new BehaviorSpec(type, nested), Role.SUFFIX);
     }
 
     /** Состояние блока в записи команды {@code /setblock}: {@code minecraft:oak_log[axis=x]}. */

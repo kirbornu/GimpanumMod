@@ -119,6 +119,11 @@ public class SpellEntity extends Entity {
         return session;
     }
 
+    /** Аркан идущего интерфикса или {@code null}, если интерфикса сейчас нет. */
+    public Arcane currentInterfix() {
+        return interfixArcane;
+    }
+
     public void addRepeater(int interval, int times, Runnable action) {
         if (times > 0) {
             repeaters.add(new Repeater(Math.max(1, interval), times, action));
