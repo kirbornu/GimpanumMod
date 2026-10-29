@@ -76,9 +76,11 @@ public final class BlockEdits {
             return false;
         }
         ServerLevel level = session.level();
+        BlockState before = level.getBlockState(pos);
         if (!level.setBlock(pos, state, Block.UPDATE_ALL)) {
             return false;
         }
+        SpellBlocks.noteCreated(level, pos, before, level.getBlockState(pos));
         if (ticks > 0) {
             TempBlocks.add(level, pos, level.getBlockState(pos), restore, ticks, sameBlock);
         }

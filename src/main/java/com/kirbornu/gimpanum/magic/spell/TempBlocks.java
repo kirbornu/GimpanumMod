@@ -140,6 +140,7 @@ public final class TempBlocks extends SavedData {
     private static void restore(ServerLevel level, Entry entry) {
         if (level.isLoaded(entry.pos()) && entry.matches(level.getBlockState(entry.pos()))) {
             level.setBlock(entry.pos(), entry.restore(), Block.UPDATE_ALL);
+            SpellBlocks.forget(level, entry.pos());
         }
     }
 
