@@ -20,6 +20,7 @@ import com.kirbornu.gimpanum.magic.core.Role;
 import com.kirbornu.gimpanum.magic.particle.ArcaneParticles;
 import com.kirbornu.gimpanum.magic.spell.SpellEntity;
 import com.kirbornu.gimpanum.magic.spell.SpellSession;
+import com.kirbornu.gimpanum.registry.GimpanumContent;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -75,6 +76,8 @@ final class MagicTestKit {
         // yaw −90 — взгляд на +X.
         p.moveTo(abs.getX() + 0.5, abs.getY(), abs.getZ() + 0.5, -90F, 0F);
         p.setYHeadRot(-90F);
+        // Хрусталь на оплату: без него каст по-настоящему (через SpellCaster) не пройдёт.
+        p.getInventory().setItem(20, new ItemStack(GimpanumContent.CRYSTAL_SHARD.get(), 64));
         if (inLevel) {
             h.getLevel().addNewPlayer(p);
         }

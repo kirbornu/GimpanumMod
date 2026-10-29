@@ -67,7 +67,7 @@ public final class MagicConfig {
 
     /** Действующие настройки. */
     public record Loaded(MagicSettings settings, Map<String, Arcane> arcanes, FieldsConfig fields,
-                         Item upgradeItem) {
+                         Item upgradeItem, Item crystalItem) {
 
         public Arcane arcane(String id) {
             return arcanes.get(id);
@@ -182,10 +182,13 @@ public final class MagicConfig {
         }
         Item upgrade = parsed.settings() == null ? null
                 : item(parsed.settings().tabletUpgradeItem(), MagicConfigParser.MAGIC + ".tabletUpgradeItem", errors);
+        Item crystal = parsed.settings() == null ? null
+                : item(parsed.settings().cost().crystalItem(), MagicConfigParser.MAGIC + ".cost.crystalItem", errors);
         if (!errors.isEmpty() || parsed.settings() == null || parsed.arcanes() == null || parsed.fields() == null) {
             return null;
         }
-        return new Loaded(parsed.settings(), arcanes, new FieldsConfig(parsed.fields().sets(), catalysts), upgrade);
+        return new Loaded(parsed.settings(), arcanes, new FieldsConfig(parsed.fields().sets(), catalysts), upgrade,
+                crystal);
     }
 
     private static Item item(String id, String path, ConfigErrors errors) {

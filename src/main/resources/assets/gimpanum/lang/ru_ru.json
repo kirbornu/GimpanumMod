@@ -322,5 +322,6 @@
     "item.gimpanum.glyph_im": "Глиф ИМ",
     "item.gimpanum.glyph_kol": "Глиф КОЛ",
     "item.gimpanum.glyph_lun": "Глиф ЛУН",
-    "item.gimpanum.glyph_mar": "Глиф МАР"
+    "item.gimpanum.glyph_mar": "Глиф МАР",
+    "gimpanum.magic.fail.crystal": "Не хватает хрусталя на это заклинание"
 }

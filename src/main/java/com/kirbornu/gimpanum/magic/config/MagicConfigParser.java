@@ -43,6 +43,11 @@ public final class MagicConfigParser {
      */
     private static final String SCHEMA_KEY = "$schema";
 
+    /** Чем платят хрусталём, если в старом {@code magic.json} этого не сказано. */
+    public static final String DEFAULT_CRYSTAL = "gimpanum:crystal_shard";
+    /** Сколько рун на осколок, если в старом {@code magic.json} этого не сказано. */
+    public static final int DEFAULT_RUNES_PER_CRYSTAL = 4;
+
     /** Всё, что прочитано из трёх файлов. */
     public record Parsed(MagicSettings settings, Map<String, ArcaneDef> arcanes, FieldsConfig fields) {
     }
@@ -113,12 +118,19 @@ public final class MagicConfigParser {
         MagicSettings.Cost cost = null;
         Json costJson = json.object("cost");
         if (costJson != null) {
-            costJson.rejectUnknown(Set.of("foodPerRune", "canKill", "healthPerFood"));
+            costJson.rejectUnknown(Set.of("foodPerRune", "canKill", "healthPerFood", "crystalItem",
+                    "runesPerCrystal"));
             Double food = costJson.number("foodPerRune", 0.0, 1000.0);
             Boolean canKill = costJson.bool("canKill");
             Double health = costJson.number("healthPerFood", 0.0, 1000.0);
-            if (food != null && canKill != null && health != null) {
-                cost = new MagicSettings.Cost(food, canKill, health);
+            // Хрусталь появился в цене позже еды, поэтому эти два поля
+            // необязательны: старый magic.json без них обязан читаться, а не
+            // ронять сервер на образец. Без них — значения образца.
+            String crystal = costJson.has("crystalItem") ? costJson.string("crystalItem") : DEFAULT_CRYSTAL;
+            Integer perCrystal = costJson.has("runesPerCrystal")
+                    ? costJson.integer("runesPerCrystal", 0, 1000) : DEFAULT_RUNES_PER_CRYSTAL;
+            if (food != null && canKill != null && health != null && crystal != null && perCrystal != null) {
+                cost = new MagicSettings.Cost(food, canKill, health, crystal, perCrystal);
             }
         }
         Double cooldown = json.number("cooldownSeconds", 0.0, 3600.0);

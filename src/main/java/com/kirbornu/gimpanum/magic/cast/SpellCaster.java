@@ -33,6 +33,7 @@ public final class SpellCaster {
         COOLDOWN,
         NOT_READY,
         PRICE,
+        CRYSTAL,
         LIMIT
     }
 
@@ -53,8 +54,9 @@ public final class SpellCaster {
         MagicConfig.Loaded config = MagicConfig.get();
         Program<Arcane> program = compile(runescripts, catalyst, config).program();
         int runes = runescripts.stream().mapToInt(word -> word.length).sum();
-        if (!SpellPayment.current().tryPay(player, runes, config.settings())) {
-            return Optional.of(Failure.PRICE);
+        Optional<Failure> unpaid = SpellPayment.current().tryPay(player, runes, config);
+        if (unpaid.isPresent()) {
+            return unpaid;
         }
         SpellCooldown.start(player, config.settings().cooldownSeconds());
 

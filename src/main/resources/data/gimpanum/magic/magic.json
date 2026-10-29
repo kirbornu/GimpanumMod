@@ -18,7 +18,9 @@
   "cost": {
     "foodPerRune": 1.0,
     "canKill": false,
-    "healthPerFood": 1.0
+    "healthPerFood": 1.0,
+    "crystalItem": "gimpanum:crystal_shard",
+    "runesPerCrystal": 4
   },
   "cooldownSeconds": 3.0,
   "tabletUpgradeItem": "minecraft:netherite_ingot",

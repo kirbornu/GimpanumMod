@@ -123,4 +123,39 @@ class MagicConfigParserTest {
         assertNull(parse(resource("arcanes.json"), fields, resource("magic.json"), errors));
         assertTrue(String.join("\n", errors.messages()).contains("уже привязан к набору «scalk»"));
     }
+
+    @Test
+    void crystalCostRoundsUpToWholeCrystals() {
+        MagicConfigParser.Parsed parsed = parse(resource("arcanes.json"), resource("fields.json"),
+                resource("magic.json"), new ConfigErrors());
+        assertNotNull(parsed);
+        MagicSettings.Cost cost = parsed.settings().cost();
+        assertEquals("gimpanum:crystal_shard", cost.crystalItem());
+        assertEquals(1, cost.crystals(1));
+        assertEquals(1, cost.crystals(4));
+        assertEquals(2, cost.crystals(5));
+        assertEquals(3, cost.crystals(12));
+    }
+
+    @Test
+    void oldMagicJsonWithoutCrystalStillReads() {
+        JsonObject magic = resource("magic.json").getAsJsonObject();
+        magic.getAsJsonObject("cost").remove("crystalItem");
+        magic.getAsJsonObject("cost").remove("runesPerCrystal");
+        ConfigErrors errors = new ConfigErrors();
+        MagicConfigParser.Parsed parsed = parse(resource("arcanes.json"), resource("fields.json"), magic, errors);
+        assertTrue(errors.isEmpty(), () -> String.join("\n", errors.messages()));
+        assertNotNull(parsed);
+        assertEquals(MagicConfigParser.DEFAULT_RUNES_PER_CRYSTAL, parsed.settings().cost().runesPerCrystal());
+    }
+
+    @Test
+    void crystalPaymentCanBeTurnedOff() {
+        JsonObject magic = resource("magic.json").getAsJsonObject();
+        magic.getAsJsonObject("cost").addProperty("runesPerCrystal", 0);
+        MagicConfigParser.Parsed parsed = parse(resource("arcanes.json"), resource("fields.json"), magic,
+                new ConfigErrors());
+        assertNotNull(parsed);
+        assertEquals(0, parsed.settings().cost().crystals(40));
+    }
 }

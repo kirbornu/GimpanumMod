@@ -322,5 +322,6 @@
     "item.gimpanum.glyph_im": "Glyph IM",
     "item.gimpanum.glyph_kol": "Glyph KOL",
     "item.gimpanum.glyph_lun": "Glyph LUN",
-    "item.gimpanum.glyph_mar": "Glyph MAR"
+    "item.gimpanum.glyph_mar": "Glyph MAR",
+    "gimpanum.magic.fail.crystal": "Not enough crystal for this spell"
 }

@@ -1,13 +1,15 @@
 package com.kirbornu.gimpanum.magic.cast;
 
-import com.kirbornu.gimpanum.magic.config.MagicSettings;
+import com.kirbornu.gimpanum.magic.config.MagicConfig;
 import net.minecraft.server.level.ServerPlayer;
+
+import java.util.Optional;
 
 /**
  * Чем платят за заклинание.
  *
- * <p>Точка расширения: сейчас платят едой, потом будут платить эрозией и
- * хрусталём. Новый способ — новая реализация, подставленная в
+ * <p>Точка расширения: сейчас платят едой и хрусталём, потом добавится
+ * эрозия. Новый способ — новая реализация, подставленная в
  * {@link #current}; табличка и посохи об этом знать не будут.
  */
 public interface SpellPayment {
@@ -16,9 +18,9 @@ public interface SpellPayment {
      * Списать цену, если игрок может её заплатить.
      *
      * @param runes сколько рун в заклинании
-     * @return {@code true} — заплачено; {@code false} — не списано ничего
+     * @return пусто — заплачено; иначе чего не хватило, и не списано ничего
      */
-    boolean tryPay(ServerPlayer player, int runes, MagicSettings settings);
+    Optional<SpellCaster.Failure> tryPay(ServerPlayer player, int runes, MagicConfig.Loaded config);
 
     /** Действующий способ оплаты. */
     static SpellPayment current() {
@@ -31,7 +33,7 @@ public interface SpellPayment {
 
     /** Хранилище для {@link #current()}: у интерфейса не бывает изменяемых полей. */
     final class Holder {
-        private static SpellPayment current = new FoodPayment();
+        private static SpellPayment current = new RunePayment();
 
         private Holder() {
         }
