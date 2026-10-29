@@ -5,9 +5,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.kirbornu.gimpanum.Gimpanum;
 import com.kirbornu.gimpanum.lore.LoreBooks;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -18,6 +21,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -30,6 +34,11 @@ import java.util.Optional;
  *
  * <p>Книга лора — здесь же, со своим шансом у каждого моба. Таблицей она и
  * раньше не выдавалась: книга каждый раз разная и собирается в коде.
+ *
+ * <p>Вместо предмета можно указать тег предметов — {@code "#gimpanum:glyphs"}:
+ * тогда выпадает случайный предмет из тега, каждый раз свой. Так одна запись
+ * описывает «любой из двенадцати глифов», а не двенадцать записей с долями
+ * шанса.
  */
 @EventBusSubscriber(modid = Gimpanum.MOD_ID)
 public final class MobLoot {
@@ -86,28 +95,44 @@ public final class MobLoot {
         event.getDrops().add(new ItemEntity(dead.level(), dead.getX(), dead.getY(), dead.getZ(), stack));
     }
 
-    /** Одна запись списка: предмет, шанс, от скольки до скольки штук. */
-    private record Drop(Item item, double chance, int min, int max) {
+    /**
+     * Одна запись списка: что выпадает, шанс, от скольки до скольки штук.
+     *
+     * @param items один предмет или все предметы тега — тогда выпадает случайный
+     */
+    private record Drop(List<Item> items, double chance, int min, int max) {
     }
 
     /** Выпала ли запись и сколько штук. */
     private static Optional<ItemStack> roll(JsonElement entry, RandomSource random) {
         return parse(entry)
                 .filter(drop -> random.nextDouble() < drop.chance())
-                .map(drop -> new ItemStack(drop.item(),
+                .map(drop -> new ItemStack(drop.items().get(random.nextInt(drop.items().size())),
                         drop.max() > drop.min() ? drop.min() + random.nextInt(drop.max() - drop.min() + 1) : drop.min()))
                 .filter(stack -> !stack.isEmpty());
     }
 
-    /** Запись, если она похожа на запись и предмет есть в игре. */
+    /**
+     * Запись, если она похожа на запись и предмет есть в игре. Тег без
+     * единого предмета — такая же ошибка, как неизвестный предмет.
+     */
     private static Optional<Drop> parse(JsonElement entry) {
         try {
             JsonObject json = entry.getAsJsonObject();
-            ResourceLocation id = ResourceLocation.parse(json.get("item").getAsString());
+            String name = json.get("item").getAsString();
             double chance = json.has("chance") ? json.get("chance").getAsDouble() : 1.0;
             int min = json.has("min") ? json.get("min").getAsInt() : 1;
             int max = json.has("max") ? json.get("max").getAsInt() : min;
-            return BuiltInRegistries.ITEM.getOptional(id).map(item -> new Drop(item, chance, min, max));
+            List<Item> items;
+            if (name.startsWith("#")) {
+                TagKey<Item> tag = TagKey.create(Registries.ITEM, ResourceLocation.parse(name.substring(1)));
+                items = BuiltInRegistries.ITEM.getTag(tag)
+                        .map(set -> set.stream().map(Holder::value).toList())
+                        .orElse(List.of());
+            } else {
+                items = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(name)).map(List::of).orElse(List.of());
+            }
+            return items.isEmpty() ? Optional.empty() : Optional.of(new Drop(items, chance, min, max));
         } catch (RuntimeException broken) {
             return Optional.empty();
         }
