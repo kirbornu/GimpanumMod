@@ -178,6 +178,7 @@ public class SpellEntity extends Entity {
 
     private void startInterfix(Arcane arcane) {
         interfixArcane = arcane;
+        arcane.sounds().play((ServerLevel) level(), Role.INTERFIX, position());
         for (Behavior behavior : arcane.behaviors(Role.INTERFIX)) {
             processes.add(behavior.start(this));
         }

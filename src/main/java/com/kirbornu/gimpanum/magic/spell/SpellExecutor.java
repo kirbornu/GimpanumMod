@@ -86,6 +86,7 @@ public final class SpellExecutor {
     }
 
     private static void act(SpellContext context, Arcane arcane, Role role) {
+        arcane.sounds().play(context.level(), role, context.entity().position());
         boolean acted = false;
         for (Behavior behavior : arcane.behaviors(role)) {
             if (behavior.kind() == Behavior.Kind.ACTION) {
@@ -114,6 +115,7 @@ public final class SpellExecutor {
             }
         }
         bursts(context, root.particles(Role.ROOT));
+        root.sounds().play(context.level(), Role.ROOT, context.entity().position());
     }
 
     /** Вспышки корня — на каждой цели, а если корень работал с формой, ещё и над её блоками. */

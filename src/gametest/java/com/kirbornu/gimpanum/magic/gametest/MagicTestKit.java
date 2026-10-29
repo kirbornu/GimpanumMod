@@ -115,7 +115,7 @@ final class MagicTestKit {
         if (!errors.isEmpty()) {
             throw new IllegalArgumentException(String.join("; ", errors.messages()));
         }
-        return new Arcane(new ArcaneDef(id, id, order, Map.of(), null), behaviors, ArcaneParticles.NONE);
+        return new Arcane(new ArcaneDef(id, id, order, Map.of(), null, null), behaviors, ArcaneParticles.NONE);
     }
 
     /** Ошибки разбора одного поведения в роли — для проверок валидации. */

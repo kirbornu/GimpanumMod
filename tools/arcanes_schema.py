@@ -107,6 +107,10 @@ defs["particleLayer"]={"type":"object","description":"Слой частиц ро
   "properties":{"particle":{"type":"object","required":["type"],"description":"Частица в ванильном JSON-формате, как у /particle.","properties":{"type":dict(RID,description="Id типа частицы.",examples=["minecraft:flame","minecraft:dust","minecraft:dust_color_transition"])},
      "examples":[{"type":"minecraft:flame"},{"type":"minecraft:dust","color":[1.0,0.4,0.0],"scale":1.0}]},
    "count":intg(1,1000,"Частиц в точке узора. По умолчанию 1."),"spread":num(0,16,"Разброс, блоков. По умолчанию 0."),"speed":num(0,10,"Скорость. По умолчанию 0.")}}
+defs["sound"]={"type":"object","description":"Звук роли.","required":["sound"],"additionalProperties":False,
+  "properties":{"sound":dict(RID,description="Id звука, как в /playsound.",examples=["minecraft:entity.blaze.shoot","minecraft:block.amethyst_block.chime"]),
+   "volume":num(0,10,"Громкость; больше 1 — слышно дальше (16 блоков на единицу). По умолчанию 1."),
+   "pitch":num(0.5,2,"Высота тона. По умолчанию 1.")}}
 role=lambda d,ref:{"type":"array","description":d,"items":{"$ref":"#/definitions/"+ref}}
 arcane={"type":"object","required":["id","name","order"],"additionalProperties":False,
  "properties":{
@@ -118,7 +122,9 @@ arcane={"type":"object","required":["id","name","order"],"additionalProperties":
   "suffix":role("Поведения в роли суффикса.","roleBehavior"),
   "interfix":role("Поведения в роли интерфикса — только процессы.","interfixBehavior"),
   "particles":{"type":"object","additionalProperties":False,"description":"Частицы по ролям.",
-     "properties":{k:{"$ref":"#/definitions/particleLayer"} for k in ["root","prefix","suffix","interfix"]}}}}
+     "properties":{k:{"$ref":"#/definitions/particleLayer"} for k in ["root","prefix","suffix","interfix"]}},
+  "sounds":{"type":"object","additionalProperties":False,"description":"Звуки по ролям: корень — при каждом срабатывании, префикс и суффикс — один раз, интерфикс — в начале.",
+     "properties":{k:{"$ref":"#/definitions/sound"} for k in ["root","prefix","suffix","interfix"]}}}}
 schema={"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://github.com/kirbornu/GimpanumMod/arcanes.schema.json",
  "title":"Арканы рунной магии Гимпанума (arcanes.json)",
  "description":"Схема для подсказок и проверки в редакторе. Окончательную проверку делает мод при /gimpanum magic reload: он ещё сверяет существование эффектов, блоков, существ и частиц. Описание — docs/magic-config.md.",

@@ -11,9 +11,10 @@ import java.util.Map;
  *
  * @param behaviors списки поведений для каждой из четырёх ролей
  * @param particles описание частиц по ролям или {@code null}
+ * @param sounds    описание звуков по ролям или {@code null}
  */
 public record ArcaneDef(String id, String name, int order, Map<Role, List<BehaviorSpec>> behaviors,
-                        Json particles) {
+                        Json particles, Json sounds) {
 
     public List<BehaviorSpec> behaviors(Role role) {
         return behaviors.getOrDefault(role, List.of());

@@ -24,6 +24,12 @@
         "prefix":   {"particle": {"type": "minecraft:dust", "color": [1.0, 0.45, 0.05], "scale": 0.6}, "count": 1},
         "suffix":   {"particle": {"type": "minecraft:small_flame"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:smoke"}, "count": 2, "spread": 0.1, "speed": 0.01}
+      },
+      "sounds": {
+        "root":     {"sound": "minecraft:entity.blaze.shoot", "volume": 1.0, "pitch": 1.0},
+        "prefix":   {"sound": "minecraft:item.firecharge.use", "volume": 0.8, "pitch": 1.2},
+        "suffix":   {"sound": "minecraft:block.fire.ambient", "volume": 1.0, "pitch": 1.0},
+        "interfix": {"sound": "minecraft:entity.blaze.burn", "volume": 0.8, "pitch": 1.0}
       }
     },
     {
@@ -47,6 +53,12 @@
         "prefix":   {"particle": {"type": "minecraft:dust", "color": [0.2, 0.45, 1.0], "scale": 0.6}, "count": 1},
         "suffix":   {"particle": {"type": "minecraft:bubble_pop"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:falling_water"}, "count": 3, "spread": 0.15, "speed": 0.0}
+      },
+      "sounds": {
+        "root":     {"sound": "minecraft:item.bucket.empty", "volume": 1.0, "pitch": 1.0},
+        "prefix":   {"sound": "minecraft:entity.player.splash", "volume": 0.6, "pitch": 1.2},
+        "suffix":   {"sound": "minecraft:block.bubble_column.upwards_inside", "volume": 1.0, "pitch": 1.0},
+        "interfix": {"sound": "minecraft:block.pointed_dripstone.drip_water", "volume": 1.0, "pitch": 1.0}
       }
     },
     {
@@ -70,6 +82,12 @@
         "prefix":   {"particle": {"type": "minecraft:dust", "color": [0.3, 1.0, 0.4], "scale": 0.6}, "count": 1},
         "suffix":   {"particle": {"type": "minecraft:happy_villager"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:dust_color_transition", "from_color": [0.3, 1.0, 0.4], "to_color": [1.0, 1.0, 1.0], "scale": 1.0}, "count": 2, "spread": 0.1, "speed": 0.0}
+      },
+      "sounds": {
+        "root":     {"sound": "minecraft:block.amethyst_block.chime", "volume": 1.0, "pitch": 1.2},
+        "prefix":   {"sound": "minecraft:block.amethyst_cluster.hit", "volume": 0.8, "pitch": 1.4},
+        "suffix":   {"sound": "minecraft:entity.experience_orb.pickup", "volume": 0.6, "pitch": 1.0},
+        "interfix": {"sound": "minecraft:block.amethyst_block.resonate", "volume": 0.8, "pitch": 1.0}
       }
     },
     {
@@ -94,6 +112,12 @@
         "prefix":   {"particle": {"type": "minecraft:dust", "color": [1.0, 0.95, 0.5], "scale": 0.6}, "count": 1},
         "suffix":   {"particle": {"type": "minecraft:glow"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:end_rod"}, "count": 1, "spread": 0.05, "speed": 0.0}
+      },
+      "sounds": {
+        "root":     {"sound": "minecraft:block.beacon.activate", "volume": 0.8, "pitch": 1.4},
+        "prefix":   {"sound": "minecraft:block.respawn_anchor.charge", "volume": 0.6, "pitch": 1.6},
+        "suffix":   {"sound": "minecraft:entity.glow_squid.squirt", "volume": 0.8, "pitch": 1.2},
+        "interfix": {"sound": "minecraft:block.beacon.ambient", "volume": 1.0, "pitch": 1.2}
       }
     }
   ]

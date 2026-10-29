@@ -212,7 +212,8 @@ public final class MagicConfigParser {
     }
 
     private static ArcaneDef arcane(Json json) {
-        json.rejectUnknown(Set.of("id", "name", "order", "root", "prefix", "suffix", "interfix", "particles"));
+        json.rejectUnknown(Set.of("id", "name", "order", "root", "prefix", "suffix", "interfix", "particles",
+                "sounds"));
         String id = json.string("id");
         if (id != null && !validId(id)) {
             json.errors().add(json.path("id"), "id — латиница в нижнем регистре, цифры и «_», не длиннее "
@@ -231,13 +232,17 @@ public final class MagicConfigParser {
         if (particles != null) {
             particles.rejectUnknown(ROLE_KEYS);
         }
+        Json sounds = json.has("sounds") ? json.object("sounds") : null;
+        if (sounds != null) {
+            sounds.rejectUnknown(ROLE_KEYS);
+        }
         if (id == null) {
             return null;
         }
         // С испорченными именем или номером аркан всё равно идёт дальше —
         // ошибка уже записана, и применено ничего не будет, — чтобы игра
         // проверила и его поведения и показала их ошибки в тот же раз.
-        return new ArcaneDef(id, name != null ? name : id, order != null ? order : 1, behaviors, particles);
+        return new ArcaneDef(id, name != null ? name : id, order != null ? order : 1, behaviors, particles, sounds);
     }
 
     private static List<BehaviorSpec> behaviorList(Json arcane, String role) {

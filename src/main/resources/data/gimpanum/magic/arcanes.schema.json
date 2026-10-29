@@ -94,6 +94,25 @@
               "$ref": "#/definitions/particleLayer"
             }
           }
+        },
+        "sounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Звуки по ролям: корень — при каждом срабатывании, префикс и суффикс — один раз, интерфикс — в начале.",
+          "properties": {
+            "root": {
+              "$ref": "#/definitions/sound"
+            },
+            "prefix": {
+              "$ref": "#/definitions/sound"
+            },
+            "suffix": {
+              "$ref": "#/definitions/sound"
+            },
+            "interfix": {
+              "$ref": "#/definitions/sound"
+            }
+          }
         }
       }
     },
@@ -2865,6 +2884,37 @@
           "minimum": 0,
           "maximum": 10,
           "description": "Скорость. По умолчанию 0."
+        }
+      }
+    },
+    "sound": {
+      "type": "object",
+      "description": "Звук роли.",
+      "required": [
+        "sound"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sound": {
+          "type": "string",
+          "pattern": "^([a-z0-9_.-]+:)?[a-z0-9_./-]+$",
+          "description": "Id звука, как в /playsound.",
+          "examples": [
+            "minecraft:entity.blaze.shoot",
+            "minecraft:block.amethyst_block.chime"
+          ]
+        },
+        "volume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Громкость; больше 1 — слышно дальше (16 блоков на единицу). По умолчанию 1."
+        },
+        "pitch": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 2,
+          "description": "Высота тона. По умолчанию 1."
         }
       }
     }

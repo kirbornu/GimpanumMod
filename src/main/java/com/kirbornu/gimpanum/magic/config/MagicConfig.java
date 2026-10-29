@@ -12,15 +12,18 @@ import com.kirbornu.gimpanum.magic.core.FieldSet;
 import com.kirbornu.gimpanum.magic.core.Role;
 import com.kirbornu.gimpanum.magic.particle.ArcaneParticles;
 import com.kirbornu.gimpanum.magic.particle.ParticleLayer;
+import com.kirbornu.gimpanum.magic.sound.ArcaneSounds;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -41,6 +44,7 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -166,7 +170,7 @@ public final class MagicConfig {
                 }
                 behaviors.put(role, List.copyOf(list));
             }
-            arcanes.put(def.id(), new Arcane(def, behaviors, particles(def.particles(), ops)));
+            arcanes.put(def.id(), new Arcane(def, behaviors, particles(def.particles(), ops), sounds(def.sounds())));
         }
 
         // Id предметов приводятся к полному виду: «sculk» в файле и
@@ -240,6 +244,38 @@ public final class MagicConfig {
             }
         }
         return new ArcaneParticles(layers);
+    }
+
+    /**
+     * Звуки аркана: по звуку на роль. Звук — id ванильного (или любого
+     * зарегистрированного) звука, как в команде {@code /playsound}.
+     */
+    private static ArcaneSounds sounds(Json json) {
+        if (json == null) {
+            return ArcaneSounds.NONE;
+        }
+        Map<Role, ArcaneSounds.Sound> sounds = new EnumMap<>(Role.class);
+        for (Role role : Role.values()) {
+            if (!json.has(role.key())) {
+                continue;
+            }
+            Json sound = json.object(role.key());
+            if (sound == null) {
+                continue;
+            }
+            sound.rejectUnknown(Set.of("sound", "volume", "pitch"));
+            String id = sound.string("sound");
+            ResourceLocation location = id == null ? null : ResourceLocation.tryParse(id);
+            Optional<Holder.Reference<SoundEvent>> event = location == null ? Optional.empty()
+                    : BuiltInRegistries.SOUND_EVENT.getHolder(location);
+            if (id != null && event.isEmpty()) {
+                sound.errors().add(sound.path("sound"), "нет такого звука: " + id);
+            }
+            double volume = sound.has("volume") ? orDefault(sound.number("volume", 0.0, 10.0), 1.0) : 1.0;
+            double pitch = sound.has("pitch") ? orDefault(sound.number("pitch", 0.5, 2.0), 1.0) : 1.0;
+            event.ifPresent(e -> sounds.put(role, new ArcaneSounds.Sound(e, (float) volume, (float) pitch)));
+        }
+        return new ArcaneSounds(sounds);
     }
 
     private static <T> T orDefault(T value, T fallback) {
