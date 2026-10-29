@@ -1,6 +1,7 @@
 package com.kirbornu.gimpanum.magic.tablet;
 
 import com.kirbornu.gimpanum.magic.MagicContent;
+import com.kirbornu.gimpanum.magic.cast.CooldownView;
 import com.kirbornu.gimpanum.magic.cast.SpellCaster;
 import com.kirbornu.gimpanum.magic.config.MagicConfig;
 import com.kirbornu.gimpanum.magic.core.Rune;
@@ -29,6 +30,9 @@ import java.util.stream.Collectors;
  * вместе с заклинанием.
  */
 public class TabletItem extends Item {
+
+    /** Лиловый — цвет рун на текстуре таблички. */
+    private static final int BAR_COLOR = 0x9678D2;
 
     public TabletItem(Properties properties) {
         super(properties);
@@ -65,6 +69,25 @@ public class TabletItem extends Item {
             buffer.writeEnum(hand);
             buffer.writeUtf(upgrade == null ? "" : BuiltInRegistries.ITEM.getKey(upgrade).toString());
         });
+    }
+
+    /**
+     * Полоска перезарядки магии — на всех табличках сразу, как была бы у
+     * ванильной перезарядки, но не мешая открыть сетку.
+     */
+    @Override
+    public boolean isBarVisible(ItemStack tablet) {
+        return CooldownView.remaining() > 0;
+    }
+
+    @Override
+    public int getBarWidth(ItemStack tablet) {
+        return Math.round(13 * CooldownView.remaining());
+    }
+
+    @Override
+    public int getBarColor(ItemStack tablet) {
+        return BAR_COLOR;
     }
 
     @Override
