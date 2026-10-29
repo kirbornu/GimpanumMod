@@ -43,6 +43,25 @@ public final class MagicConfigParser {
      */
     private static final String SCHEMA_KEY = "$schema";
 
+    /*
+     * Допустимые поля каждого объекта трёх файлов. Вынесены сюда, чтобы
+     * модульный тест сверял с ними JSON Schema: схема собирается скриптом
+     * отдельно и иначе разошлась бы с разбором незаметно.
+     */
+    public static final Set<String> MAGIC_KEYS = Set.of(SCHEMA_KEY, "runes", "turnAngle", "stepMultiplier", "cost",
+            "cooldownSeconds", "tabletUpgradeItem", "limits", "homing");
+    public static final Set<String> COST_KEYS = Set.of("foodPerRune", "canKill", "healthPerFood", "crystalItem",
+            "runesPerCrystal");
+    public static final Set<String> LIMITS_KEYS = Set.of("blocksPerSpell", "entitiesPerSpell",
+            "entityLifetimeSeconds", "homingEntities", "particlesPerTick", "defaultTargetRadius");
+    public static final Set<String> HOMING_KEYS = Set.of("searchIntervalTicks", "searchRadius");
+    public static final Set<String> ARCANES_KEYS = Set.of(SCHEMA_KEY, "arcanes");
+    public static final Set<String> ARCANE_KEYS = Set.of("id", "name", "order", "root", "prefix", "suffix",
+            "interfix", "particles", "sounds");
+    public static final Set<String> FIELDS_KEYS = Set.of(SCHEMA_KEY, "sets");
+    public static final Set<String> SET_KEYS = Set.of("catalysts", "turnAngle", "stepMultiplier", "fields");
+    public static final Set<String> FIELD_KEYS = Set.of("arcane", "center", "radius");
+
     /** Чем платят хрусталём, если в старом {@code magic.json} этого не сказано. */
     public static final String DEFAULT_CRYSTAL = "gimpanum:crystal_shard";
     /** Сколько рун на осколок, если в старом {@code magic.json} этого не сказано. */
@@ -93,8 +112,7 @@ public final class MagicConfigParser {
         if (json == null) {
             return null;
         }
-        json.rejectUnknown(Set.of(SCHEMA_KEY, "runes", "turnAngle", "stepMultiplier", "cost", "cooldownSeconds",
-                "tabletUpgradeItem", "limits", "homing"));
+        json.rejectUnknown(MAGIC_KEYS);
 
         List<Vector3> vectors = new ArrayList<>();
         Json runes = json.object("runes");
@@ -118,8 +136,7 @@ public final class MagicConfigParser {
         MagicSettings.Cost cost = null;
         Json costJson = json.object("cost");
         if (costJson != null) {
-            costJson.rejectUnknown(Set.of("foodPerRune", "canKill", "healthPerFood", "crystalItem",
-                    "runesPerCrystal"));
+            costJson.rejectUnknown(COST_KEYS);
             Double food = costJson.number("foodPerRune", 0.0, 1000.0);
             Boolean canKill = costJson.bool("canKill");
             Double health = costJson.number("healthPerFood", 0.0, 1000.0);
@@ -139,8 +156,7 @@ public final class MagicConfigParser {
         MagicSettings.Limits limits = null;
         Json limitsJson = json.object("limits");
         if (limitsJson != null) {
-            limitsJson.rejectUnknown(Set.of("blocksPerSpell", "entitiesPerSpell", "entityLifetimeSeconds",
-                    "homingEntities", "particlesPerTick", "defaultTargetRadius"));
+            limitsJson.rejectUnknown(LIMITS_KEYS);
             Integer blocks = limitsJson.integer("blocksPerSpell", 0, 100_000);
             Integer entities = limitsJson.integer("entitiesPerSpell", 1, 1000);
             Double lifetime = limitsJson.number("entityLifetimeSeconds", 1.0, 3600.0);
@@ -156,7 +172,7 @@ public final class MagicConfigParser {
         MagicSettings.Homing homing = null;
         Json homingJson = json.object("homing");
         if (homingJson != null) {
-            homingJson.rejectUnknown(Set.of("searchIntervalTicks", "searchRadius"));
+            homingJson.rejectUnknown(HOMING_KEYS);
             Integer interval = homingJson.integer("searchIntervalTicks", 1, 1200);
             Double radius = homingJson.number("searchRadius", 0.0, 256.0);
             if (interval != null && radius != null) {
@@ -179,7 +195,7 @@ public final class MagicConfigParser {
         if (json == null) {
             return null;
         }
-        json.rejectUnknown(Set.of(SCHEMA_KEY, "arcanes"));
+        json.rejectUnknown(ARCANES_KEYS);
         JsonArray list = json.array("arcanes");
         if (list == null) {
             return null;
@@ -212,8 +228,7 @@ public final class MagicConfigParser {
     }
 
     private static ArcaneDef arcane(Json json) {
-        json.rejectUnknown(Set.of("id", "name", "order", "root", "prefix", "suffix", "interfix", "particles",
-                "sounds"));
+        json.rejectUnknown(ARCANE_KEYS);
         String id = json.string("id");
         if (id != null && !validId(id)) {
             json.errors().add(json.path("id"), "id — латиница в нижнем регистре, цифры и «_», не длиннее "
@@ -283,7 +298,7 @@ public final class MagicConfigParser {
         if (json == null) {
             return null;
         }
-        json.rejectUnknown(Set.of(SCHEMA_KEY, "sets"));
+        json.rejectUnknown(FIELDS_KEYS);
         Json sets = json.object("sets");
         if (sets == null) {
             return null;
@@ -295,7 +310,7 @@ public final class MagicConfigParser {
             if (set == null) {
                 continue;
             }
-            set.rejectUnknown(Set.of("catalysts", "turnAngle", "stepMultiplier", "fields"));
+            set.rejectUnknown(SET_KEYS);
             if (set.has("catalysts")) {
                 JsonArray list = set.array("catalysts");
                 for (int i = 0; list != null && i < list.size(); i++) {
@@ -322,7 +337,7 @@ public final class MagicConfigParser {
                     continue;
                 }
                 Json field = new Json(object, path, set.errors());
-                field.rejectUnknown(Set.of("arcane", "center", "radius"));
+                field.rejectUnknown(FIELD_KEYS);
                 String arcane = field.string("arcane");
                 if (arcane != null && arcanes != null && !arcanes.contains(arcane)) {
                     field.errors().add(field.path("arcane"), "аркана «" + arcane + "» нет в " + ARCANES);

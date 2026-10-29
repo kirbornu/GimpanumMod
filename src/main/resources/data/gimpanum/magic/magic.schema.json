@@ -1,0 +1,293 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kirbornu/GimpanumMod/magic.schema.json",
+  "title": "Общие настройки рунной магии Гимпанума (magic.json)",
+  "description": "Подсказки и проверка в редакторе. Что предметы существуют, проверяет мод при /gimpanum magic reload. Описание — docs/magic-config.md.",
+  "type": "object",
+  "required": [
+    "runes",
+    "turnAngle",
+    "stepMultiplier",
+    "cost",
+    "cooldownSeconds",
+    "tabletUpgradeItem",
+    "limits",
+    "homing"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Путь к этой схеме — для редактора; мод это поле пропускает."
+    },
+    "runes": {
+      "type": "object",
+      "description": "Векторы всех двенадцати рун.",
+      "required": [
+        "an",
+        "be",
+        "vol",
+        "gi",
+        "dar",
+        "er",
+        "zhin",
+        "zar",
+        "im",
+        "kol",
+        "lun",
+        "mar"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "an": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны АН [x, y, z]."
+        },
+        "be": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны БЭ [x, y, z]."
+        },
+        "vol": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны ВОЛ [x, y, z]."
+        },
+        "gi": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны ГИ [x, y, z]."
+        },
+        "dar": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны ДАР [x, y, z]."
+        },
+        "er": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны ЭР [x, y, z]."
+        },
+        "zhin": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны ЖИН [x, y, z]."
+        },
+        "zar": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны ЗАР [x, y, z]."
+        },
+        "im": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны ИМ [x, y, z]."
+        },
+        "kol": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны КОЛ [x, y, z]."
+        },
+        "lun": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны ЛУН [x, y, z]."
+        },
+        "mar": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Вектор руны МАР [x, y, z]."
+        }
+      }
+    },
+    "turnAngle": {
+      "type": "number",
+      "description": "Угол поворота черепахи после шага, градусы."
+    },
+    "stepMultiplier": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1000,
+      "description": "Множитель длины шага."
+    },
+    "cost": {
+      "type": "object",
+      "description": "Цена заклинания.",
+      "required": [
+        "foodPerRune",
+        "canKill",
+        "healthPerFood"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "foodPerRune": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Цена руны в единицах еды (1 = половинка окорочка)."
+        },
+        "canKill": {
+          "type": "boolean",
+          "description": "Может ли цена убить. false — не хватает без смерти, каста нет."
+        },
+        "healthPerFood": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Сколько здоровья за единицу еды, когда еда кончилась."
+        },
+        "crystalItem": {
+          "type": "string",
+          "pattern": "^([a-z0-9_.-]+:)?[a-z0-9_./-]+$",
+          "description": "Чем платят хрусталём. Необязательно, по умолчанию gimpanum:crystal_shard.",
+          "examples": [
+            "gimpanum:crystal_shard"
+          ]
+        },
+        "runesPerCrystal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Сколько рун оплачивает один предмет; начатая порция — целый. 0 — хрусталём не платят. Необязательно, по умолчанию 4."
+        }
+      }
+    },
+    "cooldownSeconds": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 3600,
+      "description": "Перезарядка магии игрока после каста, с."
+    },
+    "tabletUpgradeItem": {
+      "type": "string",
+      "pattern": "^([a-z0-9_.-]+:)?[a-z0-9_./-]+$",
+      "description": "Предмет для слотов улучшения таблички.",
+      "examples": [
+        "minecraft:netherite_ingot"
+      ]
+    },
+    "limits": {
+      "type": "object",
+      "description": "Пределы.",
+      "required": [
+        "blocksPerSpell",
+        "entitiesPerSpell",
+        "entityLifetimeSeconds",
+        "homingEntities",
+        "particlesPerTick",
+        "defaultTargetRadius"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "blocksPerSpell": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000,
+          "description": "Сколько блоков заклинание может изменить."
+        },
+        "entitiesPerSpell": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Сколько всего заклинание может породить: сущностей-заклинаний, взрывов, молний, призванных, снарядов."
+        },
+        "entityLifetimeSeconds": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3600,
+          "description": "Жёсткий предел жизни сущности-заклинания, с."
+        },
+        "homingEntities": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Сколько сущностей может наводиться одновременно на сервере."
+        },
+        "particlesPerTick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000,
+          "description": "Частиц магии на весь сервер за тик."
+        },
+        "defaultTargetRadius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 256,
+          "description": "Радиус поиска цели по умолчанию, блоков."
+        }
+      }
+    },
+    "homing": {
+      "type": "object",
+      "description": "Самонаведение и поиск целей процессами.",
+      "required": [
+        "searchIntervalTicks",
+        "searchRadius"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "searchIntervalTicks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1200,
+          "description": "Как часто искать цель, тиков."
+        },
+        "searchRadius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 256,
+          "description": "Радиус поиска цели, блоков."
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 {
+  "$schema": "./fields.schema.json",
   "sets": {
     "default": {
       "catalysts": ["gimpanum:crystal_shard"],

@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
-"""Собрать JSON Schema для arcanes.json.
+"""Собрать JSON Schema для трёх файлов магии: arcanes.json, fields.json, magic.json.
 
-    python3 tools/arcanes_schema.py
+    python3 tools/magic_schemas.py
 
-Пишет src/main/resources/data/gimpanum/magic/arcanes.schema.json. Мод при
-каждой загрузке настроек кладёт её рядом с arcanes.json, и редактор берёт
-из неё подсказки и проверку.
+Пишет *.schema.json в src/main/resources/data/gimpanum/magic/. Мод при
+каждой загрузке настроек кладёт их рядом с файлами, и редактор берёт из них
+подсказки и проверку.
 
-Таблица поведений ниже повторяет BehaviorLibrary: имена, параметры, пределы.
-Добавили или поменяли поведение — поправьте таблицу и пересоберите. Игровой
-тест SchemaGameTests сверяет имена и параметры схемы с библиотекой и упадёт,
-если забыть.
+Таблица поведений ниже повторяет BehaviorLibrary: имена, параметры, пределы;
+поля и пределы fields.json и magic.json — MagicConfigParser. Поменяли код —
+поправьте здесь и пересоберите. Сверяют: игровой тест SchemaGameTests
+(поведения) и модульный MagicSchemaTest (поля всех объектов).
 """
 import json
 import os
 import sys
 
-OUT = os.path.join(os.path.dirname(__file__), '..', 'src', 'main', 'resources', 'data', 'gimpanum', 'magic',
-                   'arcanes.schema.json')
+OUT = os.path.join(os.path.dirname(__file__), '..', 'src', 'main', 'resources', 'data', 'gimpanum', 'magic')
 SEC=3600.0; REACH=32.0; AMOUNT=1000.0
 def num(lo,hi,d): return {"type":"number","minimum":lo,"maximum":hi,"description":d}
 def intg(lo,hi,d): return {"type":"integer","minimum":lo,"maximum":hi,"description":d}
@@ -132,8 +131,106 @@ schema={"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://githu
  "properties":{"$schema":{"type":"string","description":"Путь к этой схеме — для редактора; мод это поле пропускает."},
   "arcanes":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/arcane"}}},
  "definitions":dict({"arcane":arcane},**defs)}
+# --- fields.json ------------------------------------------------------------
+
+triple = {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}
+field_set = {
+    "type": "object", "required": ["fields"], "additionalProperties": False,
+    "properties": {
+        "catalysts": {"type": "array", "description": "Id предметов во второй руке, выбирающих этот набор. "
+                      "Один предмет — не больше чем в одном наборе.",
+                      "items": dict(RID, examples=["gimpanum:crystal_shard", "minecraft:sculk"])},
+        "turnAngle": {"type": "number", "description": "Свой угол поворота черепахи, градусы. Без него — из magic.json."},
+        "stepMultiplier": num(0, 1000, "Свой множитель шага. Без него — из magic.json."),
+        "fields": {"type": "array", "description": "Поля набора; порядок значим (ничьи — в пользу раннего).",
+                   "items": {"type": "object", "required": ["arcane", "center", "radius"], "additionalProperties": False,
+                             "properties": {
+                                 "arcane": {"type": "string", "pattern": "^[a-z0-9_]{1,64}$",
+                                            "description": "Id аркана из arcanes.json."},
+                                 "center": dict(triple, description="Центр [x, y, z] в пространстве рун."),
+                                 "radius": {"type": "number", "exclusiveMinimum": 0, "maximum": 1e6,
+                                            "description": "Радиус, больше нуля."}}}},
+    },
+}
+default_set = json.loads(json.dumps(field_set))
+default_set["description"] = "Набор без катализатора. Обязателен и не может быть пустым."
+default_set["properties"]["fields"]["minItems"] = 1
+fields_schema = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://github.com/kirbornu/GimpanumMod/fields.schema.json",
+    "title": "Наборы арканных полей рунной магии Гимпанума (fields.json)",
+    "description": "Подсказки и проверка в редакторе. Что арканы и предметы существуют, проверяет мод при "
+                   "/gimpanum magic reload. Описание — docs/magic-config.md.",
+    "type": "object", "required": ["sets"], "additionalProperties": False,
+    "properties": {
+        "$schema": {"type": "string", "description": "Путь к этой схеме — для редактора; мод это поле пропускает."},
+        "sets": {"type": "object", "required": ["default"], "description": "Именованные наборы полей.",
+                 "properties": {"default": default_set},
+                 "additionalProperties": dict(field_set, description="Набор, выбираемый катализатором.")},
+    },
+}
+
+# --- magic.json --------------------------------------------------------------
+
+RUNES = ["an", "be", "vol", "gi", "dar", "er", "zhin", "zar", "im", "kol", "lun", "mar"]
+TITLES = ["АН", "БЭ", "ВОЛ", "ГИ", "ДАР", "ЭР", "ЖИН", "ЗАР", "ИМ", "КОЛ", "ЛУН", "МАР"]
+
+
+def obj(properties, required, description):
+    return {"type": "object", "description": description, "required": required, "additionalProperties": False,
+            "properties": properties}
+
+
+magic_schema = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://github.com/kirbornu/GimpanumMod/magic.schema.json",
+    "title": "Общие настройки рунной магии Гимпанума (magic.json)",
+    "description": "Подсказки и проверка в редакторе. Что предметы существуют, проверяет мод при "
+                   "/gimpanum magic reload. Описание — docs/magic-config.md.",
+    "type": "object",
+    "required": ["runes", "turnAngle", "stepMultiplier", "cost", "cooldownSeconds", "tabletUpgradeItem", "limits",
+                 "homing"],
+    "additionalProperties": False,
+    "properties": {
+        "$schema": {"type": "string", "description": "Путь к этой схеме — для редактора; мод это поле пропускает."},
+        "runes": obj({r: dict(triple, description="Вектор руны " + t + " [x, y, z].") for r, t in zip(RUNES, TITLES)},
+                     RUNES, "Векторы всех двенадцати рун."),
+        "turnAngle": {"type": "number", "description": "Угол поворота черепахи после шага, градусы."},
+        "stepMultiplier": num(0, 1000, "Множитель длины шага."),
+        "cost": obj({
+            "foodPerRune": num(0, 1000, "Цена руны в единицах еды (1 = половинка окорочка)."),
+            "canKill": boolean("Может ли цена убить. false — не хватает без смерти, каста нет."),
+            "healthPerFood": num(0, 1000, "Сколько здоровья за единицу еды, когда еда кончилась."),
+            "crystalItem": dict(RID, description="Чем платят хрусталём. Необязательно, по умолчанию "
+                                                 "gimpanum:crystal_shard.", examples=["gimpanum:crystal_shard"]),
+            "runesPerCrystal": intg(0, 1000, "Сколько рун оплачивает один предмет; начатая порция — целый. "
+                                             "0 — хрусталём не платят. Необязательно, по умолчанию 4."),
+        }, ["foodPerRune", "canKill", "healthPerFood"], "Цена заклинания."),
+        "cooldownSeconds": num(0, 3600, "Перезарядка магии игрока после каста, с."),
+        "tabletUpgradeItem": dict(RID, description="Предмет для слотов улучшения таблички.",
+                                  examples=["minecraft:netherite_ingot"]),
+        "limits": obj({
+            "blocksPerSpell": intg(0, 100000, "Сколько блоков заклинание может изменить."),
+            "entitiesPerSpell": intg(1, 1000, "Сколько всего заклинание может породить: сущностей-заклинаний, "
+                                              "взрывов, молний, призванных, снарядов."),
+            "entityLifetimeSeconds": num(1, 3600, "Жёсткий предел жизни сущности-заклинания, с."),
+            "homingEntities": intg(0, 10000, "Сколько сущностей может наводиться одновременно на сервере."),
+            "particlesPerTick": intg(0, 100000, "Частиц магии на весь сервер за тик."),
+            "defaultTargetRadius": num(0, 256, "Радиус поиска цели по умолчанию, блоков."),
+        }, ["blocksPerSpell", "entitiesPerSpell", "entityLifetimeSeconds", "homingEntities", "particlesPerTick",
+            "defaultTargetRadius"], "Пределы."),
+        "homing": obj({
+            "searchIntervalTicks": intg(1, 1200, "Как часто искать цель, тиков."),
+            "searchRadius": num(0, 256, "Радиус поиска цели, блоков."),
+        }, ["searchIntervalTicks", "searchRadius"], "Самонаведение и поиск целей процессами."),
+    },
+}
+
 out = sys.argv[1] if len(sys.argv) > 1 else OUT
-with open(out, 'w', encoding='utf-8') as f:
-    json.dump(schema, f, ensure_ascii=False, indent=2)
-    f.write('\n')
-print(len(B), 'поведений →', os.path.normpath(out))
+for name, value in (("arcanes", schema), ("fields", fields_schema), ("magic", magic_schema)):
+    path = os.path.join(out, name + '.schema.json')
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(value, f, ensure_ascii=False, indent=2)
+        f.write('\n')
+    print(name, '→', os.path.normpath(path))
+print(len(B), 'поведений')

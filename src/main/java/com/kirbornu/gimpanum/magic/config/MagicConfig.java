@@ -66,8 +66,11 @@ public final class MagicConfig {
 
     private static final String RESOURCE_DIR = "/data/gimpanum/magic/";
 
-    /** JSON Schema для {@code arcanes.json}; собирается {@code tools/arcanes_schema.py}. */
+    /** JSON Schema для {@code arcanes.json}; собирается {@code tools/magic_schemas.py}. */
     public static final String SCHEMA = "arcanes.schema.json";
+
+    /** Схемы всех трёх файлов — их мод кладёт рядом с файлами. */
+    public static final List<String> SCHEMAS = List.of(SCHEMA, "fields.schema.json", "magic.schema.json");
 
     /** Действующие настройки. */
     public record Loaded(MagicSettings settings, Map<String, Arcane> arcanes, FieldsConfig fields,
@@ -130,7 +133,7 @@ public final class MagicConfig {
      * @return ошибки; пусто — настройки применены
      */
     public static List<String> load(MinecraftServer server) {
-        writeSchema();
+        writeSchemas();
         ConfigErrors errors = new ConfigErrors();
         Map<String, JsonElement> files = new LinkedHashMap<>();
         for (String name : List.of(MagicConfigParser.ARCANES, MagicConfigParser.FIELDS, MagicConfigParser.MAGIC)) {
@@ -283,21 +286,22 @@ public final class MagicConfig {
     }
 
     /**
-     * Свежая JSON Schema для {@code arcanes.json} — рядом с ним, при каждой
-     * загрузке.
+     * Свежие JSON Schema трёх файлов — рядом с ними, при каждой загрузке.
      *
-     * <p>Схема описывает поведения этой версии мода, а не данные сервера,
-     * поэтому перезаписывается всегда: после обновления мода подсказки в
-     * редакторе обязаны знать о новых поведениях. Не записалась — не беда,
-     * мод без неё работает; это только предупреждение в журнале.
+     * <p>Схемы описывают формат этой версии мода, а не данные сервера,
+     * поэтому перезаписываются всегда: после обновления мода подсказки в
+     * редакторе обязаны знать о новых поведениях и полях. Не записалась — не
+     * беда, мод без неё работает; это только предупреждение в журнале.
      */
-    private static void writeSchema() {
-        Path path = dir().resolve(SCHEMA);
-        try (InputStream source = open(SCHEMA)) {
-            Files.createDirectories(path.getParent());
-            Files.copy(source, path, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException failure) {
-            Gimpanum.LOGGER.warn("Не записалась схема {}: {}", path, failure.getMessage());
+    private static void writeSchemas() {
+        for (String name : SCHEMAS) {
+            Path path = dir().resolve(name);
+            try (InputStream source = open(name)) {
+                Files.createDirectories(path.getParent());
+                Files.copy(source, path, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException failure) {
+                Gimpanum.LOGGER.warn("Не записалась схема {}: {}", path, failure.getMessage());
+            }
         }
     }
 

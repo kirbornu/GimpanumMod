@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 /**
  * JSON Schema для {@code arcanes.json} не разошлась с библиотекой поведений.
  *
- * <p>Схему собирает {@code tools/arcanes_schema.py} по своей таблице, а не по
+ * <p>Схему собирает {@code tools/magic_schemas.py} по своей таблице, а не по
  * коду, — этот тест и есть то, что их связывает: добавили поведение и забыли
  * пересобрать схему — тест упадёт и скажет, что поправить.
  */
@@ -95,7 +95,7 @@ public class SchemaGameTests {
         }
         MagicTestKit.log("schema: " + (roleTypes.size() + processTypes.size()) + " поведений, расхождений "
                 + problems.size());
-        h.assertTrue(problems.isEmpty(), "схема разошлась с кодом (пересоберите tools/arcanes_schema.py): "
+        h.assertTrue(problems.isEmpty(), "схема разошлась с кодом (пересоберите tools/magic_schemas.py): "
                 + problems);
         h.succeed();
     }
@@ -103,7 +103,9 @@ public class SchemaGameTests {
     @GameTest(template = "magictest")
     public static void schemaIsWrittenNextToConfig(GameTestHelper h) {
         h.assertTrue(MagicConfig.load(h.getLevel().getServer()).isEmpty(), "перезагрузка");
-        h.assertTrue(Files.isRegularFile(MagicConfig.dir().resolve(MagicConfig.SCHEMA)), "схемы нет рядом с файлами");
+        for (String name : MagicConfig.SCHEMAS) {
+            h.assertTrue(Files.isRegularFile(MagicConfig.dir().resolve(name)), name + " нет рядом с файлами");
+        }
         h.succeed();
     }
 }
