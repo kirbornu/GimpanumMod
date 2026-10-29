@@ -35,6 +35,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -60,6 +61,9 @@ import java.util.Set;
 public final class MagicConfig {
 
     private static final String RESOURCE_DIR = "/data/gimpanum/magic/";
+
+    /** JSON Schema для {@code arcanes.json}; собирается {@code tools/arcanes_schema.py}. */
+    public static final String SCHEMA = "arcanes.schema.json";
 
     /** Действующие настройки. */
     public record Loaded(MagicSettings settings, Map<String, Arcane> arcanes, FieldsConfig fields,
@@ -122,6 +126,7 @@ public final class MagicConfig {
      * @return ошибки; пусто — настройки применены
      */
     public static List<String> load(MinecraftServer server) {
+        writeSchema();
         ConfigErrors errors = new ConfigErrors();
         Map<String, JsonElement> files = new LinkedHashMap<>();
         for (String name : List.of(MagicConfigParser.ARCANES, MagicConfigParser.FIELDS, MagicConfigParser.MAGIC)) {
@@ -236,6 +241,25 @@ public final class MagicConfig {
 
     private static <T> T orDefault(T value, T fallback) {
         return value == null ? fallback : value;
+    }
+
+    /**
+     * Свежая JSON Schema для {@code arcanes.json} — рядом с ним, при каждой
+     * загрузке.
+     *
+     * <p>Схема описывает поведения этой версии мода, а не данные сервера,
+     * поэтому перезаписывается всегда: после обновления мода подсказки в
+     * редакторе обязаны знать о новых поведениях. Не записалась — не беда,
+     * мод без неё работает; это только предупреждение в журнале.
+     */
+    private static void writeSchema() {
+        Path path = dir().resolve(SCHEMA);
+        try (InputStream source = open(SCHEMA)) {
+            Files.createDirectories(path.getParent());
+            Files.copy(source, path, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException failure) {
+            Gimpanum.LOGGER.warn("Не записалась схема {}: {}", path, failure.getMessage());
+        }
     }
 
     private static JsonElement readFile(String name, ConfigErrors errors) {

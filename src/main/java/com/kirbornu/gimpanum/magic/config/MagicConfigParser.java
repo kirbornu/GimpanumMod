@@ -37,6 +37,12 @@ public final class MagicConfigParser {
 
     private static final Set<String> ROLE_KEYS = Set.of("root", "prefix", "suffix", "interfix");
 
+    /**
+     * Ссылка на JSON Schema для редактора. Моду она не нужна, поэтому в
+     * корне любого из трёх файлов пропускается молча.
+     */
+    private static final String SCHEMA_KEY = "$schema";
+
     /** Всё, что прочитано из трёх файлов. */
     public record Parsed(MagicSettings settings, Map<String, ArcaneDef> arcanes, FieldsConfig fields) {
     }
@@ -82,7 +88,7 @@ public final class MagicConfigParser {
         if (json == null) {
             return null;
         }
-        json.rejectUnknown(Set.of("runes", "turnAngle", "stepMultiplier", "cost", "cooldownSeconds",
+        json.rejectUnknown(Set.of(SCHEMA_KEY, "runes", "turnAngle", "stepMultiplier", "cost", "cooldownSeconds",
                 "tabletUpgradeItem", "limits", "homing"));
 
         List<Vector3> vectors = new ArrayList<>();
@@ -161,7 +167,7 @@ public final class MagicConfigParser {
         if (json == null) {
             return null;
         }
-        json.rejectUnknown(Set.of("arcanes"));
+        json.rejectUnknown(Set.of(SCHEMA_KEY, "arcanes"));
         JsonArray list = json.array("arcanes");
         if (list == null) {
             return null;
@@ -260,7 +266,7 @@ public final class MagicConfigParser {
         if (json == null) {
             return null;
         }
-        json.rejectUnknown(Set.of("sets"));
+        json.rejectUnknown(Set.of(SCHEMA_KEY, "sets"));
         Json sets = json.object("sets");
         if (sets == null) {
             return null;

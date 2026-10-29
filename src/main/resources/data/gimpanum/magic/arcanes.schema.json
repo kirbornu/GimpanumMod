@@ -1,0 +1,2872 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kirbornu/GimpanumMod/arcanes.schema.json",
+  "title": "Арканы рунной магии Гимпанума (arcanes.json)",
+  "description": "Схема для подсказок и проверки в редакторе. Окончательную проверку делает мод при /gimpanum magic reload: он ещё сверяет существование эффектов, блоков, существ и частиц. Описание — docs/magic-config.md.",
+  "type": "object",
+  "required": [
+    "arcanes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Путь к этой схеме — для редактора; мод это поле пропускает."
+    },
+    "arcanes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/arcane"
+      }
+    }
+  },
+  "definitions": {
+    "arcane": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "order"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]{1,64}$",
+          "description": "Латиница в нижнем регистре, цифры, _; уникален."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Название для людей."
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "Порядковый номер, больше нуля. Решает роли в заклинании."
+        },
+        "root": {
+          "type": "array",
+          "description": "Поведения в роли корня.",
+          "items": {
+            "$ref": "#/definitions/roleBehavior"
+          }
+        },
+        "prefix": {
+          "type": "array",
+          "description": "Поведения в роли префикса.",
+          "items": {
+            "$ref": "#/definitions/roleBehavior"
+          }
+        },
+        "suffix": {
+          "type": "array",
+          "description": "Поведения в роли суффикса.",
+          "items": {
+            "$ref": "#/definitions/roleBehavior"
+          }
+        },
+        "interfix": {
+          "type": "array",
+          "description": "Поведения в роли интерфикса — только процессы.",
+          "items": {
+            "$ref": "#/definitions/interfixBehavior"
+          }
+        },
+        "particles": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Частицы по ролям.",
+          "properties": {
+            "root": {
+              "$ref": "#/definitions/particleLayer"
+            },
+            "prefix": {
+              "$ref": "#/definitions/particleLayer"
+            },
+            "suffix": {
+              "$ref": "#/definitions/particleLayer"
+            },
+            "interfix": {
+              "$ref": "#/definitions/particleLayer"
+            }
+          }
+        }
+      }
+    },
+    "params_extend_duration": {
+      "description": "Длительные эффекты корня длятся в factor раз дольше.",
+      "properties": {
+        "type": {
+          "const": "extend_duration"
+        },
+        "factor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Во сколько раз дольше."
+        }
+      },
+      "required": [
+        "type",
+        "factor"
+      ],
+      "additionalProperties": false
+    },
+    "params_periodic_if_instant": {
+      "description": "Мгновенный корень повторяется раз в interval с, пока прошло меньше duration с.",
+      "properties": {
+        "type": {
+          "const": "periodic_if_instant"
+        },
+        "interval": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 3600.0,
+          "description": "Период, с."
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 3600.0,
+          "description": "Сколько длится, с."
+        }
+      },
+      "required": [
+        "type",
+        "interval",
+        "duration"
+      ],
+      "additionalProperties": false
+    },
+    "params_amplify": {
+      "description": "Основной параметр корня больше на percent %.",
+      "properties": {
+        "type": {
+          "const": "amplify"
+        },
+        "percent": {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 10000,
+          "description": "На сколько процентов."
+        }
+      },
+      "required": [
+        "type",
+        "percent"
+      ],
+      "additionalProperties": false
+    },
+    "params_target_look": {
+      "description": "Цель — живая сущность под прицелом не дальше range.",
+      "properties": {
+        "type": {
+          "const": "target_look"
+        },
+        "range": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Дальность, блоков."
+        }
+      },
+      "required": [
+        "type",
+        "range"
+      ],
+      "additionalProperties": false
+    },
+    "params_target_radius": {
+      "description": "Цели — все живые в радиусе от каждого якоря.",
+      "properties": {
+        "type": {
+          "const": "target_radius"
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Радиус, блоков."
+        },
+        "includeCaster": {
+          "type": "boolean",
+          "description": "Включать ли кастера."
+        }
+      },
+      "required": [
+        "type",
+        "radius",
+        "includeCaster"
+      ],
+      "additionalProperties": false
+    },
+    "params_shape_cone": {
+      "description": "Форма — конус по взгляду кастера в момент каста.",
+      "properties": {
+        "type": {
+          "const": "shape_cone"
+        },
+        "angle": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180,
+          "description": "Полный раствор, градусы."
+        },
+        "length": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Длина, блоков."
+        }
+      },
+      "required": [
+        "type",
+        "angle",
+        "length"
+      ],
+      "additionalProperties": false
+    },
+    "params_shape_sphere": {
+      "description": "Форма — шар вокруг якоря.",
+      "properties": {
+        "type": {
+          "const": "shape_sphere"
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Радиус, блоков."
+        }
+      },
+      "required": [
+        "type",
+        "radius"
+      ],
+      "additionalProperties": false
+    },
+    "params_target_caster": {
+      "description": "Цель — сам кастер.",
+      "properties": {
+        "type": {
+          "const": "target_caster"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "params_target_nearest": {
+      "description": "От каждого якоря — ближайшая живая в радиусе, кроме самого якоря.",
+      "properties": {
+        "type": {
+          "const": "target_nearest"
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Радиус, блоков."
+        },
+        "excludeCaster": {
+          "type": "boolean",
+          "description": "Исключить кастера."
+        }
+      },
+      "required": [
+        "type",
+        "radius",
+        "excludeCaster"
+      ],
+      "additionalProperties": false
+    },
+    "params_target_filter": {
+      "description": "Оставить из целей только подходящие. Не откатывается: никто не подошёл — целей нет.",
+      "properties": {
+        "type": {
+          "const": "target_filter"
+        },
+        "filter": {
+          "type": "string",
+          "description": "players, monsters, animals, not_caster, type:<id существа>, tag:<тег типов существ>; ! в начале обращает.",
+          "pattern": "^!?(players|monsters|animals|not_caster|type:([a-z0-9_.-]+:)?[a-z0-9_./-]+|tag:([a-z0-9_.-]+:)?[a-z0-9_./-]+)$",
+          "examples": [
+            "monsters",
+            "!players",
+            "type:minecraft:pig",
+            "tag:minecraft:undead"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "filter"
+      ],
+      "additionalProperties": false
+    },
+    "params_target_limit": {
+      "description": "Оставить не больше count целей, ближайших к сущности-заклинанию.",
+      "properties": {
+        "type": {
+          "const": "target_limit"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Сколько целей."
+        }
+      },
+      "required": [
+        "type",
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "params_shape_line": {
+      "description": "Форма — луч от якоря по взгляду кастера.",
+      "properties": {
+        "type": {
+          "const": "shape_line"
+        },
+        "length": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Длина, блоков."
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Ширина, блоков."
+        }
+      },
+      "required": [
+        "type",
+        "length",
+        "width"
+      ],
+      "additionalProperties": false
+    },
+    "params_shape_ring": {
+      "description": "Форма — кольцо на высоте ног якоря.",
+      "properties": {
+        "type": {
+          "const": "shape_ring"
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Радиус, блоков."
+        },
+        "thickness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Толщина, блоков."
+        }
+      },
+      "required": [
+        "type",
+        "radius",
+        "thickness"
+      ],
+      "additionalProperties": false
+    },
+    "params_shape_box": {
+      "description": "Форма — прямоугольник x × y × z с центром в якоре.",
+      "properties": {
+        "type": {
+          "const": "shape_box"
+        },
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "По X, блоков."
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "По Y, блоков."
+        },
+        "z": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "По Z, блоков."
+        }
+      },
+      "required": [
+        "type",
+        "x",
+        "y",
+        "z"
+      ],
+      "additionalProperties": false
+    },
+    "params_shape_ground": {
+      "description": "Опустить выделение блоков на землю.",
+      "properties": {
+        "type": {
+          "const": "shape_ground"
+        },
+        "maxDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64,
+          "description": "Насколько далеко искать землю, блоков."
+        }
+      },
+      "required": [
+        "type",
+        "maxDepth"
+      ],
+      "additionalProperties": false
+    },
+    "params_repeat": {
+      "description": "Применить действия корня times раз подряд.",
+      "properties": {
+        "type": {
+          "const": "repeat"
+        },
+        "times": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Сколько раз."
+        }
+      },
+      "required": [
+        "type",
+        "times"
+      ],
+      "additionalProperties": false
+    },
+    "params_delay": {
+      "description": "Отложить применение корня.",
+      "properties": {
+        "type": {
+          "const": "delay"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600.0,
+          "description": "Задержка, с."
+        }
+      },
+      "required": [
+        "type",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_damage": {
+      "description": "Магический урон. Основной параметр — amount.",
+      "properties": {
+        "type": {
+          "const": "damage"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000.0,
+          "description": "Урон (2 = сердце)."
+        }
+      },
+      "required": [
+        "type",
+        "amount"
+      ],
+      "additionalProperties": false
+    },
+    "params_ignite": {
+      "description": "Поджечь. Длительное.",
+      "properties": {
+        "type": {
+          "const": "ignite"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600.0,
+          "description": "Сколько гореть, с."
+        }
+      },
+      "required": [
+        "type",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_heal": {
+      "description": "Вылечить. Основной параметр — amount.",
+      "properties": {
+        "type": {
+          "const": "heal"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000.0,
+          "description": "Сколько здоровья (2 = сердце)."
+        }
+      },
+      "required": [
+        "type",
+        "amount"
+      ],
+      "additionalProperties": false
+    },
+    "params_effect": {
+      "description": "Наложить эффект. Длительное.",
+      "properties": {
+        "type": {
+          "const": "effect"
+        },
+        "effect": {
+          "type": "string",
+          "pattern": "^([a-z0-9_.-]+:)?[a-z0-9_./-]+$",
+          "description": "Id эффекта.",
+          "examples": [
+            "minecraft:speed",
+            "minecraft:glowing"
+          ]
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600.0,
+          "description": "Длительность, с."
+        },
+        "amplifier": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Уровень − 1 (0 = I). Необязательно, по умолчанию 0."
+        }
+      },
+      "required": [
+        "type",
+        "effect",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_cleanse": {
+      "description": "Снять все эффекты и потушить, кроме наложенного этим же заклинанием.",
+      "properties": {
+        "type": {
+          "const": "cleanse"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "params_echo_root": {
+      "description": "Копия на месте сущности-заклинания повторяет только корень.",
+      "properties": {
+        "type": {
+          "const": "echo_root"
+        },
+        "interval": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 3600.0,
+          "description": "Период, с."
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 3600.0,
+          "description": "Сколько длится, с."
+        }
+      },
+      "required": [
+        "type",
+        "interval",
+        "duration"
+      ],
+      "additionalProperties": false
+    },
+    "params_water": {
+      "description": "Вода в выделенных блоках.",
+      "properties": {
+        "type": {
+          "const": "water"
+        },
+        "seconds": {
+          "description": "Сколько продержится, с. −1 — навсегда.",
+          "oneOf": [
+            {
+              "type": "number",
+              "const": -1
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3600.0
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_light": {
+      "description": "Невидимый блок света в воздухе. Основной параметр — level.",
+      "properties": {
+        "type": {
+          "const": "light"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "description": "Яркость."
+        },
+        "seconds": {
+          "description": "Сколько продержится, с. −1 — навсегда.",
+          "oneOf": [
+            {
+              "type": "number",
+              "const": -1
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3600.0
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "level",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_knockback": {
+      "description": "Отбросить от сущности-заклинания. Основной параметр — strength.",
+      "properties": {
+        "type": {
+          "const": "knockback"
+        },
+        "strength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Сила (0.4 — удар рукой)."
+        }
+      },
+      "required": [
+        "type",
+        "strength"
+      ],
+      "additionalProperties": false
+    },
+    "params_pull": {
+      "description": "Притянуть к сущности-заклинанию. Основной параметр — strength.",
+      "properties": {
+        "type": {
+          "const": "pull"
+        },
+        "strength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Сила."
+        }
+      },
+      "required": [
+        "type",
+        "strength"
+      ],
+      "additionalProperties": false
+    },
+    "params_launch": {
+      "description": "Подбросить вверх. Основной параметр — strength.",
+      "properties": {
+        "type": {
+          "const": "launch"
+        },
+        "strength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Прибавка к скорости, блоков за тик (1.0 ≈ 5 блоков)."
+        }
+      },
+      "required": [
+        "type",
+        "strength"
+      ],
+      "additionalProperties": false
+    },
+    "params_freeze": {
+      "description": "Заморозить, как в порошковом снегу. Длительное.",
+      "properties": {
+        "type": {
+          "const": "freeze"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600.0,
+          "description": "Сколько полностью замёрзшим, с."
+        }
+      },
+      "required": [
+        "type",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_feed": {
+      "description": "Накормить игроков. Основной параметр — food.",
+      "properties": {
+        "type": {
+          "const": "feed"
+        },
+        "food": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Единиц еды."
+        },
+        "saturation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Насыщенности."
+        }
+      },
+      "required": [
+        "type",
+        "food",
+        "saturation"
+      ],
+      "additionalProperties": false
+    },
+    "params_absorb": {
+      "description": "Поглощение (золотые сердца). Основной параметр — amount. Длительное.",
+      "properties": {
+        "type": {
+          "const": "absorb"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000.0,
+          "description": "Единиц поглощения (2 = сердце)."
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600.0,
+          "description": "Сколько держится, с."
+        }
+      },
+      "required": [
+        "type",
+        "amount",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_extinguish": {
+      "description": "Потушить цели.",
+      "properties": {
+        "type": {
+          "const": "extinguish"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "params_set_fire_blocks": {
+      "description": "Огонь в выделенных блоках.",
+      "properties": {
+        "type": {
+          "const": "set_fire_blocks"
+        },
+        "seconds": {
+          "description": "Сколько продержится поставленный огонь, с. −1 — навсегда.",
+          "oneOf": [
+            {
+              "type": "number",
+              "const": -1
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3600.0
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_explode": {
+      "description": "Ванильный взрыв в каждой цели. Основной параметр — power.",
+      "properties": {
+        "type": {
+          "const": "explode"
+        },
+        "power": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 16,
+          "description": "Сила (4 — динамит)."
+        },
+        "breakBlocks": {
+          "type": "boolean",
+          "description": "Ломать ли блоки."
+        }
+      },
+      "required": [
+        "type",
+        "power",
+        "breakBlocks"
+      ],
+      "additionalProperties": false
+    },
+    "params_lightning": {
+      "description": "Ванильная молния в каждую цель.",
+      "properties": {
+        "type": {
+          "const": "lightning"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "params_teleport_to_origin": {
+      "description": "Перенести цели в точку сущности-заклинания.",
+      "properties": {
+        "type": {
+          "const": "teleport_to_origin"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "params_swap_caster": {
+      "description": "Кастер и первая цель меняются местами.",
+      "properties": {
+        "type": {
+          "const": "swap_caster"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "params_remove_effect": {
+      "description": "Снять один эффект.",
+      "properties": {
+        "type": {
+          "const": "remove_effect"
+        },
+        "effect": {
+          "type": "string",
+          "pattern": "^([a-z0-9_.-]+:)?[a-z0-9_./-]+$",
+          "description": "Id эффекта.",
+          "examples": [
+            "minecraft:poison"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "effect"
+      ],
+      "additionalProperties": false
+    },
+    "params_steal_effects": {
+      "description": "Эффекты целей переходят на кастера.",
+      "properties": {
+        "type": {
+          "const": "steal_effects"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "params_drain": {
+      "description": "Урон целям (кроме кастера), кастер лечится на нанесённое. Основной параметр — amount.",
+      "properties": {
+        "type": {
+          "const": "drain"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000.0,
+          "description": "Урон."
+        }
+      },
+      "required": [
+        "type",
+        "amount"
+      ],
+      "additionalProperties": false
+    },
+    "params_place_block": {
+      "description": "Поставить блок в выделенные блоки.",
+      "properties": {
+        "type": {
+          "const": "place_block"
+        },
+        "block": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Блок как в /setblock.",
+          "examples": [
+            "minecraft:glass",
+            "minecraft:oak_log[axis=x]"
+          ]
+        },
+        "seconds": {
+          "description": "Срок, с. −1 — навсегда.",
+          "oneOf": [
+            {
+              "type": "number",
+              "const": -1
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3600.0
+            }
+          ]
+        },
+        "onlyAir": {
+          "type": "boolean",
+          "description": "Только в воздух (иначе ещё и в заменяемое)."
+        }
+      },
+      "required": [
+        "type",
+        "block",
+        "seconds",
+        "onlyAir"
+      ],
+      "additionalProperties": false
+    },
+    "params_freeze_water": {
+      "description": "Источники воды → лёд.",
+      "properties": {
+        "type": {
+          "const": "freeze_water"
+        },
+        "seconds": {
+          "description": "Срок, с. −1 — навсегда.",
+          "oneOf": [
+            {
+              "type": "number",
+              "const": -1
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3600.0
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_grow": {
+      "description": "Костная мука на выделенные блоки.",
+      "properties": {
+        "type": {
+          "const": "grow"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "params_break_blocks": {
+      "description": "Сломать выделенные блоки.",
+      "properties": {
+        "type": {
+          "const": "break_blocks"
+        },
+        "maxHardness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Наибольшая прочность (камень 1.5)."
+        },
+        "drop": {
+          "type": "boolean",
+          "description": "Ронять ли добычу."
+        }
+      },
+      "required": [
+        "type",
+        "maxHardness",
+        "drop"
+      ],
+      "additionalProperties": false
+    },
+    "params_summon": {
+      "description": "Призвать существо в каждой цели. Призванные ничего не роняют.",
+      "properties": {
+        "type": {
+          "const": "summon"
+        },
+        "entity": {
+          "type": "string",
+          "pattern": "^([a-z0-9_.-]+:)?[a-z0-9_./-]+$",
+          "description": "Id существа.",
+          "examples": [
+            "minecraft:wolf",
+            "minecraft:iron_golem"
+          ]
+        },
+        "seconds": {
+          "description": "Срок, с. −1 — навсегда.",
+          "oneOf": [
+            {
+              "type": "number",
+              "const": -1
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 3600.0
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "entity",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_spawn_projectile": {
+      "description": "Выпустить снаряд по взгляду кастера.",
+      "properties": {
+        "type": {
+          "const": "spawn_projectile"
+        },
+        "entity": {
+          "type": "string",
+          "pattern": "^([a-z0-9_.-]+:)?[a-z0-9_./-]+$",
+          "description": "Id снаряда.",
+          "examples": [
+            "minecraft:arrow",
+            "minecraft:fireball",
+            "minecraft:snowball"
+          ]
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Скорость, блоков за тик (3 — лук)."
+        }
+      },
+      "required": [
+        "type",
+        "entity",
+        "speed"
+      ],
+      "additionalProperties": false
+    },
+    "params_wait": {
+      "description": "Ждать.",
+      "properties": {
+        "type": {
+          "const": "wait"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600.0,
+          "description": "Сколько, с."
+        }
+      },
+      "required": [
+        "type",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_descend": {
+      "description": "Опуститься на ближайший твёрдый блок.",
+      "properties": {
+        "type": {
+          "const": "descend"
+        },
+        "maxDistance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 256,
+          "description": "Не дальше, блоков."
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 16,
+          "description": "Блоков за тик."
+        }
+      },
+      "required": [
+        "type",
+        "maxDistance",
+        "speed"
+      ],
+      "additionalProperties": false
+    },
+    "params_home": {
+      "description": "Наводиться на ближайшую живую сущность.",
+      "properties": {
+        "type": {
+          "const": "home"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600.0,
+          "description": "Сколько, с."
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 16,
+          "description": "Блоков за тик."
+        },
+        "excludeCaster": {
+          "type": "boolean",
+          "description": "Не наводиться на кастера."
+        }
+      },
+      "required": [
+        "type",
+        "seconds",
+        "speed",
+        "excludeCaster"
+      ],
+      "additionalProperties": false
+    },
+    "params_emit_light": {
+      "description": "Светиться, пока идёт интерфикс. Интерфикс не удлиняет.",
+      "properties": {
+        "type": {
+          "const": "emit_light"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "description": "Яркость."
+        }
+      },
+      "required": [
+        "type",
+        "level"
+      ],
+      "additionalProperties": false
+    },
+    "params_move_forward": {
+      "description": "Лететь по взгляду кастера.",
+      "properties": {
+        "type": {
+          "const": "move_forward"
+        },
+        "distance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 256,
+          "description": "Дальность, блоков."
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 16,
+          "description": "Блоков за тик."
+        }
+      },
+      "required": [
+        "type",
+        "distance",
+        "speed"
+      ],
+      "additionalProperties": false
+    },
+    "params_rise": {
+      "description": "Подняться.",
+      "properties": {
+        "type": {
+          "const": "rise"
+        },
+        "distance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 256,
+          "description": "Высота, блоков."
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 16,
+          "description": "Блоков за тик."
+        }
+      },
+      "required": [
+        "type",
+        "distance",
+        "speed"
+      ],
+      "additionalProperties": false
+    },
+    "params_teleport_forward": {
+      "description": "Мгновенно переместиться по взгляду кастера.",
+      "properties": {
+        "type": {
+          "const": "teleport_forward"
+        },
+        "distance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 256,
+          "description": "Дальность, блоков."
+        }
+      },
+      "required": [
+        "type",
+        "distance"
+      ],
+      "additionalProperties": false
+    },
+    "params_follow_caster": {
+      "description": "Держаться у глаз кастера.",
+      "properties": {
+        "type": {
+          "const": "follow_caster"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600.0,
+          "description": "Сколько, с."
+        }
+      },
+      "required": [
+        "type",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "params_orbit": {
+      "description": "Кружить вокруг кастера.",
+      "properties": {
+        "type": {
+          "const": "orbit"
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Радиус, блоков."
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600.0,
+          "description": "Сколько, с."
+        },
+        "period": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 3600.0,
+          "description": "Секунд на оборот."
+        }
+      },
+      "required": [
+        "type",
+        "radius",
+        "seconds",
+        "period"
+      ],
+      "additionalProperties": false
+    },
+    "params_wait_for_target": {
+      "description": "Ждать, пока кто-то подойдёт.",
+      "properties": {
+        "type": {
+          "const": "wait_for_target"
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Радиус, блоков."
+        },
+        "maxSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3600.0,
+          "description": "Не дольше, с."
+        },
+        "excludeCaster": {
+          "type": "boolean",
+          "description": "Кастер не считается."
+        }
+      },
+      "required": [
+        "type",
+        "radius",
+        "maxSeconds",
+        "excludeCaster"
+      ],
+      "additionalProperties": false
+    },
+    "params_aura": {
+      "description": "Пока идёт интерфикс, применять action ко всем в радиусе. Интерфикс не удлиняет.",
+      "properties": {
+        "type": {
+          "const": "aura"
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32.0,
+          "description": "Радиус, блоков."
+        },
+        "every": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 3600.0,
+          "description": "Период, с."
+        },
+        "excludeCaster": {
+          "type": "boolean",
+          "description": "Не задевать кастера."
+        },
+        "action": {
+          "$ref": "#/definitions/auraAction"
+        }
+      },
+      "required": [
+        "type",
+        "radius",
+        "every",
+        "excludeCaster",
+        "action"
+      ],
+      "additionalProperties": false
+    },
+    "roleBehavior": {
+      "type": "object",
+      "description": "Изменение контекста или действие — для корня, префикса и суффикса.",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "extend_duration",
+            "periodic_if_instant",
+            "amplify",
+            "target_look",
+            "target_radius",
+            "shape_cone",
+            "shape_sphere",
+            "target_caster",
+            "target_nearest",
+            "target_filter",
+            "target_limit",
+            "shape_line",
+            "shape_ring",
+            "shape_box",
+            "shape_ground",
+            "repeat",
+            "delay",
+            "damage",
+            "ignite",
+            "heal",
+            "effect",
+            "cleanse",
+            "echo_root",
+            "water",
+            "light",
+            "knockback",
+            "pull",
+            "launch",
+            "freeze",
+            "feed",
+            "absorb",
+            "extinguish",
+            "set_fire_blocks",
+            "explode",
+            "lightning",
+            "teleport_to_origin",
+            "swap_caster",
+            "remove_effect",
+            "steal_effects",
+            "drain",
+            "place_block",
+            "freeze_water",
+            "grow",
+            "break_blocks",
+            "summon",
+            "spawn_projectile"
+          ],
+          "description": "Поведение из библиотеки."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "extend_duration"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_extend_duration"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "periodic_if_instant"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_periodic_if_instant"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "amplify"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_amplify"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "target_look"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_target_look"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "target_radius"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_target_radius"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "shape_cone"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_shape_cone"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "shape_sphere"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_shape_sphere"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "target_caster"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_target_caster"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "target_nearest"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_target_nearest"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "target_filter"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_target_filter"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "target_limit"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_target_limit"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "shape_line"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_shape_line"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "shape_ring"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_shape_ring"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "shape_box"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_shape_box"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "shape_ground"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_shape_ground"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "repeat"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_repeat"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "delay"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_delay"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "damage"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_damage"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ignite"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_ignite"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "heal"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_heal"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "effect"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_effect"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "cleanse"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_cleanse"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "echo_root"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_echo_root"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "water"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_water"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "light"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_light"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "knockback"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_knockback"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "pull"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_pull"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "launch"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_launch"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "freeze"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_freeze"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "feed"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_feed"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "absorb"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_absorb"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "extinguish"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_extinguish"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "set_fire_blocks"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_set_fire_blocks"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "explode"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_explode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "lightning"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_lightning"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "teleport_to_origin"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_teleport_to_origin"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "swap_caster"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_swap_caster"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "remove_effect"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_remove_effect"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "steal_effects"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_steal_effects"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "drain"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_drain"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "place_block"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_place_block"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "freeze_water"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_freeze_water"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "grow"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_grow"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "break_blocks"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_break_blocks"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "summon"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_summon"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "spawn_projectile"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_spawn_projectile"
+          }
+        }
+      ]
+    },
+    "interfixBehavior": {
+      "type": "object",
+      "description": "Процесс — только для интерфикса.",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "wait",
+            "descend",
+            "home",
+            "emit_light",
+            "move_forward",
+            "rise",
+            "teleport_forward",
+            "follow_caster",
+            "orbit",
+            "wait_for_target",
+            "aura"
+          ],
+          "description": "Поведение из библиотеки."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "wait"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_wait"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "descend"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_descend"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "home"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_home"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "emit_light"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_emit_light"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "move_forward"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_move_forward"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "rise"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_rise"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "teleport_forward"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_teleport_forward"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "follow_caster"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_follow_caster"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "orbit"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_orbit"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "wait_for_target"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_wait_for_target"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aura"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_aura"
+          }
+        }
+      ]
+    },
+    "auraAction": {
+      "type": "object",
+      "description": "Действие (кроме echo_root), которое aura применяет к окружающим.",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "damage",
+            "ignite",
+            "heal",
+            "effect",
+            "cleanse",
+            "water",
+            "light",
+            "knockback",
+            "pull",
+            "launch",
+            "freeze",
+            "feed",
+            "absorb",
+            "extinguish",
+            "set_fire_blocks",
+            "explode",
+            "lightning",
+            "teleport_to_origin",
+            "swap_caster",
+            "remove_effect",
+            "steal_effects",
+            "drain",
+            "place_block",
+            "freeze_water",
+            "grow",
+            "break_blocks",
+            "summon",
+            "spawn_projectile"
+          ],
+          "description": "Поведение из библиотеки."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "damage"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_damage"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ignite"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_ignite"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "heal"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_heal"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "effect"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_effect"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "cleanse"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_cleanse"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "water"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_water"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "light"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_light"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "knockback"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_knockback"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "pull"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_pull"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "launch"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_launch"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "freeze"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_freeze"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "feed"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_feed"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "absorb"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_absorb"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "extinguish"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_extinguish"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "set_fire_blocks"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_set_fire_blocks"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "explode"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_explode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "lightning"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_lightning"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "teleport_to_origin"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_teleport_to_origin"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "swap_caster"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_swap_caster"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "remove_effect"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_remove_effect"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "steal_effects"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_steal_effects"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "drain"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_drain"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "place_block"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_place_block"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "freeze_water"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_freeze_water"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "grow"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_grow"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "break_blocks"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_break_blocks"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "summon"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_summon"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "spawn_projectile"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/params_spawn_projectile"
+          }
+        }
+      ]
+    },
+    "particleLayer": {
+      "type": "object",
+      "description": "Слой частиц роли.",
+      "required": [
+        "particle"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "particle": {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "description": "Частица в ванильном JSON-формате, как у /particle.",
+          "properties": {
+            "type": {
+              "type": "string",
+              "pattern": "^([a-z0-9_.-]+:)?[a-z0-9_./-]+$",
+              "description": "Id типа частицы.",
+              "examples": [
+                "minecraft:flame",
+                "minecraft:dust",
+                "minecraft:dust_color_transition"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "type": "minecraft:flame"
+            },
+            {
+              "type": "minecraft:dust",
+              "color": [
+                1.0,
+                0.4,
+                0.0
+              ],
+              "scale": 1.0
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Частиц в точке узора. По умолчанию 1."
+        },
+        "spread": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 16,
+          "description": "Разброс, блоков. По умолчанию 0."
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Скорость. По умолчанию 0."
+        }
+      }
+    }
+  }
+}
