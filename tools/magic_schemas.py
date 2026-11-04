@@ -72,7 +72,7 @@ b("place_block",A,"Поставить блок в выделенные блок�
 b("freeze_water",A,"Источники воды → лёд.",seconds=(forever("Срок, с."),True))
 b("grow",A,"Костная мука на выделенные блоки.")
 b("break_blocks",A,"Сломать выделенные блоки.",maxHardness=(num(0,1000,"Наибольшая прочность (камень 1.5)."),True),drop=(boolean("Ронять ли добычу."),True))
-b("summon",A,"Призвать существо в каждой цели. Призванные ничего не роняют.",entity=(rid("Id существа.",["minecraft:wolf","minecraft:iron_golem"]),True),seconds=(forever("Срок, с."),True))
+b("summon",A,"Призвать существо в каждой цели.",entity=(rid("Id существа.",["minecraft:wolf","minecraft:iron_golem"]),True),seconds=(forever("Срок, с."),True))
 b("spawn_projectile",A,"Выпустить снаряд по взгляду кастера.",entity=(rid("Id снаряда.",["minecraft:arrow","minecraft:fireball","minecraft:snowball"]),True),speed=(num(0,10,"Скорость, блоков за тик (3 — лук)."),True))
 b("wait",P,"Ждать.",seconds=(num(0,SEC,"Сколько, с."),True))
 b("descend",P,"Опуститься на ближайший твёрдый блок.",maxDistance=(num(0,256,"Не дальше, блоков."),True),speed=(num(0.01,16,"Блоков за тик."),True))

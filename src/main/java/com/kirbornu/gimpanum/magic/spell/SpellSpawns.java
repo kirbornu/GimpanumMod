@@ -7,8 +7,6 @@ import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
-import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.Collections;
@@ -24,9 +22,8 @@ import java.util.WeakHashMap;
  * <ul>
  *     <li>призванное существо со сроком исчезает, когда срок вышел, — в том
  *     числе после перезапуска сервера (время игровое);</li>
- *     <li>призванное существо, убитое до срока, ничего не роняет и не даёт
- *     опыта: иначе заклинание стало бы фермой — призвал железного голема,
- *     убил, забрал железо;</li>
+ *     <li>убитое до срока, оно роняет добычу и опыт как обычное — так задумано:
+ *     призванным маг распоряжается как хочет, хоть ферму строит;</li>
  *     <li>взрыв снаряда заклинания не ломает блоки (см. {@link SpellExplosions}):
  *     к моменту взрыва заклинания уже нет, и проверить, можно ли кастеру
  *     ломать там, нечем.</li>
@@ -77,10 +74,6 @@ public final class SpellSpawns {
         return entity.getPersistentData().contains(KEY);
     }
 
-    private static boolean isSummoned(Entity entity) {
-        return entity.getPersistentData().getCompound(KEY).getBoolean(KEY_SUMMONED);
-    }
-
     @SubscribeEvent
     public static void onJoin(EntityJoinLevelEvent event) {
         Entity entity = event.getEntity();
@@ -111,20 +104,6 @@ public final class SpellSpawns {
                     it.remove();
                 }
             }
-        }
-    }
-
-    @SubscribeEvent
-    public static void onDrops(LivingDropsEvent event) {
-        if (isSummoned(event.getEntity())) {
-            event.setCanceled(true);
-        }
-    }
-
-    @SubscribeEvent
-    public static void onExperience(LivingExperienceDropEvent event) {
-        if (isSummoned(event.getEntity())) {
-            event.setCanceled(true);
         }
     }
 }

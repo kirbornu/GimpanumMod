@@ -1065,7 +1065,7 @@
       "additionalProperties": false
     },
     "params_summon": {
-      "description": "Призвать существо в каждой цели. Призванные ничего не роняют.",
+      "description": "Призвать существо в каждой цели.",
       "properties": {
         "type": {
           "const": "summon"

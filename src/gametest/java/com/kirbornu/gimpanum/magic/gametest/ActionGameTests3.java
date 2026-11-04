@@ -177,7 +177,7 @@ public class ActionGameTests3 {
     }
 
     @GameTest(template = ARENA)
-    public static void summonedDropNothing(GameTestHelper h) {
+    public static void summonedDropLoot(GameTestHelper h) {
         ServerPlayer p = caster(h);
         h.assertTrue(castArcanes(p, root("{\"type\": \"summon\", \"entity\": \"minecraft:cow\", \"seconds\": -1}"))
                 != null, "каст");
@@ -187,8 +187,8 @@ public class ActionGameTests3 {
             cows.get(0).kill();
         });
         h.runAfterDelay(25, () -> {
-            h.assertTrue(h.getEntities(EntityType.ITEM).isEmpty(), "корова что-то уронила");
-            h.assertTrue(h.getEntities(EntityType.EXPERIENCE_ORB).isEmpty(), "корова дала опыт");
+            // Опыт ванильная корова даёт только от руки игрока, поэтому проверяем добычу.
+            h.assertFalse(h.getEntities(EntityType.ITEM).isEmpty(), "призванная корова ничего не уронила");
             h.succeed();
         });
     }
