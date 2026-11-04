@@ -238,7 +238,7 @@ public class ArcaneSetGameTests {
     }
 
     @GameTest(template = ARENA)
-    public static void summonedAnimalsDoNotBreed(GameTestHelper h) {
+    public static void summonedAnimalsBreedOrdinaryYoung(GameTestHelper h) {
         Arcane[] herd = new Arcane[1];
         withSet(h, loaded -> herd[0] = loaded.arcane("herd"));
         ServerPlayer p = player(h, true, CENTER);
@@ -248,16 +248,12 @@ public class ArcaneSetGameTests {
             List<Entity> cows = around(h, EntityType.COW);
             h.assertTrue(cows.size() >= 2, "коров призвано " + cows.size());
             ((Cow) cows.get(0)).spawnChildFromBreeding(h.getLevel(), (Cow) cows.get(1));
-            int summoned = around(h, EntityType.COW).size();
-            // Для сравнения — обычная пара.
-            Cow a = h.spawn(EntityType.COW, new BlockPos(3, 2, 3));
-            Cow b = h.spawn(EntityType.COW, new BlockPos(4, 2, 3));
-            int withPlain = around(h, EntityType.COW).size();
-            a.spawnChildFromBreeding(h.getLevel(), b);
-            int afterPlain = around(h, EntityType.COW).size();
-            log("breed: summoned " + cows.size() + " → " + summoned + ", plain " + withPlain + " → " + afterPlain);
-            h.assertTrue(summoned == cows.size(), "призванные коровы дали телёнка");
-            h.assertTrue(afterPlain == withPlain + 1, "обычные коровы не размножились — тест ничего не проверяет");
+            List<Entity> calves = around(h, EntityType.COW);
+            calves.removeAll(cows);
+            log("breed: summoned " + cows.size() + ", calves " + calves.size());
+            h.assertTrue(calves.size() == 1, "призванные коровы не дали телёнка");
+            // Телёнок — обычная корова: с добычей и опытом, без срока.
+            h.assertFalse(SpellSpawns.isSpellSpawned(calves.get(0)), "телёнок помечен как призванный");
             h.succeed();
         });
     }
