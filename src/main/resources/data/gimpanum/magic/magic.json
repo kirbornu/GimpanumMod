@@ -31,6 +31,7 @@
     "entityLifetimeSeconds": 120.0,
     "homingEntities": 32,
     "particlesPerTick": 600,
+    "particleBurstsPerTick": 200,
     "defaultTargetRadius": 16.0
   },
   "homing": {

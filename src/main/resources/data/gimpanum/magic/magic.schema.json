@@ -258,6 +258,12 @@
           "maximum": 100000,
           "description": "Частиц магии на весь сервер за тик."
         },
+        "particleBurstsPerTick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000,
+          "description": "Вспышек частиц (пакетов) на весь сервер за тик. Необязательно, по умолчанию 200."
+        },
         "defaultTargetRadius": {
           "type": "number",
           "minimum": 0,

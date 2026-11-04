@@ -21,6 +21,12 @@ import java.util.Iterator;
  * потому что частицы — чистая красота, и сотня одновременных заклинаний не
  * должна топить клиентов в пакетах. Когда бюджет кончился, частицы этого тика
  * просто не рисуются.
+ *
+ * <p>Бюджетов два: частиц ({@code limits.particlesPerTick}) и вспышек
+ * ({@code limits.particleBurstsPerTick}). Каждая вспышка — отдельный пакет
+ * каждому игроку рядом, и для сервера дороже число пакетов, а не частиц в
+ * них. Поэтому и у фигур потолок точек: контур большой сферы или ауры
+ * становится реже, а не тяжелее.
  */
 @EventBusSubscriber(modid = Gimpanum.MOD_ID)
 public final class SpellParticles {
@@ -31,7 +37,12 @@ public final class SpellParticles {
     /** Сколько блоков из выделения искрит при срабатывании корня, чтобы большая форма не съела бюджет. */
     private static final int MAX_BLOCK_BURSTS = 24;
 
+    /** Потолок точек одной окружности и одного отрезка — больше глаз всё равно не различит. */
+    private static final int MAX_CIRCLE_POINTS = 32;
+    private static final int MAX_LINE_POINTS = 20;
+
     private static int spentThisTick;
+    private static int burstsThisTick;
 
     private SpellParticles() {
     }
@@ -39,6 +50,12 @@ public final class SpellParticles {
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Pre event) {
         spentThisTick = 0;
+        burstsThisTick = 0;
+    }
+
+    /** Точек на фигуру длиной {@code length}: по плотности, но не меньше {@code min} и не больше {@code max}. */
+    private static int points(double length, int min, int max) {
+        return Mth.clamp((int) Math.ceil(length * OUTLINE_DENSITY), min, max);
     }
 
     /** Одна вспышка слоя в точке, если хватает бюджета. */
@@ -46,12 +63,14 @@ public final class SpellParticles {
         if (layer == null) {
             return;
         }
-        int budget = MagicConfig.get().settings().limits().particlesPerTick() - spentThisTick;
+        var limits = MagicConfig.get().settings().limits();
+        int budget = limits.particlesPerTick() - spentThisTick;
         int count = Math.min(Math.max(layer.count(), 1), budget);
-        if (count <= 0) {
+        if (count <= 0 || burstsThisTick >= limits.particleBurstsPerTick()) {
             return;
         }
         spentThisTick += count;
+        burstsThisTick++;
         level.sendParticles(layer.options(), at.x, at.y, at.z, count, layer.spread(), layer.spread(), layer.spread(),
                 layer.speed());
     }
@@ -77,7 +96,7 @@ public final class SpellParticles {
             return;
         }
         Vec3 delta = to.subtract(from);
-        int points = Math.max(2, (int) Math.ceil(delta.length() * OUTLINE_DENSITY));
+        int points = points(delta.length(), 2, MAX_LINE_POINTS);
         for (int i = 0; i <= points; i++) {
             burst(level, layer, from.add(delta.scale((double) i / points)));
         }
@@ -88,7 +107,8 @@ public final class SpellParticles {
         if (layer == null) {
             return;
         }
-        int points = Math.max(8, (int) Math.ceil(Mth.TWO_PI * radius * OUTLINE_DENSITY));
+        // Три окружности делят потолок на троих: сфера не дороже одного кольца с запасом.
+        int points = points(Mth.TWO_PI * radius, 8, MAX_CIRCLE_POINTS * 2 / 3);
         for (int i = 0; i < points; i++) {
             double a = Mth.TWO_PI * i / points;
             double c = Math.cos(a) * radius;
@@ -111,7 +131,7 @@ public final class SpellParticles {
         Vec3 up = side.cross(axis).normalize();
         double radius = Math.tan(halfAngle) * length;
         Vec3 base = apex.add(axis.scale(length));
-        int rim = Math.max(8, (int) Math.ceil(Mth.TWO_PI * radius * OUTLINE_DENSITY));
+        int rim = points(Mth.TWO_PI * radius, 8, MAX_CIRCLE_POINTS);
         for (int i = 0; i < rim; i++) {
             double a = Mth.TWO_PI * i / rim;
             burst(level, layer, base.add(side.scale(Math.cos(a) * radius)).add(up.scale(Math.sin(a) * radius)));
@@ -127,7 +147,7 @@ public final class SpellParticles {
         if (layer == null) {
             return;
         }
-        int points = 32;
+        int points = MAX_CIRCLE_POINTS * 3 / 4;
         for (int i = 0; i < points; i++) {
             double t = (double) i / points;
             double a = Mth.TWO_PI * 2 * t;
@@ -140,7 +160,7 @@ public final class SpellParticles {
         if (layer == null) {
             return;
         }
-        int points = Math.max(8, (int) Math.ceil(Mth.TWO_PI * radius * OUTLINE_DENSITY));
+        int points = points(Mth.TWO_PI * radius, 8, MAX_CIRCLE_POINTS);
         for (int i = 0; i < points; i++) {
             double a = Mth.TWO_PI * i / points;
             burst(level, layer, center.add(Math.cos(a) * radius, 0, Math.sin(a) * radius));
@@ -159,7 +179,13 @@ public final class SpellParticles {
         }
         int[][] edges = {{0, 1}, {2, 3}, {4, 5}, {6, 7}, {0, 2}, {1, 3}, {4, 6}, {5, 7}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
         for (int[] e : edges) {
-            line(level, layer, c[e[0]], c[e[1]]);
+            Vec3 from = c[e[0]];
+            Vec3 delta = c[e[1]].subtract(from);
+            // Двенадцать рёбер — по 6 точек на ребро хватает, чтобы читалась коробка.
+            int points = points(delta.length(), 2, 6);
+            for (int i = 0; i <= points; i++) {
+                burst(level, layer, from.add(delta.scale((double) i / points)));
+            }
         }
     }
 }

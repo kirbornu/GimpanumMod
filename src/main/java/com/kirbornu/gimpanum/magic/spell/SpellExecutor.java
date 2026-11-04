@@ -22,6 +22,13 @@ import java.util.List;
  */
 public final class SpellExecutor {
 
+    /**
+     * Скольким целям рисовать вспышку корня и спираль суффикса. Больше —
+     * это уже не подсказка, кого задело, а нагрузка: при «всех в радиусе 10»
+     * вокруг может стоять полсотни существ.
+     */
+    private static final int MAX_DECORATED_TARGETS = 8;
+
     private SpellExecutor() {
     }
 
@@ -124,7 +131,7 @@ public final class SpellExecutor {
             return;
         }
         List<LivingEntity> targets = context.targets();
-        for (LivingEntity target : targets) {
+        for (LivingEntity target : targets.subList(0, Math.min(targets.size(), MAX_DECORATED_TARGETS))) {
             SpellParticles.burst(context.level(), layer, target.getBoundingBox().getCenter());
         }
         if (targets.isEmpty()) {
@@ -137,7 +144,7 @@ public final class SpellExecutor {
             return;
         }
         List<LivingEntity> targets = context.targets();
-        for (LivingEntity target : targets) {
+        for (LivingEntity target : targets.subList(0, Math.min(targets.size(), MAX_DECORATED_TARGETS))) {
             SpellParticles.spiral(context.level(), layer, target.position(), target.getBbWidth() * 0.8 + 0.3,
                     target.getBbHeight());
         }

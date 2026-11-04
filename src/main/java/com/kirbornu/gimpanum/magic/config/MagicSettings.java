@@ -26,7 +26,7 @@ public record MagicSettings(TurtleSettings turtle, Cost cost, double cooldownSec
 
     /** Пределы, которые держат заклинания в рамках, как бы их ни сложили. */
     public record Limits(int blocksPerSpell, int entitiesPerSpell, double entityLifetimeSeconds, int homingEntities,
-                         int particlesPerTick, double defaultTargetRadius) {
+                         int particlesPerTick, double defaultTargetRadius, int particleBurstsPerTick) {
     }
 
     /** Самонаведение: как часто и как далеко искать цель. */

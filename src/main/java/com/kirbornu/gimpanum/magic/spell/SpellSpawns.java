@@ -7,6 +7,7 @@ import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.living.BabyEntitySpawnEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -27,6 +28,8 @@ import java.util.WeakHashMap;
  *     <li>призванное существо, убитое до срока, ничего не роняет и не даёт
  *     опыта: иначе заклинание стало бы фермой — призвал железного голема,
  *     убил, забрал железо;</li>
+ *     <li>призванные животные не размножаются: их детёныш был бы обычным
+ *     животным, и призванная пара коров давала бы бесконечное мясо;</li>
  *     <li>взрыв снаряда заклинания не ломает блоки (см. {@link SpellExplosions}):
  *     к моменту взрыва заклинания уже нет, и проверить, можно ли кастеру
  *     ломать там, нечем.</li>
@@ -117,6 +120,13 @@ public final class SpellSpawns {
     @SubscribeEvent
     public static void onDrops(LivingDropsEvent event) {
         if (isSummoned(event.getEntity())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onBreed(BabyEntitySpawnEvent event) {
+        if (isSummoned(event.getParentA()) || event.getParentB() != null && isSummoned(event.getParentB())) {
             event.setCanceled(true);
         }
     }

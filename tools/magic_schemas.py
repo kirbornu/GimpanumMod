@@ -216,6 +216,8 @@ magic_schema = {
             "entityLifetimeSeconds": num(1, 3600, "Жёсткий предел жизни сущности-заклинания, с."),
             "homingEntities": intg(0, 10000, "Сколько сущностей может наводиться одновременно на сервере."),
             "particlesPerTick": intg(0, 100000, "Частиц магии на весь сервер за тик."),
+            "particleBurstsPerTick": intg(0, 100000, "Вспышек частиц (пакетов) на весь сервер за тик. "
+                                                     "Необязательно, по умолчанию 200."),
             "defaultTargetRadius": num(0, 256, "Радиус поиска цели по умолчанию, блоков."),
         }, ["blocksPerSpell", "entitiesPerSpell", "entityLifetimeSeconds", "homingEntities", "particlesPerTick",
             "defaultTargetRadius"], "Пределы."),

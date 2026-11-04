@@ -53,7 +53,8 @@ public final class MagicConfigParser {
     public static final Set<String> COST_KEYS = Set.of("foodPerRune", "canKill", "healthPerFood", "crystalItem",
             "runesPerCrystal");
     public static final Set<String> LIMITS_KEYS = Set.of("blocksPerSpell", "entitiesPerSpell",
-            "entityLifetimeSeconds", "homingEntities", "particlesPerTick", "defaultTargetRadius");
+            "entityLifetimeSeconds", "homingEntities", "particlesPerTick", "defaultTargetRadius",
+            "particleBurstsPerTick");
     public static final Set<String> HOMING_KEYS = Set.of("searchIntervalTicks", "searchRadius");
     public static final Set<String> ARCANES_KEYS = Set.of(SCHEMA_KEY, "arcanes");
     public static final Set<String> ARCANE_KEYS = Set.of("id", "name", "order", "root", "prefix", "suffix",
@@ -64,6 +65,8 @@ public final class MagicConfigParser {
 
     /** Чем платят хрусталём, если в старом {@code magic.json} этого не сказано. */
     public static final String DEFAULT_CRYSTAL = "gimpanum:crystal_shard";
+    /** Вспышек частиц на тик, если в старом {@code magic.json} этого не сказано. */
+    public static final int DEFAULT_PARTICLE_BURSTS = 200;
     /** Сколько рун на осколок, если в старом {@code magic.json} этого не сказано. */
     public static final int DEFAULT_RUNES_PER_CRYSTAL = 4;
 
@@ -163,9 +166,12 @@ public final class MagicConfigParser {
             Integer homing = limitsJson.integer("homingEntities", 0, 10_000);
             Integer particles = limitsJson.integer("particlesPerTick", 0, 100_000);
             Double radius = limitsJson.number("defaultTargetRadius", 0.0, 256.0);
+            // Появилось позже остальных — необязательное, чтобы старый файл читался.
+            Integer bursts = limitsJson.has("particleBurstsPerTick")
+                    ? limitsJson.integer("particleBurstsPerTick", 0, 100_000) : DEFAULT_PARTICLE_BURSTS;
             if (blocks != null && entities != null && lifetime != null && homing != null && particles != null
-                    && radius != null) {
-                limits = new MagicSettings.Limits(blocks, entities, lifetime, homing, particles, radius);
+                    && radius != null && bursts != null) {
+                limits = new MagicSettings.Limits(blocks, entities, lifetime, homing, particles, radius, bursts);
             }
         }
 
