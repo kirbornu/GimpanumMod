@@ -220,7 +220,12 @@ public final class SpellContext {
 
     /**
      * Блоки для корня, работающего с блоками: выделенные формой, а без формы —
-     * блок в позиции каждой цели; без целей — блок самой сущности-заклинания.
+     * блок в позиции каждой цели.
+     *
+     * <p>Без целей — блок самой сущности-заклинания, но только если цели никто
+     * не выбирал (рядом просто никого нет). Если их отсеял выбор — фильтр
+     * никого не пропустил, цели погибли, — блоков нет: пустой выбор значит
+     * «никуда», а не «туда, где стоит кастер».
      */
     public List<BlockPos> blockTargets() {
         if (blocks != null) {
@@ -230,7 +235,7 @@ public final class SpellContext {
         for (LivingEntity target : targets()) {
             out.add(target.blockPosition());
         }
-        if (out.isEmpty()) {
+        if (out.isEmpty() && !targetsChosen) {
             out.add(entity.blockPosition());
         }
         return out;

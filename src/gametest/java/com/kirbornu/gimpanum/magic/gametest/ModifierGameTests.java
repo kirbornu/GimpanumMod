@@ -308,4 +308,16 @@ public class ModifierGameTests {
         expectError(h, Role.INTERFIX, "{\"type\": \"shape_ground\", \"maxDepth\": 3}", "не процесс");
         h.succeed();
     }
+
+    @GameTest(template = ARENA)
+    public static void emptyFilterMeansNowhereForPointActions(GameTestHelper h) {
+        // Фильтр никого не пропустил: молния не должна ударить в кастера «по умолчанию».
+        ServerPlayer p = caster(h);
+        h.assertTrue(castArcanes(p, prefix("{\"type\": \"target_filter\", \"filter\": \"monsters\"}"),
+                root("{\"type\": \"lightning\"}")) != null, "каст");
+        h.runAfterDelay(2, () -> {
+            h.assertTrue(h.getEntities(EntityType.LIGHTNING_BOLT).isEmpty(), "молния ударила в пустой выбор");
+            h.succeed();
+        });
+    }
 }
