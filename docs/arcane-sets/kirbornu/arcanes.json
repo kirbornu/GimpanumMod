@@ -24,6 +24,10 @@
         "prefix": {"particle": {"type": "minecraft:dust", "color": [1, 0.45, 0.05], "scale": 0.6}, "count": 1},
         "suffix": {"particle": {"type": "minecraft:small_flame"}, "count": 1, "spread": 0.03, "speed": 0},
         "interfix": {"particle": {"type": "minecraft:smoke"}, "count": 2, "spread": 0.1, "speed": 0.01}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.blaze.shoot", "volume": 1.0, "pitch": 1.0},
+        "interfix": {"sound": "minecraft:entity.blaze.burn", "volume": 0.6, "pitch": 1.0}
       }
     },
     {
@@ -47,6 +51,10 @@
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.2, 0.45, 1], "scale": 0.6}, "count": 1},
         "suffix": {"particle": {"type": "minecraft:bubble_pop"}, "count": 1, "spread": 0.03, "speed": 0},
         "interfix": {"particle": {"type": "minecraft:falling_water"}, "count": 3, "spread": 0.15, "speed": 0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:item.bucket.empty", "volume": 1.0, "pitch": 1.0},
+        "interfix": {"sound": "minecraft:block.pointed_dripstone.drip_water", "volume": 1.0, "pitch": 1.0}
       }
     },
     {
@@ -70,6 +78,10 @@
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.3, 1, 0.4], "scale": 0.6}, "count": 1},
         "suffix": {"particle": {"type": "minecraft:happy_villager"}, "count": 1, "spread": 0.03, "speed": 0},
         "interfix": {"particle": {"type": "minecraft:dust_color_transition", "from_color": [0.3, 1, 0.4], "to_color": [1, 1, 1], "scale": 1}, "count": 2, "spread": 0.1, "speed": 0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:block.amethyst_block.chime", "volume": 1.0, "pitch": 1.2},
+        "interfix": {"sound": "minecraft:block.amethyst_block.resonate", "volume": 0.6, "pitch": 1.0}
       }
     },
     {
@@ -94,6 +106,10 @@
         "prefix": {"particle": {"type": "minecraft:dust", "color": [1, 0.95, 0.5], "scale": 0.6}, "count": 1},
         "suffix": {"particle": {"type": "minecraft:glow"}, "count": 1, "spread": 0.03, "speed": 0},
         "interfix": {"particle": {"type": "minecraft:end_rod"}, "count": 1, "spread": 0.05, "speed": 0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:block.beacon.activate", "volume": 0.6, "pitch": 1.4},
+        "interfix": {"sound": "minecraft:block.beacon.ambient", "volume": 0.8, "pitch": 1.2}
       }
     },
     {
@@ -113,13 +129,19 @@
         {"type": "teleport_forward", "distance": 7}
       ],
       "particles": {
+        "root": {"particle": {"type": "minecraft:electric_spark"}, "count": 16, "spread": 0.5, "speed": 0.2},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.87, 0.82, 0.29], "scale": 1}, "count": 7, "spread": 1, "speed": 4},
+        "suffix": {"particle": {"type": "minecraft:electric_spark"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:dust", "color": [0.89, 0.95, 0.07], "scale": 1}, "count": 1}
+      },
+      "sounds": {
+        "interfix": {"sound": "minecraft:item.chorus_fruit.teleport", "volume": 0.8, "pitch": 1.4}
       }
     },
     {
       "id": "particle",
       "name": "Частица",
+      "order": 5,
       "root": [
         {"type": "summon", "entity": "minecraft:allay", "seconds": -1}
       ],
@@ -132,14 +154,21 @@
       "interfix": [
         {"type": "move_forward", "distance": 20, "speed": 1}
       ],
-      "order": 5,
       "particles": {
-        "prefix": {"particle": {"type": "minecraft:dust", "color": [1, 1, 1], "scale": 1}, "count": 1}
+        "root": {"particle": {"type": "minecraft:end_rod"}, "count": 8, "spread": 0.4, "speed": 0.02},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [1, 1, 1], "scale": 1}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:crit"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:end_rod"}, "count": 1, "spread": 0.05, "speed": 0.0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.allay.ambient_with_item", "volume": 1.0, "pitch": 1.0},
+        "interfix": {"sound": "minecraft:entity.firework_rocket.launch", "volume": 0.6, "pitch": 1.4}
       }
     },
     {
       "id": "poison",
       "name": "Яд",
+      "order": 75,
       "root": [
         {"type": "effect", "effect": "minecraft:poison", "seconds": 10}
       ],
@@ -152,14 +181,20 @@
       "interfix": [
         {"type": "follow_caster", "seconds": 10}
       ],
-      "order": 75,
       "particles": {
-        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.15, 0.41, 0.17], "scale": 1}, "count": 1}
+        "root": {"particle": {"type": "minecraft:dust", "color": [0.3, 0.6, 0.15], "scale": 1.0}, "count": 8},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.15, 0.41, 0.17], "scale": 1}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.25, 0.5, 0.15], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.2, 0.45, 0.12], "scale": 0.6}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:block.brewing_stand.brew", "volume": 0.8, "pitch": 1.2}
       }
     },
     {
       "id": "gravity",
       "name": "Гравитация",
+      "order": 40,
       "root": [
         {"type": "pull", "strength": 3}
       ],
@@ -172,15 +207,20 @@
       "interfix": [
         {"type": "descend", "maxDistance": 100, "speed": 1}
       ],
-      "order": 40,
       "particles": {
+        "root": {"particle": {"type": "minecraft:dust", "color": [0.93, 0.4, 0.94], "scale": 1}, "count": 1},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.82, 0.12, 0.92], "scale": 1}, "count": 1},
-        "root": {"particle": {"type": "minecraft:dust", "color": [0.93, 0.4, 0.94], "scale": 1}, "count": 1}
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.75, 0.15, 0.85], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:reverse_portal"}, "count": 2, "spread": 0.1, "speed": 0.0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:block.respawn_anchor.set_spawn", "volume": 0.8, "pitch": 0.8}
       }
     },
     {
       "id": "frost",
       "name": "Мороз",
+      "order": 65,
       "root": [
         {"type": "freeze", "seconds": 5},
         {"type": "freeze_water", "seconds": -1}
@@ -194,11 +234,14 @@
       "interfix": [
         {"type": "wait_for_target", "radius": 2, "maxSeconds": 120, "excludeCaster": false}
       ],
-      "order": 65,
       "particles": {
         "root": {"particle": {"type": "minecraft:dust", "color": [0.36, 0.81, 0.92], "scale": 1}, "count": 1},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.28, 0.71, 0.92], "scale": 1}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:snowflake"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:dust", "color": [0.26, 0.69, 0.96], "scale": 1}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.player.hurt_freeze", "volume": 0.8, "pitch": 1.0}
       }
     },
     {
@@ -218,7 +261,13 @@
         {"type": "wait", "seconds": 5}
       ],
       "particles": {
+        "root": {"particle": {"type": "minecraft:lava"}, "count": 8, "spread": 0.4, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [1.0, 0.45, 0.05], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:flame"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:dust", "color": [0.97, 0.33, 0.05], "scale": 1}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:item.bucket.empty_lava", "volume": 1.0, "pitch": 1.0}
       }
     },
     {
@@ -239,7 +288,9 @@
       ],
       "particles": {
         "root": {"particle": {"type": "minecraft:dust", "color": [0.44, 0, 0], "scale": 1}, "count": 1},
-        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.58, 0.02, 0.02], "scale": 1}, "count": 1}
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.58, 0.02, 0.02], "scale": 1}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:smoke"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:large_smoke"}, "count": 1, "spread": 0.1, "speed": 0.0}
       }
     },
     {
@@ -259,7 +310,13 @@
         {"type": "follow_caster", "seconds": 100}
       ],
       "particles": {
-        "root": {"particle": {"type": "minecraft:dust", "color": [0.53, 0.98, 0.28], "scale": 1}, "count": 1}
+        "root": {"particle": {"type": "minecraft:dust", "color": [0.53, 0.98, 0.28], "scale": 1}, "count": 1},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.5, 0.95, 0.3], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:happy_villager"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.55, 0.95, 0.35], "scale": 0.5}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.wolf.ambient", "volume": 1.0, "pitch": 1.0}
       }
     },
     {
@@ -277,7 +334,16 @@
       ],
       "interfix": [
         {"type": "wait", "seconds": 10}
-      ]
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:enchant"}, "count": 8, "spread": 0.4, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.55, 0.6, 0.8], "scale": 0.5}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.6, 0.65, 0.85], "scale": 0.5}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:enchant"}, "count": 1, "spread": 0.1, "speed": 0.0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:block.bell.resonate", "volume": 0.6, "pitch": 1.2}
+      }
     },
     {
       "id": "impulse",
@@ -288,7 +354,16 @@
       ],
       "prefix": [],
       "suffix": [],
-      "interfix": []
+      "interfix": [],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:happy_villager"}, "count": 8, "spread": 0.5, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.4, 0.8, 0.3], "scale": 0.5}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.4, 0.8, 0.3], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.4, 0.8, 0.3], "scale": 0.5}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:item.bone_meal.use", "volume": 1.0, "pitch": 1.0}
+      }
     },
     {
       "id": "wind",
@@ -307,13 +382,19 @@
         {"type": "orbit", "radius": 2, "seconds": 20, "period": 1}
       ],
       "particles": {
+        "root": {"particle": {"type": "minecraft:cloud"}, "count": 10, "spread": 0.5, "speed": 0.05},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.95, 0.38, 0.93], "scale": 1}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:cloud"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:dust", "color": [0.19, 0.75, 0.43], "scale": 1}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.breeze.wind_burst", "volume": 0.8, "pitch": 1.0}
       }
     },
     {
       "id": "earth",
       "name": "Земля",
+      "order": 37,
       "root": [
         {"type": "place_block", "block": "minecraft:dirt", "seconds": -1, "onlyAir": false}
       ],
@@ -326,9 +407,14 @@
       "interfix": [
         {"type": "descend", "maxDistance": 10, "speed": 1}
       ],
-      "order": 37,
       "particles": {
-        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.2, 0.55, 0.17], "scale": 1}, "count": 1}
+        "root": {"particle": {"type": "minecraft:block", "block_state": {"Name": "minecraft:dirt"}}, "count": 12, "spread": 0.5, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.2, 0.55, 0.17], "scale": 1}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.45, 0.32, 0.18], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:block", "block_state": {"Name": "minecraft:dirt"}}, "count": 1, "spread": 0.1, "speed": 0.0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:block.rooted_dirt.place", "volume": 1.0, "pitch": 0.8}
       }
     },
     {
@@ -346,7 +432,16 @@
       ],
       "interfix": [
         {"type": "aura", "radius": 30, "every": 1, "excludeCaster": false, "action": {"type": "damage", "amount": 999}}
-      ]
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:soul"}, "count": 10, "spread": 0.5, "speed": 0.02},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.1, 0.1, 0.1], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.15, 0.1, 0.1], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.1, 0.05, 0.05], "scale": 1.0}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.wither.ambient", "volume": 0.6, "pitch": 1.0}
+      }
     },
     {
       "id": "shield",
@@ -363,7 +458,16 @@
       ],
       "interfix": [
         {"type": "wait", "seconds": 3}
-      ]
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:dust", "color": [0.95, 0.8, 0.3], "scale": 1.0}, "count": 8},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.9, 0.75, 0.3], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:enchant"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.9, 0.8, 0.35], "scale": 0.5}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:item.shield.block", "volume": 1.0, "pitch": 1.2}
+      }
     },
     {
       "id": "shadow",
@@ -385,6 +489,7 @@
       "particles": {
         "root": {"particle": {"type": "minecraft:squid_ink"}, "count": 12, "spread": 0.4, "speed": 0.02},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.12, 0.05, 0.18], "scale": 0.8}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.1, 0.05, 0.15], "scale": 0.6}, "count": 1},
         "interfix": {"particle": {"type": "minecraft:smoke"}, "count": 2, "spread": 0.1, "speed": 0.0}
       },
       "sounds": {
@@ -409,7 +514,9 @@
         {"type": "move_forward", "distance": 24, "speed": 1.2}
       ],
       "particles": {
+        "root": {"particle": {"type": "minecraft:enchant"}, "count": 10, "spread": 0.4, "speed": 0.0},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.95, 0.85, 0.4], "scale": 0.5}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.95, 0.85, 0.4], "scale": 0.5}, "count": 1},
         "interfix": {"particle": {"type": "minecraft:enchant"}, "count": 3, "spread": 0.1, "speed": 0.0}
       },
       "sounds": {
@@ -435,6 +542,7 @@
       "particles": {
         "root": {"particle": {"type": "minecraft:soul"}, "count": 6, "spread": 0.4, "speed": 0.02},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.55, 0.85, 0.95], "scale": 0.8}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:soul"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:soul"}, "count": 1, "spread": 0.1, "speed": 0.0}
       },
       "sounds": {
@@ -460,6 +568,7 @@
       "particles": {
         "root": {"particle": {"type": "minecraft:sweep_attack"}, "count": 1, "spread": 0.0, "speed": 0.0},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.8, 0.9, 1.0], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:cloud"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:cloud"}, "count": 1, "spread": 0.05, "speed": 0.0}
       },
       "sounds": {
@@ -483,8 +592,9 @@
         {"type": "teleport_forward", "distance": 8}
       ],
       "particles": {
-        "suffix": {"particle": {"type": "minecraft:portal"}, "count": 12, "spread": 0.4, "speed": 0.3},
+        "root": {"particle": {"type": "minecraft:cloud"}, "count": 6, "spread": 0.4, "speed": 0.02},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.6, 0.3, 0.9], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:portal"}, "count": 12, "spread": 0.4, "speed": 0.3},
         "interfix": {"particle": {"type": "minecraft:reverse_portal"}, "count": 4, "spread": 0.2, "speed": 0.02}
       },
       "sounds": {
@@ -511,6 +621,7 @@
       "particles": {
         "root": {"particle": {"type": "minecraft:cloud"}, "count": 6, "spread": 0.4, "speed": 0.01},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [1.0, 1.0, 1.0], "scale": 0.5}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:white_ash"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:white_ash"}, "count": 2, "spread": 0.1, "speed": 0.0}
       },
       "sounds": {
@@ -535,8 +646,10 @@
         {"type": "wait", "seconds": 2}
       ],
       "particles": {
+        "root": {"particle": {"type": "minecraft:block", "block_state": {"Name": "minecraft:cobblestone"}}, "count": 4, "spread": 0.3, "speed": 0.0},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.5, 0.5, 0.5], "scale": 0.8}, "count": 1},
-        "root": {"particle": {"type": "minecraft:block", "block_state": {"Name": "minecraft:cobblestone"}}, "count": 4, "spread": 0.3, "speed": 0.0}
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.55, 0.55, 0.55], "scale": 0.5}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.5, 0.5, 0.5], "scale": 0.5}, "count": 1}
       },
       "sounds": {
         "root": {"sound": "minecraft:block.stone.place", "volume": 1.0, "pitch": 0.8}
@@ -561,6 +674,7 @@
       "particles": {
         "root": {"particle": {"type": "minecraft:cloud"}, "count": 10, "spread": 0.5, "speed": 0.01},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.75, 0.8, 0.85], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:cloud"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:cloud"}, "count": 1, "spread": 0.1, "speed": 0.0}
       },
       "sounds": {
@@ -585,7 +699,9 @@
       ],
       "particles": {
         "root": {"particle": {"type": "minecraft:reverse_portal"}, "count": 16, "spread": 0.4, "speed": 0.05},
-        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.4, 0.2, 0.7], "scale": 0.6}, "count": 1}
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.4, 0.2, 0.7], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:portal"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:reverse_portal"}, "count": 2, "spread": 0.1, "speed": 0.0}
       },
       "sounds": {
         "root": {"sound": "minecraft:entity.illusioner.cast_spell", "volume": 0.8, "pitch": 1.2}
@@ -609,7 +725,9 @@
       ],
       "particles": {
         "root": {"particle": {"type": "minecraft:dust", "color": [0.3, 0.55, 0.2], "scale": 1.0}, "count": 6},
-        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.35, 0.6, 0.25], "scale": 0.8}, "count": 1}
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.35, 0.6, 0.25], "scale": 0.8}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:snowflake"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.35, 0.6, 0.25], "scale": 0.5}, "count": 1}
       },
       "sounds": {
         "root": {"sound": "minecraft:entity.evoker.prepare_attack", "volume": 0.6, "pitch": 1.4}
@@ -635,6 +753,7 @@
       "particles": {
         "root": {"particle": {"type": "minecraft:snowflake"}, "count": 12, "spread": 0.4, "speed": 0.02},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.7, 0.9, 1.0], "scale": 0.8}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:snowflake"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:snowflake"}, "count": 1, "spread": 0.05, "speed": 0.0}
       },
       "sounds": {
@@ -661,6 +780,7 @@
       "particles": {
         "root": {"particle": {"type": "minecraft:witch"}, "count": 10, "spread": 0.4, "speed": 0.02},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.45, 0.1, 0.4], "scale": 0.8}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:witch"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:witch"}, "count": 1, "spread": 0.05, "speed": 0.0}
       },
       "sounds": {
@@ -684,7 +804,9 @@
         {"type": "move_forward", "distance": 6, "speed": 0.6}
       ],
       "particles": {
+        "root": {"particle": {"type": "minecraft:crit"}, "count": 10, "spread": 0.4, "speed": 0.1},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.6, 0.6, 0.55], "scale": 0.8}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:crit"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:crit"}, "count": 2, "spread": 0.1, "speed": 0.0}
       },
       "sounds": {
@@ -709,7 +831,9 @@
       ],
       "particles": {
         "root": {"particle": {"type": "minecraft:enchanted_hit"}, "count": 12, "spread": 0.4, "speed": 0.1},
-        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.9, 0.9, 0.95], "scale": 0.6}, "count": 1}
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.9, 0.9, 0.95], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.95, 0.95, 1.0], "scale": 0.5}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:enchanted_hit"}, "count": 1, "spread": 0.05, "speed": 0.0}
       },
       "sounds": {
         "root": {"sound": "minecraft:item.trident.thunder", "volume": 0.4, "pitch": 1.6}
@@ -736,6 +860,7 @@
       "particles": {
         "root": {"particle": {"type": "minecraft:flame"}, "count": 16, "spread": 0.3, "speed": 0.05},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [1.0, 0.75, 0.2], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:glow"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:end_rod"}, "count": 1, "spread": 0.05, "speed": 0.0}
       },
       "sounds": {
@@ -761,6 +886,7 @@
       "particles": {
         "root": {"particle": {"type": "minecraft:reverse_portal"}, "count": 2, "spread": 0.3, "speed": 0.0},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.05, 0.0, 0.1], "scale": 0.8}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.05, 0.0, 0.1], "scale": 0.5}, "count": 1},
         "interfix": {"particle": {"type": "minecraft:portal"}, "count": 6, "spread": 0.2, "speed": 0.2}
       },
       "sounds": {
@@ -788,6 +914,7 @@
       "particles": {
         "root": {"particle": {"type": "minecraft:electric_spark"}, "count": 16, "spread": 0.5, "speed": 0.2},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.6, 0.65, 0.9], "scale": 0.8}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:electric_spark"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:cloud"}, "count": 2, "spread": 0.2, "speed": 0.0}
       },
       "sounds": {
@@ -812,7 +939,9 @@
         {"type": "wait", "seconds": 5}
       ],
       "particles": {
+        "root": {"particle": {"type": "minecraft:dust", "color": [0.6, 0.45, 0.8], "scale": 0.8}, "count": 6},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.55, 0.4, 0.75], "scale": 0.5}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.55, 0.4, 0.75], "scale": 0.5}, "count": 1},
         "interfix": {"particle": {"type": "minecraft:dust", "color": [0.6, 0.45, 0.8], "scale": 0.8}, "count": 1}
       },
       "sounds": {
@@ -836,7 +965,9 @@
         {"type": "teleport_forward", "distance": 3}
       ],
       "particles": {
+        "root": {"particle": {"type": "minecraft:crit"}, "count": 8, "spread": 0.3, "speed": 0.1},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.8, 0.8, 0.75], "scale": 0.5}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:crit"}, "count": 1, "spread": 0.03, "speed": 0.0},
         "interfix": {"particle": {"type": "minecraft:crit"}, "count": 3, "spread": 0.1, "speed": 0.0}
       },
       "sounds": {
@@ -860,8 +991,10 @@
         {"type": "wait", "seconds": 1}
       ],
       "particles": {
+        "root": {"particle": {"type": "minecraft:dust", "color": [0.9, 0.2, 0.15], "scale": 1.0}, "count": 8},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.9, 0.2, 0.15], "scale": 0.6}, "count": 1},
-        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.95, 0.3, 0.2], "scale": 0.6}, "count": 1}
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.95, 0.3, 0.2], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.9, 0.25, 0.2], "scale": 0.5}, "count": 1}
       },
       "sounds": {
         "root": {"sound": "minecraft:block.enchantment_table.use", "volume": 0.8, "pitch": 0.8}
@@ -884,11 +1017,287 @@
         {"type": "wait", "seconds": 3}
       ],
       "particles": {
+        "root": {"particle": {"type": "minecraft:heart"}, "count": 3, "spread": 0.4, "speed": 0.0},
         "prefix": {"particle": {"type": "minecraft:dust", "color": [0.6, 0.75, 0.85], "scale": 0.5}, "count": 1},
-        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.65, 0.8, 0.9], "scale": 0.5}, "count": 1}
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.65, 0.8, 0.9], "scale": 0.5}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.6, 0.75, 0.85], "scale": 0.5}, "count": 1}
       },
       "sounds": {
         "root": {"sound": "minecraft:block.beacon.deactivate", "volume": 0.5, "pitch": 1.4}
+      }
+    },
+    {
+      "id": "herd",
+      "name": "Стадо",
+      "order": 57,
+      "root": [
+        {"type": "summon", "entity": "minecraft:cow", "seconds": -1},
+        {"type": "summon", "entity": "minecraft:pig", "seconds": -1}
+      ],
+      "prefix": [
+        {"type": "target_radius", "radius": 4, "includeCaster": true}
+      ],
+      "suffix": [
+        {"type": "feed", "food": 4, "saturation": 2}
+      ],
+      "interfix": [
+        {"type": "follow_caster", "seconds": 10}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:happy_villager"}, "count": 6, "spread": 0.5, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.85, 0.75, 0.55], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.9, 0.8, 0.5], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.8, 0.7, 0.5], "scale": 0.5}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.cow.ambient", "volume": 1.0, "pitch": 1.0},
+        "interfix": {"sound": "minecraft:entity.pig.ambient", "volume": 0.8, "pitch": 1.0}
+      }
+    },
+    {
+      "id": "thicket",
+      "name": "Чаща",
+      "order": 58,
+      "root": [
+        {"type": "summon", "entity": "minecraft:fox", "seconds": -1},
+        {"type": "summon", "entity": "minecraft:rabbit", "seconds": -1}
+      ],
+      "prefix": [
+        {"type": "shape_sphere", "radius": 3},
+        {"type": "shape_ground", "maxDepth": 4}
+      ],
+      "suffix": [
+        {"type": "grow"}
+      ],
+      "interfix": [
+        {"type": "wait", "seconds": 3}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:composter"}, "count": 8, "spread": 0.5, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.25, 0.55, 0.2], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.35, 0.65, 0.25], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.3, 0.6, 0.25], "scale": 0.5}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.fox.ambient", "volume": 1.0, "pitch": 1.0},
+        "suffix": {"sound": "minecraft:item.bone_meal.use", "volume": 0.8, "pitch": 1.0}
+      }
+    },
+    {
+      "id": "deep",
+      "name": "Пучина",
+      "order": 61,
+      "root": [
+        {"type": "water", "seconds": 30},
+        {"type": "summon", "entity": "minecraft:drowned", "seconds": 60}
+      ],
+      "prefix": [
+        {"type": "target_radius", "radius": 4, "includeCaster": false}
+      ],
+      "suffix": [
+        {"type": "pull", "strength": 1.0}
+      ],
+      "interfix": [
+        {"type": "descend", "maxDistance": 12, "speed": 0.4}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:splash"}, "count": 20, "spread": 0.5, "speed": 0.1},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.1, 0.3, 0.45], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.15, 0.35, 0.5], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dripping_water"}, "count": 2, "spread": 0.1, "speed": 0.0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.drowned.ambient", "volume": 1.0, "pitch": 0.8}
+      }
+    },
+    {
+      "id": "swarm",
+      "name": "Рой",
+      "order": 63,
+      "root": [
+        {"type": "summon", "entity": "minecraft:bee", "seconds": -1}
+      ],
+      "prefix": [
+        {"type": "target_nearest", "radius": 8, "excludeCaster": true}
+      ],
+      "suffix": [
+        {"type": "effect", "effect": "minecraft:poison", "seconds": 4}
+      ],
+      "interfix": [
+        {"type": "orbit", "radius": 2, "seconds": 4, "period": 1}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:falling_honey"}, "count": 6, "spread": 0.4, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.95, 0.8, 0.2], "scale": 0.5}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.9, 0.75, 0.15], "scale": 0.5}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.95, 0.85, 0.3], "scale": 0.5}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.bee.pollinate", "volume": 1.0, "pitch": 1.2},
+        "interfix": {"sound": "minecraft:entity.bee.pollinate", "volume": 0.6, "pitch": 1.4}
+      }
+    },
+    {
+      "id": "guardian",
+      "name": "Страж",
+      "order": 66,
+      "root": [
+        {"type": "summon", "entity": "minecraft:iron_golem", "seconds": 120}
+      ],
+      "prefix": [
+        {"type": "target_caster"}
+      ],
+      "suffix": [
+        {"type": "absorb", "amount": 4, "seconds": 20}
+      ],
+      "interfix": [
+        {"type": "follow_caster", "seconds": 5}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:block", "block_state": {"Name": "minecraft:iron_block"}}, "count": 12, "spread": 0.5, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.8, 0.8, 0.8], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.85, 0.85, 0.85], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.75, 0.75, 0.78], "scale": 0.5}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.iron_golem.repair", "volume": 1.0, "pitch": 0.8}
+      }
+    },
+    {
+      "id": "nest",
+      "name": "Гнездо",
+      "order": 73,
+      "root": [
+        {"type": "summon", "entity": "minecraft:cave_spider", "seconds": 45},
+        {"type": "place_block", "block": "minecraft:cobweb", "seconds": 30, "onlyAir": true}
+      ],
+      "prefix": [
+        {"type": "shape_sphere", "radius": 2}
+      ],
+      "suffix": [
+        {"type": "effect", "effect": "minecraft:slowness", "seconds": 4, "amplifier": 1}
+      ],
+      "interfix": [
+        {"type": "wait_for_target", "radius": 3, "maxSeconds": 30, "excludeCaster": true}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:white_ash"}, "count": 12, "spread": 0.5, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.85, 0.85, 0.85], "scale": 0.5}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.3, 0.1, 0.1], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.4, 0.15, 0.15], "scale": 0.5}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.spider.ambient", "volume": 1.0, "pitch": 1.2}
+      }
+    },
+    {
+      "id": "undead",
+      "name": "Нежить",
+      "order": 77,
+      "root": [
+        {"type": "summon", "entity": "minecraft:zombie", "seconds": 60},
+        {"type": "summon", "entity": "minecraft:skeleton", "seconds": 60}
+      ],
+      "prefix": [
+        {"type": "target_nearest", "radius": 12, "excludeCaster": true}
+      ],
+      "suffix": [
+        {"type": "effect", "effect": "minecraft:wither", "seconds": 3}
+      ],
+      "interfix": [
+        {"type": "descend", "maxDistance": 10, "speed": 0.5}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:soul"}, "count": 10, "spread": 0.5, "speed": 0.02},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.35, 0.45, 0.3], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.2, 0.2, 0.2], "scale": 0.6}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:ash"}, "count": 2, "spread": 0.1, "speed": 0.0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.zombie.ambient", "volume": 1.0, "pitch": 0.8},
+        "interfix": {"sound": "minecraft:entity.skeleton.ambient", "volume": 0.6, "pitch": 0.8}
+      }
+    },
+    {
+      "id": "vexes",
+      "name": "Вредины",
+      "order": 79,
+      "root": [
+        {"type": "summon", "entity": "minecraft:vex", "seconds": 20}
+      ],
+      "prefix": [
+        {"type": "target_nearest", "radius": 10, "excludeCaster": true}
+      ],
+      "suffix": [
+        {"type": "damage", "amount": 1}
+      ],
+      "interfix": [
+        {"type": "orbit", "radius": 3, "seconds": 5, "period": 1}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:crit"}, "count": 10, "spread": 0.4, "speed": 0.1},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.6, 0.65, 0.75], "scale": 0.5}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:dust", "color": [0.55, 0.6, 0.7], "scale": 0.5}, "count": 1},
+        "interfix": {"particle": {"type": "minecraft:dust", "color": [0.65, 0.7, 0.8], "scale": 0.5}, "count": 1}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.vex.charge", "volume": 1.0, "pitch": 1.0}
+      }
+    },
+    {
+      "id": "inferno",
+      "name": "Пекло",
+      "order": 86,
+      "root": [
+        {"type": "summon", "entity": "minecraft:blaze", "seconds": 30},
+        {"type": "set_fire_blocks", "seconds": 10}
+      ],
+      "prefix": [
+        {"type": "shape_ring", "radius": 3, "thickness": 1},
+        {"type": "shape_ground", "maxDepth": 4}
+      ],
+      "suffix": [
+        {"type": "ignite", "seconds": 3}
+      ],
+      "interfix": [
+        {"type": "rise", "distance": 3, "speed": 0.3}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:flame"}, "count": 16, "spread": 0.5, "speed": 0.03},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [1.0, 0.4, 0.05], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:small_flame"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:lava"}, "count": 1, "spread": 0.05, "speed": 0.0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.blaze.ambient", "volume": 1.0, "pitch": 1.0}
+      }
+    },
+    {
+      "id": "edge",
+      "name": "Край",
+      "order": 92,
+      "root": [
+        {"type": "summon", "entity": "minecraft:enderman", "seconds": 60},
+        {"type": "summon", "entity": "minecraft:endermite", "seconds": 30}
+      ],
+      "prefix": [
+        {"type": "target_look", "range": 20}
+      ],
+      "suffix": [
+        {"type": "teleport_to_origin"}
+      ],
+      "interfix": [
+        {"type": "teleport_forward", "distance": 10}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:portal"}, "count": 20, "spread": 0.5, "speed": 0.5},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.35, 0.1, 0.45], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:reverse_portal"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:portal"}, "count": 3, "spread": 0.2, "speed": 0.2}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.enderman.scream", "volume": 0.6, "pitch": 1.0},
+        "interfix": {"sound": "minecraft:item.chorus_fruit.teleport", "volume": 0.8, "pitch": 1.0}
       }
     }
   ]
