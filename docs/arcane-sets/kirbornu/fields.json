@@ -158,7 +158,25 @@
         {"arcane": "arcane_1", "center": [3.888, -0.902, -0.881], "radius": 0.34},
         {"arcane": "void", "center": [3.172, 2.910, 1.285], "radius": 0.37},
         {"arcane": "storm", "center": [3.551, 2.072, -0.901], "radius": 0.29},
-        {"arcane": "echo", "center": [2.963, 2.717, -1.782], "radius": 0.43}
+        {"arcane": "echo", "center": [2.963, 2.717, -1.782], "radius": 0.43},
+        {"arcane": "henhouse", "center": [1.176, -0.822, 0.378], "radius": 0.26},
+        {"arcane": "bounty", "center": [-1.250, 0.723, 0.367], "radius": 0.41},
+        {"arcane": "henhouse", "center": [-1.265, -0.364, -1.427], "radius": 0.26},
+        {"arcane": "bounty", "center": [0.101, 0.375, 1.541], "radius": 0.46},
+        {"arcane": "henhouse", "center": [0.894, -1.400, -1.379], "radius": 0.25},
+        {"arcane": "bounty", "center": [-0.533, 0.809, -1.257], "radius": 0.39},
+        {"arcane": "illumination", "center": [2.528, -1.632, 0.536], "radius": 0.25},
+        {"arcane": "burden", "center": [0.342, 1.705, 2.434], "radius": 0.46},
+        {"arcane": "illumination", "center": [0.856, -2.786, -0.819], "radius": 0.25},
+        {"arcane": "burden", "center": [-0.387, -1.200, 2.707], "radius": 0.4},
+        {"arcane": "illumination", "center": [-2.931, 0.445, -0.730], "radius": 0.42},
+        {"arcane": "burden", "center": [-0.098, -2.143, -2.229], "radius": 0.34},
+        {"arcane": "muster", "center": [-4.176, -1.392, -1.912], "radius": 0.58},
+        {"arcane": "ascension", "center": [3.622, 1.115, 1.233], "radius": 0.36},
+        {"arcane": "muster", "center": [-1.100, -4.552, -1.052], "radius": 0.31},
+        {"arcane": "ascension", "center": [1.604, -3.512, 2.175], "radius": 0.39},
+        {"arcane": "muster", "center": [0.706, -4.449, 0.753], "radius": 0.63},
+        {"arcane": "ascension", "center": [-0.898, -3.924, 1.302], "radius": 0.6}
       ]
     },
     "scalk": {

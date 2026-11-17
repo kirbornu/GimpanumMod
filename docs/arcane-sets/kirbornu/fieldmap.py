@@ -91,11 +91,12 @@ def safe(center, radius):
     return all(np.linalg.norm(center - t) > radius + 0.05 for t in tips)
 
 
-def add_layer(names, per, band_points, sizes):
+def add_layer(names, per, band_points, sizes, rand=None):
+    rand = rand or rng
     centers = fps(band_points, len(names) * per, occupied)
     occupied.extend(centers)
     for name, c in zip(names * per, centers):
-        r = round(rng.uniform(*sizes), 2)
+        r = round(rand.uniform(*sizes), 2)
         while not safe(c, r):
             r = round(r - 0.02, 2)
         fields.append({"arcane": name, "center": [round(float(x), 3) for x in c], "radius": r})
@@ -134,5 +135,87 @@ for round_ in range(20):
 else:
     raise SystemExit("сторожевые сферы не закрыли все короткие рунописи")
 
+old_fields = [dict(f) for f in fields]
+
+# Дикие арканы — дописаны после сторожевых сфер, со своим зерном: первые поля
+# карты от этого не меняются. Центры — подальше от всех уже занятых, в том
+# числе от сторожевых.
+WILD = [  # (арканы, сфер на аркан, (r_min, r_max) центров, (радиус min, max)) — как у слоёв 2–4
+    (["henhouse", "bounty"], 3, (1.45, 2.3), (0.22, 0.5)),
+    (["illumination", "burden"], 3, (2.2, 3.1), (0.2, 0.5)),
+    (["muster", "ascension"], 3, (3.0, 4.8), (0.3, 0.65)),
+]
+wild_rng = random.Random(20261105)
+occupied = [np.array(f["center"]) for f in fields]
+for names, per, (rmin, rmax), sizes in WILD:
+    add_layer(names, per, uniq[(norm >= rmin) & (norm <= rmax) & (far_from_tips > 0.5)], sizes, wild_rng)
+
+# --- проверки: генератор падает, если карта нарушает правила ---------------
+CYR = dict(zip(RUNES, ["АН", "БЭ", "ВОЛ", "ГИ", "ДАР", "ЭР", "ЖИН", "ЗАР", "ИМ", "КОЛ", "ЛУН", "МАР"]))
+
+
+def word_point(word):
+    k = len(word)
+    return P[k][sum(RUNES.index(r) * 12 ** (k - 1 - i) for i, r in enumerate(word))]
+
+
+def arcane_of(word, fs):
+    return fs[resolve(word_point(word)[None, :], fs)[0]]["arcane"]
+
+
+def words(k):
+    return [tuple(RUNES[(i // 12 ** (k - 1 - j)) % 12] for j in range(k)) for i in range(12 ** k)]
+
+
+def check(ok, what):
+    if not ok:
+        raise SystemExit("карта нарушает правило: " + what)
+
+
+# 1. Первые поля — поштучно те же.
+check(fields[:len(old_fields)] == old_fields, "первые поля изменились")
+# 2. Одиночная руна — свой базовый аркан.
+for r in RUNES:
+    check(arcane_of((r,), fields) == BASE[r], "руна " + r)
+# 3. Слова из игровых тестов и примеров README ведут туда же, куда раньше.
+KEEP = ["be.er", "an.vol", "an.dar", "an.an.an", "an.an.zhin", "an.be.be", "dar.dar.dar", "mar.mar.mar",
+        "an.an.an.be", "vol.im", "an.zhin.zhin", "gi.gi", "vol.vol.im", "an.be", "be.mar.lun",
+        "an.be.be.be.be", "zhin.gi.mar.mar.mar", "an.an.an.an.zhin", "vol.vol.an.dar.er", "an.im.dar.er.dar"]
+for w in KEEP:
+    word = tuple(w.split("."))
+    check(arcane_of(word, fields) == arcane_of(word, old_fields), "слово " + w + " сменило аркан")
+check(arcane_of(("dar", "dar", "dar"), fields) == "arcane_1", "ДАР·ДАР·ДАР — не Иссушение")
+# 4. Ни одна рунопись из 1–4 рун не ведёт к призыву.
+names = np.array([f["arcane"] for f in fields])
+won = {k: names[resolve(P[k], fields)] for k in range(1, 6)}
+check(not any(np.isin(won[k], SUMMONS).any() for k in range(1, 5)), "рунопись из 1–4 рун ведёт к призыву")
+# 5. Дикие арканы достижимы: Курятник и Щедрость двумя рунами, Иллюминация и
+# Бремя — тремя, Сбор и Вознесение — не больше чем четырьмя.
+for name, most in [("henhouse", 2), ("bounty", 2), ("illumination", 3), ("burden", 3), ("muster", 4),
+                   ("ascension", 4)]:
+    check(any((won[k] == name).any() for k in range(1, most + 1)), name + " не достижим за " + str(most))
+
 json.dump(fields, open(os.path.join(HERE, 'fields_generated.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print(len(fields), "полей; сторожевых раундов:", round_)
+
+# --- отчёт: что сдвинулось и как часто дикие арканы бывают интерфиксом -----
+old_names = np.array([f["arcane"] for f in old_fields])
+moved = {}
+total = changed = 0
+for k in range(1, 5):
+    before = old_names[resolve(P[k], old_fields)]
+    total += len(before)
+    for a, b in zip(before, won[k]):
+        if a != b:
+            changed += 1
+            moved.setdefault(a, [0] * 5)[k] += 1
+print("сменили аркан: %d из %d рунописей из 1–4 рун (%.1f %%)" % (changed, total, 100.0 * changed / total))
+for a, c in sorted(moved.items(), key=lambda kv: -sum(kv[1])):
+    print("  %-12s ушло %3d: из 2 рун %d, из 3 — %d, из 4 — %d" % (a, sum(c), c[2], c[3], c[4]))
+WILD_NAMES = [n for names_, _, _, _ in WILD for n in names_]
+for name in WILD_NAMES:
+    shortest = next(k for k in range(1, 5) if (won[k] == name).any())
+    ws = [w for w in words(shortest) if arcane_of(w, fields) == name]
+    print("%-12s минимум %d руны; кратчайшие: %s; доля: %s" % (
+        name, shortest, ", ".join("·".join(CYR[r] for r in w) for w in ws[:3]),
+        ", ".join("%d рун %.2f %%" % (k, 100.0 * (won[k] == name).mean()) for k in (2, 3, 4))))

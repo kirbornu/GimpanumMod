@@ -1299,6 +1299,195 @@
         "root": {"sound": "minecraft:entity.enderman.scream", "volume": 0.6, "pitch": 1.0},
         "interfix": {"sound": "minecraft:item.chorus_fruit.teleport", "volume": 0.8, "pitch": 1.0}
       }
+    },
+    {
+      "id": "henhouse",
+      "name": "Курятник",
+      "order": 8,
+      "root": [
+        {"type": "spawn_projectile", "entity": "minecraft:egg", "speed": 1.5}
+      ],
+      "prefix": [
+        {"type": "target_radius", "radius": 8, "includeCaster": false},
+        {"type": "target_filter", "filter": "animals"}
+      ],
+      "suffix": [
+        {"type": "effect", "effect": "minecraft:slow_falling", "seconds": 10}
+      ],
+      "interfix": [
+        {"type": "aura", "radius": 6, "every": 1, "excludeCaster": false, "action": {"type": "summon", "entity": "minecraft:chicken", "seconds": 20}},
+        {"type": "wait", "seconds": 4.5}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:egg_crack"}, "count": 6, "spread": 0.3, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.95, 0.9, 0.75], "scale": 0.6}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:white_ash"}, "count": 2, "spread": 0.05, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:poof"}, "count": 1, "spread": 0.4, "speed": 0.02}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.egg.throw", "volume": 1.0, "pitch": 1.0},
+        "prefix": {"sound": "minecraft:entity.chicken.ambient", "volume": 0.6, "pitch": 1.2},
+        "suffix": {"sound": "minecraft:entity.chicken.step", "volume": 0.8, "pitch": 1.0},
+        "interfix": {"sound": "minecraft:entity.chicken.egg", "volume": 1.0, "pitch": 0.8}
+      }
+    },
+    {
+      "id": "bounty",
+      "name": "Щедрость",
+      "order": 14,
+      "root": [
+        {"type": "shape_sphere", "radius": 3},
+        {"type": "grow"}
+      ],
+      "prefix": [
+        {"type": "target_radius", "radius": 6, "includeCaster": true},
+        {"type": "target_filter", "filter": "players"}
+      ],
+      "suffix": [
+        {"type": "effect", "effect": "minecraft:luck", "seconds": 120}
+      ],
+      "interfix": [
+        {"type": "aura", "radius": 16, "every": 1, "excludeCaster": true, "action": {"type": "heal", "amount": 4}},
+        {"type": "aura", "radius": 16, "every": 1, "excludeCaster": true, "action": {"type": "feed", "food": 2, "saturation": 2}},
+        {"type": "wait", "seconds": 2.5}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:composter"}, "count": 10, "spread": 0.8, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [1.0, 0.85, 0.3], "scale": 0.7}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:happy_villager"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:heart"}, "count": 1, "spread": 0.8, "speed": 0.0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:item.bone_meal.use", "volume": 1.0, "pitch": 1.0},
+        "prefix": {"sound": "minecraft:entity.villager.yes", "volume": 0.6, "pitch": 1.2},
+        "suffix": {"sound": "minecraft:entity.experience_orb.pickup", "volume": 0.5, "pitch": 1.4},
+        "interfix": {"sound": "minecraft:entity.player.levelup", "volume": 0.8, "pitch": 1.2}
+      }
+    },
+    {
+      "id": "illumination",
+      "name": "Иллюминация",
+      "order": 24,
+      "root": [
+        {"type": "effect", "effect": "minecraft:night_vision", "seconds": 60}
+      ],
+      "prefix": [
+        {"type": "target_radius", "radius": 12, "includeCaster": false},
+        {"type": "target_filter", "filter": "monsters"}
+      ],
+      "suffix": [
+        {"type": "remove_effect", "effect": "minecraft:invisibility"},
+        {"type": "effect", "effect": "minecraft:glowing", "seconds": 8}
+      ],
+      "interfix": [
+        {"type": "aura", "radius": 32, "every": 1, "excludeCaster": false, "action": {"type": "effect", "effect": "minecraft:glowing", "seconds": 60}},
+        {"type": "aura", "radius": 32, "every": 1, "excludeCaster": false, "action": {"type": "remove_effect", "effect": "minecraft:invisibility"}},
+        {"type": "wait", "seconds": 0.5}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:glow"}, "count": 8, "spread": 0.4, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [1.0, 0.95, 0.6], "scale": 0.8}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:end_rod"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:firework"}, "count": 3, "spread": 0.8, "speed": 0.05}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:block.beacon.power_select", "volume": 0.6, "pitch": 1.6},
+        "prefix": {"sound": "minecraft:block.amethyst_block.chime", "volume": 0.6, "pitch": 1.6},
+        "suffix": {"sound": "minecraft:entity.glow_squid.squirt", "volume": 0.6, "pitch": 1.4},
+        "interfix": {"sound": "minecraft:entity.firework_rocket.large_blast", "volume": 1.5, "pitch": 1.0}
+      }
+    },
+    {
+      "id": "burden",
+      "name": "Бремя",
+      "order": 42,
+      "root": [
+        {"type": "effect", "effect": "minecraft:slowness", "seconds": 8, "amplifier": 1},
+        {"type": "effect", "effect": "minecraft:resistance", "seconds": 8}
+      ],
+      "prefix": [
+        {"type": "delay", "seconds": 3}
+      ],
+      "suffix": [
+        {"type": "extend_duration", "factor": 2}
+      ],
+      "interfix": [
+        {"type": "aura", "radius": 16, "every": 1, "excludeCaster": true, "action": {"type": "steal_effects"}},
+        {"type": "wait", "seconds": 1.5}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:block", "block_state": {"Name": "minecraft:anvil"}}, "count": 10, "spread": 0.4, "speed": 0.0},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.35, 0.35, 0.4], "scale": 0.8}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:ash"}, "count": 2, "spread": 0.05, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:squid_ink"}, "count": 2, "spread": 0.3, "speed": 0.01}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:item.armor.equip_netherite", "volume": 1.0, "pitch": 0.8},
+        "prefix": {"sound": "minecraft:block.chain.place", "volume": 0.8, "pitch": 0.8},
+        "suffix": {"sound": "minecraft:block.chain.step", "volume": 0.6, "pitch": 0.8},
+        "interfix": {"sound": "minecraft:block.anvil.land", "volume": 0.8, "pitch": 0.6}
+      }
+    },
+    {
+      "id": "muster",
+      "name": "Сбор",
+      "order": 93,
+      "root": [
+        {"type": "target_radius", "radius": 6, "includeCaster": false},
+        {"type": "pull", "strength": 1.5}
+      ],
+      "prefix": [
+        {"type": "target_radius", "radius": 10, "includeCaster": false}
+      ],
+      "suffix": [
+        {"type": "effect", "effect": "minecraft:speed", "seconds": 8, "amplifier": 1}
+      ],
+      "interfix": [
+        {"type": "aura", "radius": 16, "every": 1, "excludeCaster": true, "action": {"type": "teleport_to_origin"}},
+        {"type": "wait", "seconds": 0.5}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:reverse_portal"}, "count": 16, "spread": 0.5, "speed": 0.05},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.85, 0.65, 0.3], "scale": 0.7}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:crit"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:portal"}, "count": 4, "spread": 0.6, "speed": 0.3}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.enderman.teleport", "volume": 0.8, "pitch": 1.4},
+        "prefix": {"sound": "minecraft:block.bell.use", "volume": 0.8, "pitch": 1.2},
+        "suffix": {"sound": "minecraft:entity.horse.gallop", "volume": 0.6, "pitch": 1.2},
+        "interfix": {"sound": "minecraft:event.raid.horn", "volume": 2.0, "pitch": 1.0}
+      }
+    },
+    {
+      "id": "ascension",
+      "name": "Вознесение",
+      "order": 96,
+      "root": [
+        {"type": "effect", "effect": "minecraft:levitation", "seconds": 4}
+      ],
+      "prefix": [
+        {"type": "target_look", "range": 32}
+      ],
+      "suffix": [
+        {"type": "effect", "effect": "minecraft:jump_boost", "seconds": 20, "amplifier": 1}
+      ],
+      "interfix": [
+        {"type": "aura", "radius": 10, "every": 1, "excludeCaster": false, "action": {"type": "launch", "strength": 2.0}},
+        {"type": "wait", "seconds": 0.5}
+      ],
+      "particles": {
+        "root": {"particle": {"type": "minecraft:end_rod"}, "count": 10, "spread": 0.4, "speed": 0.05},
+        "prefix": {"particle": {"type": "minecraft:dust", "color": [0.75, 0.85, 1.0], "scale": 0.7}, "count": 1},
+        "suffix": {"particle": {"type": "minecraft:cloud"}, "count": 1, "spread": 0.03, "speed": 0.0},
+        "interfix": {"particle": {"type": "minecraft:gust"}, "count": 1, "spread": 0.5, "speed": 0.0}
+      },
+      "sounds": {
+        "root": {"sound": "minecraft:entity.shulker.shoot", "volume": 0.8, "pitch": 1.2},
+        "prefix": {"sound": "minecraft:entity.phantom.flap", "volume": 0.5, "pitch": 1.4},
+        "suffix": {"sound": "minecraft:entity.rabbit.jump", "volume": 0.8, "pitch": 1.0},
+        "interfix": {"sound": "minecraft:entity.breeze.wind_burst", "volume": 1.2, "pitch": 0.6}
+      }
     }
   ]
 }
